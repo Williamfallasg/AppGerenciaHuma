@@ -1,14 +1,9 @@
 import React, { useContext, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import addData from '../firebase/addData';
 
 
 const Sesion = () => {
-  addData("test","1", {
-    name: "Paco",
-    password: "pacazo"
-  })
   const navigation = useNavigation();
 
   return (

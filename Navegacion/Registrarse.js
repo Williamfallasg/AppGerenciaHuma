@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { firebase } from '@react-native-firebase/firestore';
+import addData from '../firebase/addData';
+
 
 
 const Registrarse = ({}) => {
@@ -22,10 +23,11 @@ const Registrarse = ({}) => {
 }*/
 
   const handleSubmit = () => {
-    console.log('Nombre:', nombre);
-    console.log('Apellidos:', apellidos);
-    console.log('Correo:', correo);
-    console.log('Contraseña:', contrasena);
+    addData("usuarios", correo,{
+      nombre: nombre,
+      apellidos: apellidos,
+      contrasena: contrasena,
+    });
   };
 
   return (
