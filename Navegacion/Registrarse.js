@@ -14,13 +14,6 @@ const Registrarse = ({}) => {
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
 
-/*const crearRegistro  = async () => {
-  try {
-    await firebaseServices.Registrarse (nombre, apellidos, correo, contrasena
-  } catch (error) {
-    
-  }
-}*/
 
   const handleSubmit = () => {
     addData("usuarios", correo,{

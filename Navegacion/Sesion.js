@@ -5,6 +5,9 @@ import { useNavigation } from '@react-navigation/native';
 
 const Sesion = () => {
   const navigation = useNavigation();
+  const handleSubmit = () => {
+    
+  };
 
   return (
     <View style={styles.container}>
@@ -34,7 +37,7 @@ const Sesion = () => {
           defaultValue=""
         />
       </View>
-      <TouchableOpacity style={styles.button} onPress={() => console.log('Iniciar sesión')}>
+      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
         <Text style={styles.buttonText}>Iniciar sesión</Text>
       </TouchableOpacity>
       
