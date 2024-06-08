@@ -3,10 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'reac
 import { useNavigation } from '@react-navigation/native';
 import addData from '../firebase/addData';
 
-
+import { Alert } from 'react-native';
 
 const Registrarse = ({}) => {
-
   const navigation = useNavigation();
 
   const [nombre, setNombre] = useState('');
@@ -14,14 +13,26 @@ const Registrarse = ({}) => {
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
 
-
   const handleSubmit = () => {
-    addData("usuarios", correo,{
-      nombre: nombre,
-      apellidos: apellidos,
-      contrasena: contrasena,
-    });
-  };
+    const emailDomains = ['@gmail.com', '@hotmail.com', '@ucr.ac.cr'];
+    const emailDomain = correo.split('@')[1];
+
+    if (emailDomains.includes(`@${emailDomain}`)) {
+      addData("usuarios", correo, {
+        nombre: nombre,
+        apellidos: apellidos,
+        correo: correo,
+        contrasena: contrasena,
+      });
+      Alert.alert('Datos guardados');
+      setNombre('');
+      setApellidos('');
+      setCorreo('');
+      setContrasena('');
+    } else {
+      Alert.alert('Dominio de correo electrónico no válido');
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -43,11 +54,11 @@ const Registrarse = ({}) => {
       <Text style={styles.label}>Apellidos</Text>
 
       <TextInput
-        style={styles.input}
-        placeholder="Apellidos"
-        onChangeText={(text) => setApellidos(text)}
-        value={apellidos}
-        placeholderTextColor="#B0B0B0"
+       style={styles.input}
+       placeholder="Apellidos"
+       onChangeText={(text) => setApellidos(text)}
+       value={apellidos}
+       placeholderTextColor="#B0B0B0"
       />
        <Text style={styles.label}>Correo</Text>
 
