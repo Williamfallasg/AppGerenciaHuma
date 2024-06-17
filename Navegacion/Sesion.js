@@ -1,12 +1,25 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-
+import  getDocument  from "../firebase/getData"
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'; 
 
 const Sesion = () => {
   const navigation = useNavigation();
-  const handleSubmit = () => {
-    
+
+  const [correo, setCorreo] = useState('');
+  const [contrasena, setContrasena] = useState('');
+  const [usuarios, setUsuarios] = useState({});
+
+
+  const handleSubmit = async () => {
+    await getDocument("usuarios", correo).then(usuario =>{
+      if((usuario.correo == correo) && (usuario.contrasena == contrasena)){
+        navigation.navigate("Home")
+      }
+    }) 
+
+   
   };
 
   return (
@@ -14,6 +27,12 @@ const Sesion = () => {
       
       <TouchableOpacity onPress={() => navigation.navigate('Registrarse')}>
         <Text style={styles.register}>Registrar</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate('EditPerfil')}>
+        <Text style={styles.register}>EditPerfil</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate('Pantalla6')}>
+        <Text style={styles.register}>Home</Text>
       </TouchableOpacity>
 
       <Image source={require('../assets/imageLog.png')} style={styles.logo} />

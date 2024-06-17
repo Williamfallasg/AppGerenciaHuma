@@ -1,10 +1,13 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+
 import Sesion from './Navegacion/Sesion';
 import Registrarse from './Navegacion/Registrarse';
 import Rec_contraseña from './Navegacion/Rec_contraseña';
-
+import EditPerfil from './Navegacion/EditPerfil';
+import Home from './Navegacion/Home';
+import Pantalla6 from './Navegacion/Pantalla6';
 
 
 const Stack = createStackNavigator();
@@ -28,6 +31,22 @@ const Navegacion = () => {
           component={Rec_contraseña} 
           options={{ title: 'Recuperar contraseña' }}
         />
+         <Stack.Screen 
+          name="EditPerfil" 
+          component={EditPerfil} 
+          options={{ title: 'Recuperar EditPerfil' }}
+        />
+        <Stack.Screen 
+          name="Home" 
+          component={Home} 
+          options={{ title: 'Home' }}
+        />
+ <Stack.Screen 
+          name="Pantalla6" 
+          component={Pantalla6} 
+          options={{ title: 'Pantalla6' }}
+        />
+
 
       </Stack.Navigator>
     </NavigationContainer>

@@ -1,50 +1,55 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import addData from '../firebase/addData';
-
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { Alert } from 'react-native';
 
-const Registrarse = ({}) => {
+const Registrarse = () => {
   const navigation = useNavigation();
-
   const [nombre, setNombre] = useState('');
   const [apellidos, setApellidos] = useState('');
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
 
-  const handleSubmit = () => {
-    const emailDomains = ['@gmail.com', '@hotmail.com', '@ucr.ac.cr'];
+  const handleSubmit = async () => {
+    const emailDomains = ['gmail.com', 'hotmail.com', 'ucr.ac.cr'];
     const emailDomain = correo.split('@')[1];
 
-    if (emailDomains.includes(`@${emailDomain}`)) {
-      addData("usuarios", correo, {
-        nombre: nombre,
-        apellidos: apellidos,
-        correo: correo,
-        contrasena: contrasena,
-      });
-      Alert.alert('Datos guardados');
-      setNombre('');
-      setApellidos('');
-      setCorreo('');
-      setContrasena('');
+    if (emailDomains.includes(emailDomain)) {
+      try {
+        const auth = getAuth();
+        await createUserWithEmailAndPassword(auth, correo, contrasena);
+        await addData("usuarios", correo, {
+          nombre: nombre,
+          apellidos: apellidos,
+          correo: correo,
+          contrasena: contrasena,
+        });
+        Alert.alert('Registro exitoso');
+        setNombre('');
+        setApellidos('');
+        setCorreo('');
+        setContrasena('');
+        navigation.navigate('Sesion');
+      } catch (error) {
+        Alert.alert('Error de registro', error.message);
+      }
     } else {
       Alert.alert('Dominio de correo electrónico no válido');
     }
-  }
-
+  };
   return (
     <View style={styles.container}>
       <View style={styles.logoContainer}>
-      <Image source={require('../assets/imageLog.png')} style={styles.logo} />
+        <Image source={require('../assets/imageLog.png')} style={styles.logo} />
       </View>
-      
+
       <Text style={styles.title}>REGISTRO</Text>
 
       <Text style={styles.label}>Nombre</Text>
       <TextInput
-        
+
         style={styles.input}
         placeholder="Nombre"
         onChangeText={(text) => setNombre(text)}
@@ -54,13 +59,13 @@ const Registrarse = ({}) => {
       <Text style={styles.label}>Apellidos</Text>
 
       <TextInput
-       style={styles.input}
-       placeholder="Apellidos"
-       onChangeText={(text) => setApellidos(text)}
-       value={apellidos}
-       placeholderTextColor="#B0B0B0"
+        style={styles.input}
+        placeholder="Apellidos"
+        onChangeText={(text) => setApellidos(text)}
+        value={apellidos}
+        placeholderTextColor="#B0B0B0"
       />
-       <Text style={styles.label}>Correo</Text>
+      <Text style={styles.label}>Correo</Text>
 
       <TextInput
         style={styles.input}
@@ -71,7 +76,7 @@ const Registrarse = ({}) => {
         autoCapitalize="none"
         placeholderTextColor="#B0B0B0"
       />
-       <Text style={styles.label}>Constraseña</Text>
+      <Text style={styles.label}>Constraseña</Text>
 
       <TextInput
         style={styles.input}
@@ -80,14 +85,17 @@ const Registrarse = ({}) => {
         onChangeText={(text) => setContrasena(text)}
         value={contrasena}
         placeholderTextColor="#B0B0B0"
-       
+
       />
 
       <TouchableOpacity style={styles.button} onPress={handleSubmit}>
         <Text style={styles.buttonText}>Registrar</Text>
       </TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate('Sesion')}>
+        <Text style={styles.link}>¿Ya tiene una cuenta?</Text>
 
-      <Text style={styles.link}>¿Ya tiene una cuenta?</Text>
+      </TouchableOpacity>
+
     </View>
   );
 };
@@ -127,8 +135,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingHorizontal: 10,
     marginBottom: 10,
-   
-   
+
+
   },
   button: {
     width: '100%',
