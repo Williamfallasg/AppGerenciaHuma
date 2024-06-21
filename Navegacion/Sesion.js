@@ -1,24 +1,29 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import getDocument from '../firebase/getData';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 
 const Sesion = () => {
   const navigation = useNavigation();
-
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
 
   const handleSubmit = async () => {
+    const auth = getAuth();
     try {
-      const usuario = await getDocument('usuarios', correo);
-      if (usuario.correo === correo && usuario.contrasena === contrasena) {
-        navigation.navigate('Home');
-      } else {
-        Alert.alert('Error', 'Correo o contraseña incorrectos');
-      }
+      await signInWithEmailAndPassword(auth, correo, contrasena);
+      setCorreo('');
+      setContrasena('');
+      Alert.alert('Bienvenido al sistema de EDUCATEC', 'Inicio de sesión exitoso');
+      navigation.navigate('Home');
     } catch (error) {
-      Alert.alert('Error', 'No se pudo iniciar sesión. Intente de nuevo.');
+      setCorreo('');
+      setContrasena('');
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        Alert.alert('Error', 'Correo o contraseña incorrectos');
+      } else {
+        Alert.alert('Error', 'No se pudo iniciar sesión. Intente de nuevo.');
+      }
     }
   };
 
@@ -26,9 +31,6 @@ const Sesion = () => {
     <View style={styles.container}>
       <TouchableOpacity onPress={() => navigation.navigate('Registrarse')}>
         <Text style={styles.register}>Registrar</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-        <Text style={styles.register}>home</Text>
       </TouchableOpacity>
       <Image source={require('../assets/imageLog.png')} style={styles.logo} />
       <Text style={styles.label}>Correo</Text>
@@ -41,6 +43,7 @@ const Sesion = () => {
           onChangeText={setCorreo}
           keyboardType="email-address"
           autoCapitalize="none"
+          placeholderTextColor="#B0B0B0"
         />
       </View>
       <Text style={styles.label}>Contraseña</Text>
@@ -52,6 +55,7 @@ const Sesion = () => {
           secureTextEntry
           value={contrasena}
           onChangeText={setContrasena}
+          placeholderTextColor="#B0B0B0"
         />
       </View>
       <TouchableOpacity style={styles.button} onPress={handleSubmit}>
