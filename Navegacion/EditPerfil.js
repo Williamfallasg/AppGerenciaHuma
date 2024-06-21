@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { useNavigation } from '@react-navigation/native';
 
 const EditPerfil = () => {
+  const navigation = useNavigation();
   const [name, setName] = useState('William');
   const [surname, setSurname] = useState('Fallas González');
   const [birthDate, setBirthDate] = useState('12/06/1994');
@@ -26,6 +28,18 @@ const EditPerfil = () => {
     if (!result.canceled) {
       setProfileImage({ uri: result.uri });
     }
+  };
+
+  const handleUpdateProfile = () => {
+    Alert.alert('Perfil actualizado satisfactoriamente');
+  };
+
+  const handleLogout = () => {
+    Alert.alert('Cerrando sesión');
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert('Cuenta eliminada');
   };
 
   return (
@@ -64,15 +78,15 @@ const EditPerfil = () => {
         secureTextEntry
       />
 
-      <TouchableOpacity style={styles.updateButton}>
+      <TouchableOpacity style={styles.updateButton} onPress={handleUpdateProfile}>
         <Text style={styles.buttonText}>Actualizar perfil</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.linkButton}>
+      <TouchableOpacity style={styles.linkButton} onPress={handleLogout}>
         <Text style={styles.linkText}>Cerrar Sesión</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.linkButton}>
+      <TouchableOpacity style={styles.linkButton} onPress={handleDeleteAccount}>
         <Text style={styles.linkText}>Eliminar cuenta</Text>
       </TouchableOpacity>
     </ScrollView>

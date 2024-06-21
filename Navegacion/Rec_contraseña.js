@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, View, TouchableOpacity, Alert, Image } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
-export default function App() {
+export default function Rec_contraseña() {
     const [email, setEmail] = useState('');
-    const [submitted, setSubmitted] = useState(false);
+    const navigation = useNavigation();
 
     const handleSubmit = () => {
         if (email) {
             if (email.includes('@gmail.com') || email.includes('@hotmail.com') || email.includes('@ucr.ac.cr')) {
-                setSubmitted(true);
-                Alert.alert('Éxito', 'Su solicitud ha sido enviada');
+                Alert.alert('Éxito', 'Su nueva clave ha sido enviada a su correo electrónico', [
+                    { text: 'OK', onPress: () => navigation.navigate('Sesion') }
+                ]);
                 setEmail('');
             } else {
                 Alert.alert('Error', 'El correo electrónico debe incluir un dominio válido');
-            } setEmail('');
-
+                setEmail('');
+            }
         } else {
             Alert.alert('Error', 'Por favor, introduzca su correo electrónico');
             setEmail('');
@@ -39,7 +41,6 @@ export default function App() {
             <TouchableOpacity style={styles.button} onPress={handleSubmit}>
                 <Text style={styles.buttonText}>Enviar</Text>
             </TouchableOpacity>
-            
         </View>
     );
 }
@@ -85,40 +86,11 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
-        width: 341,
+        width: 350,
         height: 41,
     },
     buttonText: {
         color: 'white',
         fontSize: 16,
-    },
-    successContainer: {
-        marginTop: 20,
-        alignItems: 'center',
-    },
-    successMessage: {
-        color: 'white',
-        fontSize: 16,
-        marginBottom: 10,
-    },
-    acceptButton: {
-        width: '100%',
-        height: 40,
-        backgroundColor: '#87B4B5',
-        borderRadius: 5,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    acceptButtonText: {
-        color: 'white',
-        fontSize: 16,
-    },
-    iconContainer: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        width: 50,
     },
 });

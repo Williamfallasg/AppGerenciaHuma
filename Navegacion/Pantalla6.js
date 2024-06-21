@@ -1,7 +1,9 @@
 import React from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 const Pantalla6 = () => {
+  const navigation = useNavigation();
   const handlePress = () => {
     // Aquí puedes manejar la acción del enlace
   };
@@ -9,48 +11,60 @@ const Pantalla6 = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.navItem}>Home</Text>
+      <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+          <Text style={styles.navItem}>Home</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => navigation.navigate('Pantalla7')}>
         <Text style={styles.navItem}>Cursos</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => navigation.navigate('Pantalla8')}>
         <Text style={styles.navItem}>Cursos en línea</Text>
+        </TouchableOpacity>
+        
+        
       </View>
-      <View style={styles.mainContent}>
-        <View style={styles.iconContainer}>
-          <Image source={require('../assets/image4.png')} style={styles.mainImage} />
-        </View>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.mainContent}>
+          <View style={styles.iconContainer}>
+            <Image source={require('../assets/image4.png')} style={styles.mainImage} />
+          </View>
 
-        <Text style={styles.mainTitle}>Aprender en línea</Text>
+          <Text style={styles.mainTitle}>Aprender en línea</Text>
 
-        <View style={styles.searchBar}>
-          <TextInput style={styles.searchInput} placeholder="Inglés" />
-          <TouchableOpacity style={styles.searchButton}>
-            <Text style={styles.searchButtonText}>🔍</Text>
-          </TouchableOpacity>
+          <View style={styles.searchBar}>
+            <TextInput style={styles.searchInput} placeholder="Inglés" />
+            <TouchableOpacity style={styles.searchButton}>
+              <Text style={styles.searchButtonText}>🔍</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.filterContainer}>
+            <TouchableOpacity style={styles.filterButton}>
+              <Text style={styles.filterText}>Tema</Text>
+              <Text style={styles.filterIcon}>👆</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.filterButton}>
+              <Text style={styles.filterText}>Nivel</Text>
+              <Text style={styles.filterIcon}>👆</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.filterButton}>
+              <Text style={styles.filterText}>Ubicación</Text>
+              <Text style={styles.filterIcon}>👆</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.footerNav}>
+            <Text style={styles.footerNavItem}>Home</Text>
+            <Text style={styles.footerNavItem}>Cursos</Text>
+            <Text style={styles.footerNavItem}>Cursos en línea</Text>
+          </View>
+          <View style={styles.descriptionContainer}>
+            <Text style={styles.descriptionText}>
+              El aprendizaje en línea es una forma de aprender de forma remota sin asistir a lecciones en un aula o tener contacto cara a cara con un tutor.
+            </Text>
+          </View>
         </View>
-        <View style={styles.filterContainer}>
-          <TouchableOpacity style={styles.filter1Button}>
-            <Text style={styles.filterText}>Tema</Text>
-            <Text style={styles.filterIcon}>👆</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.filter2Button}>
-            <Text style={styles.filterText}>Nivel</Text>
-            <Text style={styles.filterIcon}>👆</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.filter3Button}>
-            <Text style={styles.filterText}>Ubicación</Text>
-            <Text style={styles.filterIcon}>👆</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.footerNav}>
-          <Text style={styles.footer1NavItem}>Home</Text>
-          <Text style={styles.footer2NavItem}>Cursos</Text>
-          <Text style={styles.footer3NavItem}>Cursos en línea</Text>
-        </View>
-        <View style={styles.descriptionContainer}>
-          <Text style={styles.descriptionText}>
-            El aprendizaje en línea es una forma de aprender de forma remota sin asistir a lecciones en un aula o tener contacto cara a cara con un tutor.
-          </Text>
-        </View>
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -60,26 +74,29 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
-    padding: 0,
-    marginTop: 0,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     backgroundColor: '#2C6C6C',
-    paddingVertical: 20,
-    marginBottom: 10,
-    marginTop: 20,
-    width: 393,
+    marginTop: 50,
+    marginBottom: 20,
+    width: 405,
     height: 79,
+    alignItems: 'center',
   },
   navItem: {
     color: 'white',
     fontWeight: 'bold',
   },
+  scrollContent: {
+    alignItems: 'center',
+    padding: 20,
+  },
   mainContent: {
     alignItems: 'center',
     marginTop: 20,
+    width: '100%',
   },
   iconContainer: {
     borderColor: '#004b44',
@@ -97,9 +114,9 @@ const styles = StyleSheet.create({
   },
   mainTitle: {
     fontSize: 20,
-    color: '#004b44',
+    color: '#3E838C',
     marginBottom: 20,
-    width: 320, 
+    width: 320,
     textAlign: 'left',
     fontWeight: 'bold',
   },
@@ -107,6 +124,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
+    width: '100%',
   },
   searchInput: {
     flex: 1,
@@ -133,36 +151,16 @@ const styles = StyleSheet.create({
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 5,
+    marginBottom: 20,
+    width: '100%',
   },
-  filter1Button: {
+  filterButton: {
     alignItems: 'center',
     padding: 10,
     backgroundColor: '#8EBDB6',
     borderRadius: 10,
     paddingVertical: 20,
-    margin: 20,
-    width: 107,
-    height: 74,
-  },
-  filter2Button: {
-    alignItems: 'center',
-    padding: 10,
-    backgroundColor: '#8EBDB6',
-    borderRadius: 10,
-    paddingVertical: 20,
-    margin: 20,
-    width: 107,
-    height: 74,
-  },
-  filter3Button: {
-    alignItems: 'center',
-    padding: 10,
-    backgroundColor: '#8EBDB6',
-    borderRadius: 10,
-    width: '30%',
-    paddingVertical: 20,
-    margin: 20,
+    margin: 10,
     width: 107,
     height: 74,
   },
@@ -176,25 +174,11 @@ const styles = StyleSheet.create({
   footerNav: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginVertical: 20,
     paddingVertical: 20,
-    width: 393,
-    height: 79,
-    color: '#195E63',
+    width: '100%',
+    backgroundColor: '#FFFFFF',
   },
   footerNavItem: {
-    color: '#195E63',
-  },
-  footer1NavItem: {
-    color: '#195E63',
-    textDecorationLine: 'underline',
-    fontWeight: 'bold',
-  },
-  footer2NavItem: {
-    color: '#195E63',
-    fontWeight: 'bold',
-  },
-  footer3NavItem: {
     color: '#195E63',
     fontWeight: 'bold',
   },
@@ -202,16 +186,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#3E838C',
     padding: 10,
     borderRadius: 25,
-    marginBottom: 5,
-    width: 371,
-    height: 165,
-    margin: 1,
+    marginBottom: 20,
+    width: '100%',
   },
   descriptionText: {
     color: 'white',
     textAlign: 'left',
     fontSize: 20,
-    justifyContent: 'center',
   },
 });
 

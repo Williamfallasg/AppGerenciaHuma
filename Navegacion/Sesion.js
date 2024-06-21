@@ -1,70 +1,66 @@
-import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import  getDocument  from "../firebase/getData"
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'; 
+import getDocument from '../firebase/getData';
 
 const Sesion = () => {
   const navigation = useNavigation();
 
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
-  const [usuarios, setUsuarios] = useState({});
-
 
   const handleSubmit = async () => {
-    await getDocument("usuarios", correo).then(usuario =>{
-      if((usuario.correo == correo) && (usuario.contrasena == contrasena)){
-        navigation.navigate("Home")
+    try {
+      const usuario = await getDocument('usuarios', correo);
+      if (usuario.correo === correo && usuario.contrasena === contrasena) {
+        navigation.navigate('Home');
+      } else {
+        Alert.alert('Error', 'Correo o contraseña incorrectos');
       }
-    }) 
-
-   
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo iniciar sesión. Intente de nuevo.');
+    }
   };
 
   return (
     <View style={styles.container}>
-      
       <TouchableOpacity onPress={() => navigation.navigate('Registrarse')}>
         <Text style={styles.register}>Registrar</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('EditPerfil')}>
-        <Text style={styles.register}>EditPerfil</Text>
+      <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+        <Text style={styles.register}>home</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Pantalla6')}>
-        <Text style={styles.register}>Home</Text>
-      </TouchableOpacity>
-
       <Image source={require('../assets/imageLog.png')} style={styles.logo} />
-
       <Text style={styles.label}>Correo</Text>
       <View style={styles.inputContainer}>
-      <Image source={require('../assets/imageEmail.png')} style={styles.icon} />
-        <TextInput 
-          style={styles.input} 
+        <Image source={require('../assets/imageEmail.png')} style={styles.icon} />
+        <TextInput
+          style={styles.input}
           placeholder="example@gmail.com"
-          defaultValue=""
+          value={correo}
+          onChangeText={setCorreo}
+          keyboardType="email-address"
+          autoCapitalize="none"
         />
       </View>
       <Text style={styles.label}>Contraseña</Text>
       <View style={styles.inputContainer}>
-      <Image source={require('../assets/imageLock.png')} style={styles.icon} />
-        <TextInput 
-          style={styles.input} 
+        <Image source={require('../assets/imageLock.png')} style={styles.icon} />
+        <TextInput
+          style={styles.input}
           placeholder=""
           secureTextEntry
-          defaultValue=""
+          value={contrasena}
+          onChangeText={setContrasena}
         />
       </View>
       <TouchableOpacity style={styles.button} onPress={handleSubmit}>
         <Text style={styles.buttonText}>Iniciar sesión</Text>
       </TouchableOpacity>
-      
       <TouchableOpacity onPress={() => navigation.navigate('Rec_contraseña')}>
-      <Text style={styles.forgotPassword}>Recuperar contraseña</Text>
+        <Text style={styles.forgotPassword}>Recuperar contraseña</Text>
       </TouchableOpacity>
     </View>
-    
   );
 };
 
@@ -86,7 +82,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     marginBottom: 10,
-  },
+    },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -105,13 +101,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   button: {
-    backgroundColor: '#6ABFA0',
+    backgroundColor: '#87B4B5',
     borderRadius: 5,
     paddingVertical: 10,
     paddingHorizontal: 20,
     marginBottom: 10,
     width: 314,
     height: 44,
+    marginTop: 18
   },
   buttonText: {
     color: 'white',
@@ -120,7 +117,9 @@ const styles = StyleSheet.create({
   },
   forgotPassword: {
     color: 'lightgray',
-    marginBottom: 20,
+    marginBottom: 30,
+    marginTop: 20,
+    fontSize: 16, 
   },
   register: {
     color: 'white',
@@ -128,7 +127,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     width: 300,
     height: 50,
-    textAlign:'right',
+    textAlign: 'right',
     fontSize: 16,
     textDecorationLine: 'underline',
   },

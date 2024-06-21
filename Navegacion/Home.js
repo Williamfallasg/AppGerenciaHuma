@@ -1,23 +1,28 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image,Linking } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
-
+import { useNavigation } from '@react-navigation/native';
 
 
 const Home = () => {
+  const navigation = useNavigation();
+
   const handlePress = () => {
     Linking.openURL('https://sdgs.un.org/2030agenda');
   };
 
   return (
-    
     <View style={styles.container}>
       <View style={styles.navbar}>
         <Text style={styles.navbarText}>Home</Text>
-        <Text style={styles.navbarText}>News</Text>
+        
+        <TouchableOpacity onPress={() => navigation.navigate('Pantalla6')}>
         <Text style={styles.navbarText}>About</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity onPress={() => navigation.navigate('EditPerfil')}>
+          <Text style={styles.navbarText}>Edit Profile</Text>
+        </TouchableOpacity>
       </View>
-
 
       <Text style={styles.header}>Welcome to United Nations</Text>
       <View style={styles.searchContainer}>
@@ -27,14 +32,12 @@ const Home = () => {
         </TouchableOpacity>
       </View>
 
-
       <TouchableOpacity style={styles.mainButton}>
         <Text style={styles.mainButtonText}>LOS 17 OBJETIVOS</Text>
       </TouchableOpacity>
 
       <Image source={require('../assets/image3.png')} style={styles.mainImage} />
 
-      <View style={styles.container}>
       <View style={styles.storyContainer}>
         <TouchableOpacity style={styles.subButton}>
           <Text style={styles.subButtonText}>Historias</Text>
@@ -44,30 +47,27 @@ const Home = () => {
         </Text>
       </View>
     </View>
-
-      
-
-    </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    padding: 20,
+    padding: 0,
+    marginTop: 30,
+    width: '100%',
   },
   navbar: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    width: '100%',
     backgroundColor: '#2C6C6C',
-    paddingVertical: 10,
+    marginTop: 50,
     marginBottom: 20,
-    marginTop:40,
-    width: 393,
-    height: 76,
+    width: 405,
+    height: 79,
+    alignItems: 'center',
   },
   navbarText: {
     color: 'white',
