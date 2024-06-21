@@ -14,7 +14,7 @@ const Sesion = () => {
       await signInWithEmailAndPassword(auth, correo, contrasena);
       setCorreo('');
       setContrasena('');
-      Alert.alert('Bienvenido al sistema de EDUCATE', 'Inicio de sesión exitoso');
+      Alert.alert('Bienvenido al sistema de EDUCATE-2030');
       navigation.navigate('Home');
     } catch (error) {
       setCorreo('');
