@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   },
   navbarText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 20,
   },
   header: {
     fontSize: 24,

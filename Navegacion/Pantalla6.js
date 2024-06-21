@@ -85,6 +85,7 @@ const styles = StyleSheet.create({
   navItem: {
     color: 'white',
     fontWeight: 'bold',
+    fontSize: 20,
   },
   scrollContent: {
     alignItems: 'center',

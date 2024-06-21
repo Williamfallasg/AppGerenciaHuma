@@ -36,7 +36,7 @@ const Pantalla9 = () => {
                 </View>
                 <View style={styles.course}>
                     <View style={styles.course1}>
-                        <Text style={styles.courseTitle}>Asistencia técnica</Text>
+                        <Text style={styles.courseTitle1}>Asistencia técnica</Text>
                     </View>
                     <Image source={require('../assets/image16.png')} style={styles.courseImage} />
                 </View>
@@ -81,28 +81,30 @@ const styles = StyleSheet.create({
     subNavItem: {
         color: 'white',
         fontWeight: 'bold',
-        fontSize: 16,
+        fontSize: 20,
     },
     courseContainer: {
-        padding: 20,
+        padding: 10,
+        marginTop: 20
     },
     course: {
         backgroundColor: '#FFFFFF',
-        padding: 0,
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 10,
-        borderColor: '#ccc',
-        borderWidth: 3,
-        width: 350,
+        borderColor: '#3E838C',
+        borderWidth: 2,
+        width: 361,
         height: 195,
     },
     course1: {
-        backgroundColor: '#195E63',
-        flexDirection: 'row',
-        alignItems: 'center',
-        width: 168,
-        height: 195,
+    backgroundColor: '#195E63',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 186, 
+    height: 195,
+    padding: 30,
+
     },
     courseImage: {
         width: 149,
@@ -110,10 +112,18 @@ const styles = StyleSheet.create({
         marginLeft: 20,
     },
     courseTitle: {
+        fontSize: 17,
+        color: 'white',
+        flex: 1,
+        textAlign: 'center',
+        marginTop: 50
+    },
+    courseTitle1: {
         fontSize: 18,
         color: 'white',
         flex: 1,
         textAlign: 'center',
+        marginTop: 50
     },
 });
 
