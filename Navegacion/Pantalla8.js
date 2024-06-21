@@ -1,7 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Pantalla7 from './Pantalla7';
 
 const Pantalla8 = () => {
   const navigation = useNavigation();

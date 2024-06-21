@@ -1,13 +1,10 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from 'react-native';
-import Pantalla8 from './Pantalla8';
 import { useNavigation } from '@react-navigation/native';
 
 const Pantalla9 = () => {
     const navigation = useNavigation();
-    const handlePress = () => {
-        // Aquí puedes manejar la acción del enlace
-    };
+    
     return (
         <ScrollView style={styles.container}>
             <View style={styles.header}>

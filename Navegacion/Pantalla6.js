@@ -4,10 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 
 const Pantalla6 = () => {
   const navigation = useNavigation();
-  const handlePress = () => {
-    // Aquí puedes manejar la acción del enlace
-  };
-
+ 
   return (
     <View style={styles.container}>
       <View style={styles.header}>

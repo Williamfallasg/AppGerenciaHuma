@@ -2,7 +2,6 @@ import React from 'react';
 import { StyleSheet, Text, View, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-// Componente para la barra de navegación
 const Navbar = () => {
     const navigation = useNavigation();
     return (
@@ -11,14 +10,9 @@ const Navbar = () => {
             <TouchableOpacity onPress={() => navigation.navigate('Home')}>
                 <Text style={styles.navItem}>Home</Text>
             </TouchableOpacity>
-
-
-
             <TouchableOpacity onPress={() => navigation.navigate('Pantalla10')}>
                 <Text style={styles.navItem1}>Cursos</Text>
             </TouchableOpacity>
-
-
             <TouchableOpacity onPress={() => navigation.navigate('Pantalla7')}>
                 <Text style={styles.navItem2}>Matrícula</Text>
             </TouchableOpacity>

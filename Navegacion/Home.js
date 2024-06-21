@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image,Linking } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 
@@ -14,11 +14,11 @@ const Home = () => {
     <View style={styles.container}>
       <View style={styles.navbar}>
         <Text style={styles.navbarText}>Home</Text>
-        
+
         <TouchableOpacity onPress={() => navigation.navigate('Pantalla6')}>
-        <Text style={styles.navbarText}>About</Text>
+          <Text style={styles.navbarText}>About</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity onPress={() => navigation.navigate('EditPerfil')}>
           <Text style={styles.navbarText}>Edit Profile</Text>
         </TouchableOpacity>
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   mainButtonText: {
     color: 'white',
     fontSize: 18,
-    textAlign:'center',
+    textAlign: 'center',
   },
   mainImage: {
     width: 355,
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   subButtonText: {
     color: 'white',
     fontSize: 16,
-    textAlign:'center'
+    textAlign: 'center'
   },
   contentText: {
     fontSize: 16,
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     padding: 30,
     borderRadius: 10,
   },
-  
+
 });
 
 export default Home;

@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     marginBottom: 10,
-    },
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     color: 'lightgray',
     marginBottom: 30,
     marginTop: 20,
-    fontSize: 16, 
+    fontSize: 16,
   },
   register: {
     color: 'white',
