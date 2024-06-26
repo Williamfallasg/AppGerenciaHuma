@@ -13,6 +13,7 @@ import Pantalla9 from './Navegacion/Pantalla9';
 import Pantalla10 from './Navegacion/Pantalla10';
 import Pantalla11 from './Navegacion/Pantalla11';
 import EditPerfil from './Navegacion/EditPerfil';
+import ConsumiApi from './Navegacion/ConsumiApi';
 
 const Stack = createStackNavigator();
 
@@ -74,6 +75,11 @@ const Navegacion = () => {
         <Stack.Screen
           name="Pantalla11"
           component={Pantalla11}
+          options={{ headerShown: false }}
+        />
+         <Stack.Screen
+          name="ConsumiApi"
+          component={ConsumiApi}
           options={{ headerShown: false }}
         />
         

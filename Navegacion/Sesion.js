@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 
@@ -28,7 +28,7 @@ const Sesion = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <TouchableOpacity onPress={() => navigation.navigate('Registrarse')}>
         <Text style={styles.register}>Registrar</Text>
       </TouchableOpacity>
@@ -51,7 +51,7 @@ const Sesion = () => {
         <Image source={require('../assets/imageLock.png')} style={styles.icon} />
         <TextInput
           style={styles.input}
-          placeholder=""
+          placeholder="******"
           secureTextEntry
           value={contrasena}
           onChangeText={setContrasena}
@@ -64,13 +64,13 @@ const Sesion = () => {
       <TouchableOpacity onPress={() => navigation.navigate('Rec_contraseña')}>
         <Text style={styles.forgotPassword}>Recuperar contraseña</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: '#195E63',
     alignItems: 'center',
     justifyContent: 'center',

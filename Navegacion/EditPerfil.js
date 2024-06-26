@@ -1,15 +1,40 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
+import { getAuth, signOut, deleteUser, updatePassword } from 'firebase/auth';
+import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { firestore } from '../firebase/firebase';
 
 const EditPerfil = () => {
   const navigation = useNavigation();
-  const [name, setName] = useState('William');
-  const [surname, setSurname] = useState('Fallas González');
-  const [birthDate, setBirthDate] = useState('12/06/1994');
-  const [password, setPassword] = useState('Xtyywuwwo-17');
-  const [profileImage, setProfileImage] = useState(require('../assets/imgL.png'));
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  const [name, setName] = useState('');
+  const [surname, setSurname] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [profileImage, setProfileImage] = useState(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (user) {
+        const userRef = doc(firestore, 'usuarios', user.email);
+        const docSnap = await getDoc(userRef);
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          setName(userData.nombre);
+          setSurname(userData.apellidos);
+          setEmail(userData.correo); 
+          setPassword(userData.contrasena); 
+          setProfileImage(userData.profileImage ? { uri: userData.profileImage } : require('../assets/imgL.png'));
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [user]);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -27,19 +52,56 @@ const EditPerfil = () => {
 
     if (!result.canceled) {
       setProfileImage({ uri: result.uri });
+      Alert.alert('Imagen seleccionada satisfactoriamente');
     }
   };
 
-  const handleUpdateProfile = () => {
-    Alert.alert('Perfil actualizado satisfactoriamente');
+  const handleUpdateProfile = async () => {
+    if (user) {
+      try {
+        const updateData = {
+          nombre: name,
+          apellidos: surname,
+          contrasena: password,
+        };
+
+        // Se actualiza los datos del usuario en Firestore
+        const userRef = doc(firestore, 'usuarios', user.email);
+        await updateDoc(userRef, updateData);
+
+        if (password) {
+          await updatePassword(user, password);
+        }
+
+        Alert.alert('Perfil actualizado satisfactoriamente');
+      } catch (error) {
+        Alert.alert('Error al actualizar perfil', error.message);
+      }
+    }
   };
 
-  const handleLogout = () => {
-    Alert.alert('Cerrando sesión');
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigation.navigate('Sesion');
+      Alert.alert('Cerrando sesión');
+    } catch (error) {
+      Alert.alert('Error al cerrar sesión', error.message);
+    }
   };
 
-  const handleDeleteAccount = () => {
-    Alert.alert('Cuenta eliminada');
+  const handleDeleteAccount = async () => {
+    if (user) {
+      try {
+        const userRef = doc(firestore, 'usuarios', user.email);
+        await deleteDoc(userRef);  
+        await deleteUser(user);    
+        Alert.alert('Cuenta eliminada');
+        navigation.navigate('Sesion'); 
+      } catch (error) {
+        Alert.alert('Error al eliminar cuenta', error.message);
+      }
+    }
   };
 
   return (
@@ -63,11 +125,12 @@ const EditPerfil = () => {
         onChangeText={setSurname}
       />
 
-      <Text style={styles.label}>Editar fecha de nacimiento</Text>
+      <Text style={styles.label}>Correo electrónico</Text>
       <TextInput
         style={styles.input}
-        value={birthDate}
-        onChangeText={setBirthDate}
+        value={email}
+        editable={false} 
+        keyboardType="email-address"
       />
 
       <Text style={styles.label}>Contraseña</Text>

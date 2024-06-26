@@ -39,11 +39,13 @@ const Pantalla10 = () => {
       </View>
 
       <View style={styles.subNavbar1}>
-      <TouchableOpacity onPress={() => navigation.navigate('Pantalla11')}>
-      <Text style={styles.subNavItem}>Mis cursos recientes</Text>
-                </TouchableOpacity>
-       
+        <TouchableOpacity onPress={() => navigation.navigate('Pantalla11')}>
+          <Text style={styles.subNavItem}>Mis cursos recientes</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => navigation.navigate('ConsumiApi')}>
         <Text style={styles.subNavItem}>Apoyo Docente</Text>
+        </TouchableOpacity>
       </View>
 
 

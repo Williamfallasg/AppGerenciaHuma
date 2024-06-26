@@ -12,7 +12,7 @@ const Pantalla6 = () => {
           <Text style={styles.navItem}>Home</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate('Pantalla7')}>
+        <TouchableOpacity onPress={() => navigation.navigate('Pantalla10')}>
         <Text style={styles.navItem}>Cursos</Text>
         </TouchableOpacity>
 

@@ -4,21 +4,32 @@ import { useNavigation } from '@react-navigation/native';
 
 const Pantalla9 = () => {
     const navigation = useNavigation();
-    
+
     return (
         <ScrollView style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.navItem}>Home</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+                    <Text style={styles.navItem}>Home</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Pantalla7')}>
                 <Text style={styles.navItem}>Cursos</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Pantalla7')}>
                 <Text style={styles.navItem}>Matrícula</Text>
+                </TouchableOpacity>           
+
+
+                
             </View>
 
             <View style={styles.subHeader}>
                 <TouchableOpacity onPress={() => navigation.navigate('Pantalla10')}>
                     <Text style={styles.subNavItem}>Mis cursos</Text>
                 </TouchableOpacity>
-                
-                <Text style={styles.subNavItem}>Apoyo Docente</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('ConsumiApi')}>
+
+                <Text style={styles.subNavItem}>Cursos virtuales</Text>
+                </TouchableOpacity>
             </View>
 
             <View style={styles.courseContainer}>
@@ -98,12 +109,12 @@ const styles = StyleSheet.create({
         height: 195,
     },
     course1: {
-    backgroundColor: '#195E63',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 186, 
-    height: 195,
-    padding: 30,
+        backgroundColor: '#195E63',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 186,
+        height: 195,
+        padding: 30,
 
     },
     courseImage: {
