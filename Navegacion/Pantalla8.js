@@ -1,9 +1,31 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { getAuth } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { firestore } from '../firebase/firebase';
 
 const Pantalla8 = () => {
+  const [userName, setUserName] = useState('Estudiante');
   const navigation = useNavigation();
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (user) {
+        const userRef = doc(firestore, 'usuarios', user.email);
+        const docSnap = await getDoc(userRef);
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          setUserName(userData.nombre || 'Estudiante');
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [user]);
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -12,11 +34,12 @@ const Pantalla8 = () => {
           <Text style={styles.navItem}>Matrícula</Text>
         </TouchableOpacity>
 
-        <Text style={styles.navItem2}>William Estudiante</Text>
+        <Text style={styles.navItem2}>{userName} Estudiante</Text>
+        
       </View>
 
       <View style={styles.welcomeContainer}>
-        <Text style={styles.welcomeText}>Bienvenido, William Fallas</Text>
+        <Text style={styles.welcomeText}>Bienvenido, {userName}</Text>
       </View>
 
       <View style={styles.courseContainer}>
@@ -53,7 +76,6 @@ const styles = StyleSheet.create({
     padding: 0,
     marginTop: 30,
     width: '100%',
-
   },
   header: {
     flexDirection: 'row',
@@ -68,7 +90,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginRight: 20,
     width: 152,
-    height: 26,
+    height: 36,
   },
   navItem2: {
     color: 'white',
@@ -78,27 +100,25 @@ const styles = StyleSheet.create({
     width: 104,
     height: 48,
   },
-
   welcomeContainer: {
     backgroundColor: '#3E838C',
     padding: 20,
     marginTop: 10,
     width: 405,
     height: 57,
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   welcomeText: {
     color: 'white',
     fontSize: 20,
     width: 253,
     height: 24,
-    textAlign: 'center'
+    textAlign: 'center',
   },
   courseContainer: {
     padding: 25,
     marginTop: 5,
-    justifyContent: 'center'
-
+    justifyContent: 'center',
   },
   course: {
     backgroundColor: '#FFFFFF',
@@ -111,12 +131,11 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     width: 343,
     height: 116,
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   course1Image: {
     width: 30,
     height: 28.64,
-
   },
   courseImage: {
     width: 91,
@@ -139,7 +158,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     width: 161,
     height: 52,
-
   },
   courseTitle: {
     fontSize: 20,
@@ -147,7 +165,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     width: 152,
     height: 25,
-
   },
 });
 

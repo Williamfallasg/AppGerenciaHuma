@@ -165,8 +165,10 @@ const styles = StyleSheet.create({
   },
   profileImage: {
     width: 154,
-    height: 131,
-    borderRadius: 50,
+    height: 154,
+    borderRadius: 77, 
+    borderWidth: 5,
+    borderColor: 'white',
     marginBottom: 20,
     marginTop: 30,
   },
