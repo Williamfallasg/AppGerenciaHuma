@@ -1,166 +1,127 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Linking } from 'react-native';
+import React, { useContext, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useLanguage } from '../context/LanguageContext';
+import { useUserRole } from '../context/UserRoleContext'; // Importar el contexto del rol del usuario
 
+const { width, height } = Dimensions.get('window');
 
 const Home = () => {
   const navigation = useNavigation();
+  const { language } = useLanguage();
+  const { userRole } = useUserRole(); // Obtener el rol del usuario
 
-  const handlePress = () => {
-    Linking.openURL('https://sdgs.un.org/2030agenda');
+  useEffect(() => {
+    console.log('User role:', userRole); // Verificar el rol del usuario en la consola
+  }, [userRole]);
+
+  const handleLogout = () => {
+    navigation.navigate('Sesion');
+  };
+
+  const navigateToProgramForm = () => {
+    navigation.navigate('ProgramForm');
+  };
+
+  const navigateToProjectForm = () => {
+    navigation.navigate('ProjectForm');
+  };
+
+  const navigateToRegisterUser = () => {
+    navigation.navigate('RegisterUser');
+  };
+
+  const navigateToGenerateReport = () => {
+    navigation.navigate('GenerateReport');
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.navbar}>
-        <Text style={styles.navbarText}>Home</Text>
+      {/* El logotipo se muestra para ambos roles */}
+      <Image source={require('../assets/image.png')} style={styles.logo} />
 
-        <TouchableOpacity onPress={() => navigation.navigate('Pantalla6')}>
-          <Text style={styles.navbarText}>About</Text>
+      {userRole === 'admin' && (
+        <>
+          <TouchableOpacity style={styles.mainButton} onPress={navigateToProgramForm}>
+            <Text style={styles.mainButtonText}>
+              {language === 'es' ? 'Registrar programa' : 'Register Program'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.mainButton} onPress={navigateToProjectForm}>
+            <Text style={styles.mainButtonText}>
+              {language === 'es' ? 'Registrar proyecto' : 'Register Project'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.mainButton} onPress={navigateToGenerateReport}>
+            <Text style={styles.mainButtonText}>
+              {language === 'es' ? 'Generar informe' : 'Generate Report'}
+            </Text>
+          </TouchableOpacity>
+        </>
+      )}
+
+      {/* Mostrar el botón "Registrar beneficiário" tanto para 'admin' como para 'user' */}
+      {(userRole === 'admin' || userRole === 'user') && (
+        <TouchableOpacity style={styles.mainButton} onPress={navigateToRegisterUser}>
+          <Text style={styles.mainButtonText}>
+            {language === 'es' ? 'Registrar beneficiário' : 'Register Beneficiary'}
+          </Text>
         </TouchableOpacity>
+      )}
 
-        <TouchableOpacity onPress={() => navigation.navigate('EditPerfil')}>
-          <Text style={styles.navbarText}>Edit Profile</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Text style={styles.header}>Welcome to United Nations</Text>
-      <View style={styles.searchContainer}>
-        <TextInput style={styles.searchInput} placeholder="Search" />
-        <TouchableOpacity style={styles.searchButton}>
-          <Text style={styles.searchButtonText}>🔍</Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity style={styles.mainButton}>
-        <Text style={styles.mainButtonText}>LOS 17 OBJETIVOS</Text>
-      </TouchableOpacity>
-
-      <Image source={require('../assets/image3.png')} style={styles.mainImage} />
-
-      <View style={styles.storyContainer}>
-        <TouchableOpacity style={styles.subButton}>
-          <Text style={styles.subButtonText}>Historias</Text>
-        </TouchableOpacity>
-        <Text style={styles.contentText} onPress={handlePress}>
-          The 2030 Agenda for Sustainable Development.
+      <TouchableOpacity style={styles.exitButton} onPress={handleLogout}>
+        <Text style={styles.exitButtonText}>
+          {language === 'es' ? 'Salir' : 'Exit'}
         </Text>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 };
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    padding: 0,
-    marginTop: 30,
-    width: '100%',
-  },
-  navbar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#2C6C6C',
-    marginTop: 50,
-    marginBottom: 20,
-    width: 405,
-    height: 79,
+    backgroundColor: '#D3D3D3',
     alignItems: 'center',
+    justifyContent: 'center',
+    padding: width > 600 ? 20 : 10, // Ajuste dinámico del padding para pantallas más grandes
   },
-  navbarText: {
-    color: 'white',
-    fontSize: 20,
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    width: '100%',
-    marginBottom: 20,
-    alignItems: 'center',
-  },
-  searchInput: {
-    flex: 1,
-    padding: 10,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 5,
-    marginRight: 10,
-  },
-  searchButton: {
-    padding: 10,
-    backgroundColor: '#2C6C6C',
-    borderRadius: 5,
-  },
-  searchButtonText: {
-    color: 'white',
-    fontSize: 16,
+  logo: {
+    width: width * 0.5,
+    height: undefined,
+    aspectRatio: 1, // Mantiene la proporción original de la imagen
+    marginBottom: height * 0.05,
   },
   mainButton: {
-    backgroundColor: '#2C6C6C',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    marginBottom: 20,
-    width: 268,
-    height: 50,
-
+    backgroundColor: '#67A6F2',
+    borderRadius: 10,
+    paddingVertical: height * 0.02,
+    paddingHorizontal: width * 0.1,
+    marginBottom: height * 0.02,
+    width: width > 600 ? '60%' : '80%', // Ajuste dinámico del ancho del botón para pantallas más grandes
+    alignItems: 'center',
   },
   mainButtonText: {
-    color: 'white',
-    fontSize: 18,
+    color: 'black',
+    fontSize: width > 600 ? 20 : width * 0.05, // Ajuste dinámico del tamaño de la fuente
     textAlign: 'center',
   },
-  mainImage: {
-    width: 355,
-    height: 261,
-    resizeMode: 'contain',
-    marginBottom: 20,
-
-  },
-  subButton: {
-    backgroundColor: '#2C6C6C',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    marginBottom: 10,
-    width: 268,
-    height: 50,
-    fontSize: 18,
-
-  },
-  subButtonText: {
-    color: 'white',
-    fontSize: 16,
-    textAlign: 'center'
-  },
-  contentText: {
-    fontSize: 16,
-    textAlign: 'center',
-    textDecorationLine: 'underline',
-  },
-
-  container: {
-    flex: 1,
-    justifyContent: 'left',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-  },
-  storyContainer: {
-    alignItems: 'left',
-    width: '80%',
-    borderWidth: 2,
-    borderColor: '#438a92',
-    padding: 30,
+  exitButton: {
+    backgroundColor: '#F28C32',
     borderRadius: 10,
+    paddingVertical: height * 0.02,
+    paddingHorizontal: width * 0.1,
+    marginTop: height * 0.03,
+    width: width > 600 ? '60%' : '80%', // Ajuste dinámico del ancho del botón para pantallas más grandes
+    alignItems: 'center',
   },
-
+  exitButtonText: {
+    color: 'white',
+    fontSize: width > 600 ? 20 : width * 0.05, // Ajuste dinámico del tamaño de la fuente
+    textAlign: 'center',
+  },
 });
 
 export default Home;

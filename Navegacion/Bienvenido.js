@@ -1,13 +1,17 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Image, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { View, Text, TextInput, Image, StyleSheet, TouchableOpacity, Alert, Dimensions } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from "@react-navigation/native";
 import { StatusBar } from 'expo-status-bar';
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { getDocs, collection, query, where } from "firebase/firestore";
 import { auth, db } from "../../../practica_and/my-project/AccesoFirebase";
+import { useLanguage } from '../context/LanguageContext';
+
+const { width, height } = Dimensions.get('window');
 
 const Bienvenido = () => {
+    const { language } = useLanguage()
     const navigation = useNavigation();
 
     const [email, setEmail] = useState('');
@@ -104,29 +108,29 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         alignItems: 'center',
         justifyContent: 'flex-start',
-        paddingTop: 50,
+        paddingTop: height * 0.05, // Ajuste dinámico del padding superior
     },
     txtBienvenido: {
-        fontSize: 30,
+        fontSize: width * 0.08, // Ajuste dinámico del tamaño de fuente
         fontWeight: 'bold',
         color: '#34434D',
         textAlign: 'left',
-        marginTop: 20,
+        marginTop: height * 0.02, // Ajuste dinámico del margen superior
     },
     titulo: {
-        fontSize: 18,
+        fontSize: width * 0.05, // Ajuste dinámico del tamaño de fuente
         fontWeight: '300',
         color: 'gray',
         textAlign: 'left',
-        marginTop: 10,
+        marginTop: height * 0.01, // Ajuste dinámico del margen superior
     },
     txtInput: {
         width: '80%',
-        height: 50,
+        height: height * 0.06, // Ajuste dinámico de la altura
         borderRadius: 25,
         borderWidth: 1,
         paddingLeft: 20,
-        marginTop: 20,
+        marginTop: height * 0.02, // Ajuste dinámico del margen superior
         borderColor: 'grey',
         backgroundColor: '#F5F5F5',
         shadowColor: '#000',
@@ -136,16 +140,16 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     txtOlvi_contra: {
-        fontSize: 16,
+        fontSize: width * 0.04, // Ajuste dinámico del tamaño de fuente
         color: "#00c1bb",
-        marginTop: 10,
+        marginTop: height * 0.01, // Ajuste dinámico del margen superior
         alignSelf: 'flex-start',
         textAlign: "right"
     },
     txtCrear_Cuenta: {
-        fontSize: 16,
+        fontSize: width * 0.04, // Ajuste dinámico del tamaño de fuente
         color: "#00c1bb",
-        marginTop: 10,
+        marginTop: height * 0.02, // Ajuste dinámico del margen superior
         textAlign: 'center',
     },
     txtRigi: {
@@ -154,19 +158,19 @@ const styles = StyleSheet.create({
     },
     img_Apli: {
         width: '100%',
-        height: 200,
+        height: height * 0.25, // Ajuste dinámico de la altura
         resizeMode: 'cover',
     },
     btnGradient: {
         borderRadius: 30,
-        width: 219,
-        height: 53,
-        marginTop: 35,
+        width: width * 0.6, // Ajuste dinámico del ancho
+        height: height * 0.07, // Ajuste dinámico de la altura
+        marginTop: height * 0.05, // Ajuste dinámico del margen superior
         justifyContent: 'center',
         alignItems: 'center',
     },
     btnText: {
-        fontSize: 18,
+        fontSize: width * 0.05, // Ajuste dinámico del tamaño de fuente
         fontWeight: 'bold',
         color: '#fff',
         textAlign: 'right',

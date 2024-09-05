@@ -1,29 +1,22 @@
-import { getApp, getApps, initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
-import 'firebase/compat/auth';
-import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
-
-import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
+// firebase.js
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";  // Importar Firestore
 
 // Configuración de Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyBAtFTalRRiIMhGpIGRkekMbJ1ECjosyjs",
-  authDomain: "proyect-multimedios.firebaseapp.com",
-  projectId: "proyect-multimedios",
-  storageBucket: "proyect-multimedios.appspot.com",
-  messagingSenderId: "474011568263",
-  appId: "1:474011568263:web:11afa7e87f3b7c7513d022",
-  measurementId: "G-94L76VSS0X"
+  apiKey: "AIzaSyC4ypoMBYIV0AQSLEseyZEt-KLx4RS3J1c",
+  authDomain: "appgerencia-c8669.firebaseapp.com",
+  projectId: "appgerencia-c8669",
+  storageBucket: "appgerencia-c8669.appspot.com",
+  messagingSenderId: "992957621777",
+  appId: "1:992957621777:web:f91074f67f771b1b42b3b0",
+  measurementId: "G-6MWKBZ866C"
 };
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp()
 
-// Initialize Firebase services
-const firestore = getFirestore(app)
-//const auth = getAuth(app)
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(ReactNativeAsyncStorage)
-});
+// Inicializar Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app); // Inicializar Auth
+const firestore = getFirestore(app); // Inicializar Firestore
 
-export { app, firestore, auth }
-
+export { auth, firestore }; // Exportar Auth y Firestore para usarlos en otras partes de la aplicación

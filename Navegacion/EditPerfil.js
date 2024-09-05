@@ -5,8 +5,10 @@ import { useNavigation } from '@react-navigation/native';
 import { getAuth, signOut, deleteUser, updatePassword } from 'firebase/auth';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { firestore } from '../firebase/firebase';
+import { useLanguage } from '../context/LanguageContext';
 
 const EditPerfil = () => {
+  const { language } = useLanguage();
   const navigation = useNavigation();
   const auth = getAuth();
   const user = auth.currentUser;
@@ -15,31 +17,42 @@ const EditPerfil = () => {
   const [surname, setSurname] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [profileImage, setProfileImage] = useState(null);
+  const [profileImage, setProfileImage] = useState(require('../assets/imgL.png'));
 
   useEffect(() => {
     const fetchUserData = async () => {
       if (user) {
-        const userRef = doc(firestore, 'usuarios', user.email);
-        const docSnap = await getDoc(userRef);
-        if (docSnap.exists()) {
-          const userData = docSnap.data();
-          setName(userData.nombre);
-          setSurname(userData.apellidos);
-          setEmail(userData.correo); 
-          setPassword(userData.contrasena); 
-          setProfileImage(userData.profileImage ? { uri: userData.profileImage } : require('../assets/imgL.png'));
+        try {
+          const userRef = doc(firestore, 'usuarios', user.email);
+          const docSnap = await getDoc(userRef);
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            setName(userData.nombre);
+            setSurname(userData.apellidos);
+            setEmail(userData.correo);
+            setPassword(userData.contrasena);
+            setProfileImage(userData.profileImage ? { uri: userData.profileImage } : require('../assets/imgL.png'));
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          Alert.alert(
+            language === 'es' ? 'Error' : 'Error',
+            language === 'es' ? 'No se pudo cargar los datos del perfil' : 'Could not load profile data'
+          );
         }
       }
     };
 
     fetchUserData();
-  }, [user]);
+  }, [user, language]);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      alert('Sorry, we need camera roll permissions to make this work!');
+      Alert.alert(
+        language === 'es' ? 'Permiso denegado' : 'Permission denied',
+        language === 'es' ? 'Se necesita permiso para acceder a la galería.' : 'Permission is needed to access the gallery.'
+      );
       return;
     }
 
@@ -50,9 +63,11 @@ const EditPerfil = () => {
       quality: 1,
     });
 
-    if (!result.canceled) {
+    if (!result.canceled && result.uri) {
       setProfileImage({ uri: result.uri });
-      Alert.alert('Imagen seleccionada satisfactoriamente');
+      Alert.alert(
+        language === 'es' ? 'Imagen seleccionada satisfactoriamente' : 'Image successfully selected'
+      );
     }
   };
 
@@ -62,20 +77,25 @@ const EditPerfil = () => {
         const updateData = {
           nombre: name,
           apellidos: surname,
-          contrasena: password,
         };
 
-        // Se actualiza los datos del usuario en Firestore
+        if (password && password !== '') {
+          await updatePassword(user, password);
+          updateData.contrasena = password;
+        }
+
         const userRef = doc(firestore, 'usuarios', user.email);
         await updateDoc(userRef, updateData);
 
-        if (password) {
-          await updatePassword(user, password);
-        }
-
-        Alert.alert('Perfil actualizado satisfactoriamente');
+        Alert.alert(
+          language === 'es' ? 'Perfil actualizado satisfactoriamente' : 'Profile updated successfully'
+        );
       } catch (error) {
-        Alert.alert('Error al actualizar perfil', error.message);
+        console.error("Error updating profile:", error);
+        Alert.alert(
+          language === 'es' ? 'Error al actualizar perfil' : 'Error updating profile',
+          error.message
+        );
       }
     }
   };
@@ -84,9 +104,15 @@ const EditPerfil = () => {
     try {
       await signOut(auth);
       navigation.navigate('Sesion');
-      Alert.alert('Cerrando sesión');
+      Alert.alert(
+        language === 'es' ? 'Sesión cerrada' : 'Session closed'
+      );
     } catch (error) {
-      Alert.alert('Error al cerrar sesión', error.message);
+      console.error("Error signing out:", error);
+      Alert.alert(
+        language === 'es' ? 'Error al cerrar sesión' : 'Error signing out',
+        error.message
+      );
     }
   };
 
@@ -94,132 +120,162 @@ const EditPerfil = () => {
     if (user) {
       try {
         const userRef = doc(firestore, 'usuarios', user.email);
-        await deleteDoc(userRef);  
-        await deleteUser(user);    
-        Alert.alert('Cuenta eliminada');
-        navigation.navigate('Sesion'); 
+        await deleteDoc(userRef);
+        await deleteUser(user);
+        Alert.alert(
+          language === 'es' ? 'Cuenta eliminada' : 'Account deleted'
+        );
+        navigation.navigate('Sesion');
       } catch (error) {
-        Alert.alert('Error al eliminar cuenta', error.message);
+        console.error("Error deleting account:", error);
+        Alert.alert(
+          language === 'es' ? 'Error al eliminar cuenta' : 'Error deleting account',
+          error.message
+        );
       }
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
       <Image source={profileImage} style={styles.profileImage} />
       <TouchableOpacity style={styles.changePhotoButton} onPress={pickImage}>
-        <Text style={styles.changePhotoButtonText}>Cambiar Foto</Text>
+        <Text style={styles.changePhotoButtonText}>
+          {language === 'es' ? 'Cambiar Foto' : 'Change Photo'}
+        </Text>
       </TouchableOpacity>
 
-      <Text style={styles.label}>Editar nombre</Text>
+      <Text style={styles.label}>
+        {language === 'es' ? 'Editar nombre' : 'Edit First Name'}
+      </Text>
       <TextInput
         style={styles.input}
         value={name}
         onChangeText={setName}
+        placeholder={language === 'es' ? 'Nombre' : 'First Name'}
+        placeholderTextColor="#B0B0B0"
       />
 
-      <Text style={styles.label}>Editar apellidos</Text>
+      <Text style={styles.label}>
+        {language === 'es' ? 'Editar apellidos' : 'Edit Last Name'}
+      </Text>
       <TextInput
         style={styles.input}
         value={surname}
         onChangeText={setSurname}
+        placeholder={language === 'es' ? 'Apellidos' : 'Last Name'}
+        placeholderTextColor="#B0B0B0"
       />
 
-      <Text style={styles.label}>Correo electrónico</Text>
+      <Text style={styles.label}>
+        {language === 'es' ? 'Correo electrónico' : 'Email'}
+      </Text>
       <TextInput
         style={styles.input}
         value={email}
-        editable={false} 
+        editable={false}
         keyboardType="email-address"
+        placeholderTextColor="#B0B0B0"
       />
 
-      <Text style={styles.label}>Contraseña</Text>
+      <Text style={styles.label}>
+        {language === 'es' ? 'Contraseña' : 'Password'}
+      </Text>
       <TextInput
         style={styles.input}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
+        placeholder={language === 'es' ? 'Contraseña' : 'Password'}
+        placeholderTextColor="#B0B0B0"
       />
 
       <TouchableOpacity style={styles.updateButton} onPress={handleUpdateProfile}>
-        <Text style={styles.buttonText}>Actualizar perfil</Text>
+        <Text style={styles.buttonText}>
+          {language === 'es' ? 'Actualizar perfil' : 'Update Profile'}
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.linkButton} onPress={handleLogout}>
-        <Text style={styles.linkText}>Cerrar Sesión</Text>
+        <Text style={styles.linkText}>
+          {language === 'es' ? 'Cerrar Sesión' : 'Sign Out'}
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.linkButton} onPress={handleDeleteAccount}>
-        <Text style={styles.linkText}>Eliminar cuenta</Text>
+        <Text style={styles.linkText}>
+          {language === 'es' ? 'Eliminar cuenta' : 'Delete Account'}
+        </Text>
       </TouchableOpacity>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  scrollContainer: {
     flexGrow: 1,
+    justifyContent: 'center',
     padding: 20,
-    backgroundColor: '#2C6C6C',
+    backgroundColor: '#D3D3D3',
     alignItems: 'center',
   },
   profileImage: {
     width: 154,
     height: 154,
-    borderRadius: 77, 
+    borderRadius: 77,
     borderWidth: 5,
     borderColor: 'white',
     marginBottom: 20,
     marginTop: 30,
   },
   changePhotoButton: {
-    backgroundColor: '#87B4B5',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    marginBottom: 20,
     width: 186,
     height: 47,
+    backgroundColor: '#67A6F2',
+    borderRadius: 25,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
   },
   changePhotoButtonText: {
-    color: 'white',
+    color: 'black',
     fontSize: 16,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    alignItems: 'center',
   },
   label: {
-    color: 'white',
     alignSelf: 'flex-start',
-    marginVertical: 5,
+    color: 'black',
+    fontSize: 18,
+    marginBottom: 10,
+    paddingHorizontal: 10,
   },
   input: {
     width: '100%',
-    padding: 10,
-    borderRadius: 5,
+    height: 40,
     backgroundColor: 'white',
+    borderRadius: 5,
+    paddingHorizontal: 10,
     marginBottom: 10,
   },
   updateButton: {
     width: '100%',
     height: 40,
-    backgroundColor: '#87B4B5',
+    backgroundColor: '#67A6F2',
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 20,
   },
+  buttonText: {
+    color: 'black',
+    fontSize: 16,
+  },
   linkButton: {
     marginVertical: 10,
   },
   linkText: {
-    color: 'white',
+    color: 'black',
     textDecorationLine: 'underline',
   },
 });
 
-export default EditPerfil;
+export default EditPerfil

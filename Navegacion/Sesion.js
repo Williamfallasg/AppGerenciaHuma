@@ -1,144 +1,205 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ScrollView, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { useLanguage } from '../context/LanguageContext';
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth, firestore } from '../firebase/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import Icon from 'react-native-vector-icons/Ionicons';
+
+const { width, height } = Dimensions.get('window');
 
 const Sesion = () => {
+
   const navigation = useNavigation();
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const { language, setLanguage } = useLanguage();
 
   const handleSubmit = async () => {
-    const auth = getAuth();
     try {
-      await signInWithEmailAndPassword(auth, correo, contrasena);
-      setCorreo('');
-      setContrasena('');
-      Alert.alert('Bienvenido al sistema de EDUCATE-2030');
-      navigation.navigate('Home');
+      const userCredential = await signInWithEmailAndPassword(auth, correo, contrasena);
+      const user = userCredential.user;
+
+      // Obtener el rol del usuario desde Firestore
+      const docRef = doc(firestore, 'usuarios', user.email);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        const userRole = userData.rol;
+
+        // Redirigir según el rol
+        if (userRole === 'admin') {
+          Alert.alert(
+            language === 'es' ? 'Bienvenido al sistema de Humanitarian Consultants' : 'Welcome to the Humanitarian Consultants system'
+          );
+          navigation.navigate('Home');  // Navegar a la pantalla principal para admin
+        } else if (userRole === 'user') {
+          Alert.alert(
+            language === 'es' ? 'Bienvenido' : 'Welcome'
+          );
+          navigation.navigate('Home');  // Navegar a la pantalla principal para usuarios
+        } else {
+          Alert.alert(language === 'es' ? 'Rol no autorizado' : 'Unauthorized role');
+        }
+      } else {
+        Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'No se encontró información del usuario.' : 'User information not found.');
+      }
     } catch (error) {
       setCorreo('');
       setContrasena('');
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        Alert.alert('Error', 'Correo o contraseña incorrectos');
+        Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Correo o contraseña incorrectos' : 'Incorrect email or password');
       } else {
-        Alert.alert('Error', 'No se pudo iniciar sesión. Intente de nuevo.');
+        Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'No se pudo iniciar sesión. Intente de nuevo.' : 'Could not log in. Please try again.');
       }
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <TouchableOpacity onPress={() => navigation.navigate('Registrarse')}>
-        <Text style={styles.register}>Registrar</Text>
-      </TouchableOpacity>
-      <Image source={require('../assets/imageLog.png')} style={styles.logo} />
-      <Text style={styles.label}>Correo</Text>
-      <View style={styles.inputContainer}>
-        <Image source={require('../assets/imageEmail.png')} style={styles.icon} />
-        <TextInput
-          style={styles.input}
-          placeholder="example@gmail.com"
-          value={correo}
-          onChangeText={setCorreo}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          placeholderTextColor="#B0B0B0"
-        />
-      </View>
-      <Text style={styles.label}>Contraseña</Text>
-      <View style={styles.inputContainer}>
-        <Image source={require('../assets/imageLock.png')} style={styles.icon} />
-        <TextInput
-          style={styles.input}
-          placeholder="******"
-          secureTextEntry
-          value={contrasena}
-          onChangeText={setContrasena}
-          placeholderTextColor="#B0B0B0"
-        />
-      </View>
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>Iniciar sesión</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Rec_contraseña')}>
-        <Text style={styles.forgotPassword}>Recuperar contraseña</Text>
-      </TouchableOpacity>
-    </ScrollView>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
+    >
+      <ScrollView contentContainerStyle={styles.container}>
+        <Image source={require('../assets/image.png')} style={styles.logo} resizeMode="contain" />
+        
+        <View style={styles.languageButtonsContainer}>
+          <TouchableOpacity style={styles.languageButton} onPress={() => setLanguage('es')}>
+            <Text style={styles.languageButtonText}>Español</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.languageButton} onPress={() => setLanguage('en')}>
+            <Text style={styles.languageButtonText}>English</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.label}>{language === 'es' ? 'Correo' : 'Email'}</Text>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={[styles.input, { paddingRight: 35 }]}
+            placeholder={language === 'es' ? 'Correo' : 'Email'}
+            value={correo}
+            onChangeText={setCorreo}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            placeholderTextColor="#B0B0B0"
+          />
+        </View>
+        <Text style={styles.label}>{language === 'es' ? 'Contraseña' : 'Password'}</Text>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={[styles.input, { paddingRight: 35 }]}
+            placeholder={language === 'es' ? 'Contraseña' : 'Password'}
+            secureTextEntry={!showPassword}
+            value={contrasena}
+            onChangeText={setContrasena}
+            placeholderTextColor="#B0B0B0"
+          />
+          <TouchableOpacity style={styles.iconContainer} onPress={() => setShowPassword(!showPassword)}>
+            <Icon name={showPassword ? "eye-off" : "eye"} size={24} color="#B0B0B0" />
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+          <Text style={styles.buttonText}>{language === 'es' ? 'Iniciar sesión' : 'Log In'}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Registrarse')}>
+          <Text style={styles.linkText}>{language === 'es' ? 'Registrar usuario' : 'Register User'}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Rec_contraseña')}>
+          <Text style={styles.linkText}>{language === 'es' ? 'Recuperar contraseña' : 'Recover Password'}</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#195E63',
+    backgroundColor: '#D3D3D3',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
+    paddingVertical: height * 0.02,
+    paddingHorizontal: width > 600 ? 20 : 10,
   },
   logo: {
-    width: 312,
-    height: 198,
-    marginBottom: 20,
+    width: '70%',
+    height: height * 0.2,
+    marginBottom: height * 0.05,
   },
   label: {
     alignSelf: 'flex-start',
-    color: 'white',
-    fontSize: 18,
-    marginBottom: 10,
+    color: 'black',
+    fontSize: width > 600 ? 18 : width * 0.045,
+    marginBottom: height * 0.01,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
-    borderRadius: 5,
-    marginBottom: 15,
+    borderRadius: 10,
+    marginBottom: height * 0.02,
     paddingLeft: 10,
-  },
-  icon: {
-    width: 20,
-    height: 20,
-    marginRight: 10,
+    width: '100%',
+    height: height * 0.07,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   input: {
-    height: 40,
+    height: '100%',
     flex: 1,
+    color: 'black',
+  },
+  iconContainer: {
+    paddingHorizontal: 10,
   },
   button: {
-    backgroundColor: '#87B4B5',
-    borderRadius: 5,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    marginBottom: 10,
-    width: 314,
-    height: 44,
-    marginTop: 18
+    backgroundColor: '#67A6F2',
+    borderRadius: 10,
+    paddingVertical: height * 0.02,
+    paddingHorizontal: '10%',
+    marginBottom: height * 0.02,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   buttonText: {
-    color: 'white',
-    fontSize: 18,
+    color: 'black',
+    fontSize: width > 600 ? 18 : width * 0.045,
     textAlign: 'center',
   },
-  forgotPassword: {
-    color: 'lightgray',
-    marginBottom: 30,
-    marginTop: 20,
-    fontSize: 16,
-  },
-  register: {
-    color: 'white',
-    alignSelf: 'flex-end',
-    marginTop: 10,
-    width: 300,
-    height: 50,
-    textAlign: 'right',
-    fontSize: 16,
+  linkText: {
+    color: 'black',
+    marginTop: height * 0.02,
+    fontSize: width > 600 ? 16 : width * 0.04,
     textDecorationLine: 'underline',
+    textAlign: 'center',
   },
-  icon: {
-    width: 21,
-    height: 21,
-    marginRight: 10,
+  languageButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: height * 0.02,
+    marginBottom: height * 0.02,
+  },
+  languageButton: {
+    flex: 1,
+    backgroundColor: '#67A6F2',
+    borderRadius: 10,
+    paddingVertical: height * 0.015,
+    marginHorizontal: width * 0.02,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  languageButtonText: {
+    color: 'black',
+    fontSize: width > 600 ? 16 : width * 0.04,
+    textAlign: 'center',
   },
 });
 
