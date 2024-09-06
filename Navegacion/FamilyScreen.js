@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
-import { useUserRole } from '../context/UserRoleContext'; // Importar el contexto del rol del usuario
+import { useUserRole } from '../context/UserRoleContext';
+import styles from '../styles/stylesFamilyScreen'; // Importar los estilos desde el archivo separado
 
 const FamilyScreen = ({ route }) => {
   const { language } = useLanguage();
-  const { userRole } = useUserRole(); // Obtener el rol del usuario
+  const { userRole } = useUserRole();
   const navigation = useNavigation();
   const [familyMembers, setFamilyMembers] = useState(route.params?.family || []);
 
@@ -22,7 +23,7 @@ const FamilyScreen = ({ route }) => {
   }, [userRole, navigation, language]);
 
   if (userRole !== 'admin' && userRole !== 'user') {
-    return null; // No renderizar nada si el usuario no es admin o user
+    return null;
   }
 
   const handleEditFamilyMember = (index, field, value) => {
@@ -139,85 +140,5 @@ const FamilyScreen = ({ route }) => {
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: '#D3D3D3',
-    padding: 20,
-  },
-  logo: {
-    width: 150,
-    height: 150,
-    marginBottom: 20,
-    alignSelf: 'center',
-  },
-  input: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 15,
-    width: '100%',
-    fontSize: 16,
-    borderColor: '#DDD',
-    borderWidth: 1,
-  },
-  pickerContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    marginBottom: 15,
-    width: '100%',
-    paddingHorizontal: 10,
-    borderColor: '#DDD',
-    borderWidth: 1,
-  },
-  picker: {
-    height: 50,
-    color: '#000',
-  },
-  pickerItem: {
-    color: '#67A6F2',
-    fontSize: 16,
-  },
-  familyContainer: {
-    backgroundColor: '#EEE',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 10,
-    width: '100%',
-  },
-  addButton: {
-    backgroundColor: '#67A6F2',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    marginTop: 20,
-    width: '100%',
-    alignItems: 'center',
-  },
-  deleteButton: {
-    backgroundColor: '#F28C32',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    marginTop: 10,
-    width: '100%',
-    alignItems: 'center',
-  },
-  saveButton: {
-    backgroundColor: '#67A6F2',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    marginTop: 20,
-    width: '100%',
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 18,
-    textAlign: 'center',
-  },
-});
 
 export default FamilyScreen;

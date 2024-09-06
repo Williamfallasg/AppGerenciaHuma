@@ -1,14 +1,16 @@
-import React, { useEffect, useState } from 'react'; // Asegúrate de importar useState
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ScrollView, Alert } from 'react-native';
+// Report.js
+import React, { useEffect, useState } from 'react';
+import { View, Text, Dimensions, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { LineChart, BarChart } from 'react-native-chart-kit';
 import { useNavigation } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
-import { useUserRole } from '../context/UserRoleContext'; // Importar el contexto del rol del usuario
+import { useUserRole } from '../context/UserRoleContext';
+import styles from '../styles/stylesReport'; // Importamos el archivo de estilos
 
 const Report = ({ route }) => {
   const navigation = useNavigation();
   const { language } = useLanguage(); 
-  const { userRole } = useUserRole(); // Obtener el rol del usuario
+  const { userRole } = useUserRole(); 
   const { projectName, selectedVariables } = route.params || {};
 
   useEffect(() => {
@@ -22,7 +24,7 @@ const Report = ({ route }) => {
   }, [userRole, navigation, language]);
 
   if (userRole !== 'admin') {
-    return null; // No renderizar nada si el usuario no es admin
+    return null; 
   }
 
   const [variables, setVariables] = useState(selectedVariables && selectedVariables.length > 0 ? selectedVariables : ['Variable 1']);
@@ -31,7 +33,7 @@ const Report = ({ route }) => {
 
   const datasets = variables.map((variable) => ({
     data: [Math.random() * 100, Math.random() * 100, Math.random() * 100, Math.random() * 100, Math.random() * 100, Math.random() * 100],
-    color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`, // Color del gráfico
+    color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
     label: variable,
   }));
 
@@ -89,8 +91,8 @@ const Report = ({ route }) => {
 
       <LineChart
         data={data}
-        width={screenWidth - 60} // Ajuste de ancho del gráfico
-        height={200} // Ajuste de altura del gráfico
+        width={screenWidth - 60} 
+        height={200}
         chartConfig={{
           backgroundColor: '#e26a00',
           backgroundGradientFrom: '#fb8c00',
@@ -106,8 +108,8 @@ const Report = ({ route }) => {
 
       <BarChart
         data={data}
-        width={screenWidth - 60} // Ajuste de ancho del gráfico
-        height={200} // Ajuste de altura del gráfico
+        width={screenWidth - 60} 
+        height={200} 
         chartConfig={{
           backgroundColor: '#022173',
           backgroundGradientFrom: '#1e3c72',
@@ -129,64 +131,5 @@ const Report = ({ route }) => {
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 15, // Ajuste del padding general
-  },
-  title: {
-    fontSize: 22, // Ajuste de tamaño de fuente
-    marginBottom: 15, // Ajuste del margen inferior
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16, // Ajuste de tamaño de fuente
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  variablesContainer: {
-    width: '100%',
-    marginBottom: 15,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    marginBottom: 10,
-    color: '#000',
-    textAlign: 'center',
-  },
-  variableButton: {
-    backgroundColor: '#ccc',
-    borderRadius: 5,
-    padding: 8, // Ajuste del padding del botón
-    marginBottom: 8,
-    alignItems: 'center', // Centrar el texto
-  },
-  variableButtonText: {
-    fontSize: 14, // Ajuste de tamaño de fuente
-    color: '#000',
-  },
-  chart: {
-    marginVertical: 8, // Ajuste del margen vertical
-    borderRadius: 16,
-  },
-  exitButton: {
-    backgroundColor: '#F28C32',
-    borderRadius: 10,
-    paddingVertical: 12, // Ajuste del padding vertical
-    paddingHorizontal: 20,
-    marginTop: 20,
-    width: '80%', // Ajuste del ancho del botón
-    alignItems: 'center',
-  },
-  exitButtonText: {
-    color: 'white',
-    fontSize: 16, // Ajuste de tamaño de fuente
-    textAlign: 'center',
-  },
-});
 
 export default Report;

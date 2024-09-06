@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView, Alert, Dimensions, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert, Dimensions, Platform } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { useNavigation } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
@@ -8,17 +8,19 @@ import { firestore } from '../firebase/firebase3';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { useWindowDimensions } from 'react-native';
 import { useUserRole } from '../context/UserRoleContext'; // Importar el contexto del rol del usuario
+import styles from '../styles/stylesRegisterUser'; // Importa el archivo de estilos
 
 const RegisterUser = () => {
   const { language } = useLanguage();
   const { userRole } = useUserRole(); // Obtener el rol del usuario
-  
+  // Añadir campos de usuario
   const [userData, setUserData] = useState({
     userID: '',
     idType: '',
     name: '',
     gender: '',
     birthDate: '',
+    age: '', 
     country: '',
     province: '',
     canton: '',
@@ -28,30 +30,31 @@ const RegisterUser = () => {
   const [qrValue, setQrValue] = useState(null);
 
   const navigation = useNavigation();
-  const { width, height } = useWindowDimensions();
+  const { width } = useWindowDimensions();
 
+  // Lista de países
   const countries = [
-      "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia",
-    "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin",
-    "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi",
-    "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia",
-    "Comoros", "Congo (Congo-Brazzaville)", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czechia (Czech Republic)",
-    "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt",
-    "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini (fmr. Swaziland)", "Ethiopia", "Fiji", "Finland",
-    "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau",
-    "Guyana", "Haiti", "Holy See", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland",
-    "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos",
-    "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi",
-    "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia",
-    "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar (formerly Burma)", "Namibia", "Nauru",
-    "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia (formerly Macedonia)",
-    "Norway", "Oman", "Pakistan", "Palau", "Palestine State", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines",
-    "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines",
-    "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore",
-    "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka",
-    "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste",
-    "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates",
-    "United Kingdom", "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+    'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Australia', 
+    'Austria', 'Azerbaijan', 'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 
+    'Bhutan', 'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 
+    'Cabo Verde', 'Cambodia', 'Cameroon', 'Canada', 'Central African Republic', 'Chad', 'Chile', 'China', 'Colombia', 
+    'Comoros', 'Congo (Congo-Brazzaville)', 'Costa Rica', 'Croatia', 'Cuba', 'Cyprus', 'Czech Republic', 'Denmark', 
+    'Djibouti', 'Dominica', 'Dominican Republic', 'East Timor (Timor-Leste)', 'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea', 
+    'Eritrea', 'Estonia', 'Eswatini (fmr. "Swaziland")', 'Ethiopia', 'Fiji', 'Finland', 'France', 'Gabon', 'Gambia', 'Georgia', 
+    'Germany', 'Ghana', 'Greece', 'Grenada', 'Guatemala', 'Guinea', 'Guinea-Bissau', 'Guyana', 'Haiti', 'Honduras', 'Hungary', 
+    'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel', 'Italy', 'Ivory Coast', 'Jamaica', 'Japan', 
+    'Jordan', 'Kazakhstan', 'Kenya', 'Kiribati', 'Kuwait', 'Kyrgyzstan', 'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 
+    'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg', 'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 
+    'Marshall Islands', 'Mauritania', 'Mauritius', 'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 
+    'Morocco', 'Mozambique', 'Myanmar (formerly Burma)', 'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 
+    'Niger', 'Nigeria', 'North Korea', 'North Macedonia (formerly Macedonia)', 'Norway', 'Oman', 'Pakistan', 'Palau', 'Panama', 
+    'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Poland', 'Portugal', 'Qatar', 'Romania', 'Russia', 'Rwanda', 
+    'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent and the Grenadines', 'Samoa', 'San Marino', 'Sao Tome and Principe', 
+    'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 
+    'Somalia', 'South Africa', 'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Sweden', 'Switzerland', 
+    'Syria', 'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 
+    'Turkmenistan', 'Tuvalu', 'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay', 
+    'Uzbekistan', 'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'
   ];
 
   const handleInputChange = (field, value) => {
@@ -59,9 +62,9 @@ const RegisterUser = () => {
   };
 
   const handleSave = async () => {
-    const { userID, idType, name, gender, birthDate, country, province, canton, district, phone } = userData;
+    const { userID, idType, name, gender, birthDate, age, country, province, canton, district, phone } = userData;
 
-    if (!userID || !idType || !name || !gender || !birthDate || !country || !province || !canton || !district || !phone) {
+    if (!userID || !idType || !name || !gender || !birthDate || !age || !country || !province || !canton || !district || !phone) {
       Alert.alert(language === 'es' ? 'Por favor, complete todos los campos' : 'Please fill in all fields');
       return;
     }
@@ -148,7 +151,7 @@ const RegisterUser = () => {
           onValueChange={(value) => handleInputChange('gender', value)}
           itemStyle={styles.pickerItem}
         >
-          <Picker.Item label={language === 'es' ? "Seleccione un género" : "Select a gender"} value="" />
+          <Picker.Item label={language === 'es' ? "Seleccione un sexo" : "Select a sex"} value="" />
           <Picker.Item label={language === 'es' ? "Masculino" : "Male"} value="Male" />
           <Picker.Item label={language === 'es' ? "Femenino" : "Female"} value="Female" />
         </Picker>
@@ -162,6 +165,15 @@ const RegisterUser = () => {
         keyboardType="numeric"
         placeholderTextColor="#B0B0B0"
         maxLength={10}
+      />
+
+      <TextInput
+        style={styles.input(width)}
+        placeholder={language === 'es' ? "Edad" : "Age"}
+        value={userData.age}
+        onChangeText={(value) => handleInputChange('age', value)}
+        keyboardType="numeric" // Asegurarse de que solo se acepten números
+        placeholderTextColor="#B0B0B0"
       />
 
       <View style={styles.pickerContainer}>
@@ -237,83 +249,5 @@ const RegisterUser = () => {
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: (width) => ({
-    flexGrow: 1,
-    backgroundColor: '#D3D3D3',
-    paddingHorizontal: width > 600 ? 40 : 20, // Ajusta el padding según el ancho de la pantalla
-    paddingVertical: 10,
-  }),
-  logo: (width) => ({
-    width: width * 0.4,
-    height: width * 0.4,
-    marginBottom: 20,
-    alignSelf: 'center',
-  }),
-  input: (width) => ({
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: Platform.OS === 'ios' ? 12 : 10,
-    marginBottom: 15,
-    width: '100%',
-    fontSize: width > 600 ? 18 : 16, // Ajusta el tamaño de fuente según el ancho de la pantalla
-    borderColor: '#DDD',
-    borderWidth: 1,
-  }),
-  pickerContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    marginBottom: 15,
-    width: '100%',
-    paddingHorizontal: 10,
-    borderColor: '#DDD',
-    borderWidth: 1,
-  },
-  picker: {
-    height: 50,
-    color: '#000',
-  },
-  pickerItem: {
-    color: '#67A6F2',
-    fontSize: Platform.OS === 'ios' ? 18 : 16,
-  },
-  button: (width) => ({
-    backgroundColor: '#67A6F2',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    marginTop: 20,
-    width: '100%',
-    alignItems: 'center',
-  }),
-  addButton: (width) => ({
-    backgroundColor: '#67A6F2',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    marginTop: 10,
-    width: '100%',
-    alignItems: 'center',
-  }),
-  buttonText: {
-    color: '#FFF',
-    fontSize: 18,
-    textAlign: 'center',
-  },
-  qrContainer: (width) => ({
-    marginTop: 30,
-    alignItems: 'center',
-  }),
-  exitButton: (width) => ({
-    backgroundColor: '#F28C32',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    marginTop: 20,
-    width: '100%',
-    alignItems: 'center',
-  }),
-});
 
 export default RegisterUser;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
@@ -7,75 +7,97 @@ import { firestore } from '../firebase/firebase';
 import addData from '../firebase/addData';
 import { useLanguage } from '../context/LanguageContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import styles from '../styles/stylesRegistrarse';  // Importamos el archivo de estilos
 
+// Componente para el registro de nuevos usuarios
 const Registrarse = () => {
-  const { language } = useLanguage();
-  const navigation = useNavigation();
-  const [nombre, setNombre] = useState('');
-  const [apellidos, setApellidos] = useState('');
-  const [correo, setCorreo] = useState('');
-  const [contrasena, setContrasena] = useState('');
-  const [rol, setRol] = useState('user'); // Por defecto, asigna rol de 'user'
-  const [mostrarContrasena, setMostrarContrasena] = useState(false);
+  const { language } = useLanguage(); // Obtener el idioma de la aplicación
+  const navigation = useNavigation(); // Hook para la navegación entre pantallas
+  const [nombre, setNombre] = useState(''); // Estado para el nombre
+  const [apellidos, setApellidos] = useState(''); // Estado para los apellidos
+  const [correo, setCorreo] = useState(''); // Estado para el correo electrónico
+  const [contrasena, setContrasena] = useState(''); // Estado para la contraseña
+  const [rol, setRol] = useState('user'); // Estado para el rol, por defecto 'user'
+  const [mostrarContrasena, setMostrarContrasena] = useState(false); // Estado para mostrar/ocultar la contraseña
 
-  const handleSubmit = async () => {
-    const emailDomains = ['gmail.com', 'hotmail.com', 'ucr.ac.cr', 'humanitarianconsultants.org'];
-    const emailDomain = correo.split('@')[1];
+  // Función que maneja el registro del usuario
+    const handleSubmit = async () => {
+    const emailDomains = ['gmail.com', 'hotmail.com', 'ucr.ac.cr','outlook.com', 'humanitarianconsultants.org']; // Dominios de correo válidos
+    const emailDomain = correo.split('@')[1]; // Obtener el dominio del correo electrónico
 
+    // Verificar si el dominio del correo es válido
     if (emailDomains.includes(emailDomain)) {
       try {
+        // Verificar si el correo ya está registrado en Firestore
         const usersCollection = collection(firestore, 'usuarios');
         const q = query(usersCollection, where('correo', '==', correo));
         const querySnapshot = await getDocs(q);
 
+        // Si el correo ya existe, mostrar una alerta
         if (!querySnapshot.empty) {
           Alert.alert(
             language === 'es' ? 'Error' : 'Error',
             language === 'es' ? 'El correo ya está registrado' : 'The email is already registered'
           );
         } else {
+          // Crear usuario en Firebase Authentication
           const auth = getAuth();
           await createUserWithEmailAndPassword(auth, correo, contrasena);
+
+          // Guardar los datos del usuario en Firestore
           await addData("usuarios", correo, {
             nombre: nombre,
             apellidos: apellidos,
             correo: correo,
             contrasena: contrasena,
-            rol: rol // Guardar el rol dinámicamente según lo seleccionado
+            rol: rol // Guardar el rol dinámicamente
           });
+
+          // Mostrar alerta de registro exitoso
           Alert.alert(
             language === 'es' ? 'Registro exitoso' : 'Registration successful'
           );
+
+          // Limpiar los campos del formulario
           setNombre('');
           setApellidos('');
           setCorreo('');
           setContrasena('');
+
+          // Navegar a la pantalla de inicio de sesión
           navigation.navigate('Sesion');
         }
       } catch (error) {
+        // Mostrar alerta en caso de error
         Alert.alert(
           language === 'es' ? 'Error de registro' : 'Registration error', 
           error.message
         );
       }
     } else {
+      // Mostrar alerta si el dominio del correo no es válido
       Alert.alert(
         language === 'es' ? 'Dominio de correo electrónico no válido' : 'Invalid email domain'
       );
     }
   };
 
+  // Renderizado del formulario de registro
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
+      {/* Contenedor principal */}
       <View style={styles.container}>
+        {/* Logo de la aplicación */}
         <View style={styles.logoContainer}>
           <Image source={require('../assets/image.png')} style={styles.logo} />
         </View>
 
+        {/* Título del formulario */}
         <Text style={styles.title}>
           {language === 'es' ? 'REGISTRO' : 'REGISTER'}
         </Text>
 
+        {/* Campo de entrada para el nombre */}
         <Text style={styles.label}>
           {language === 'es' ? 'Nombre' : 'First Name'}
         </Text>
@@ -86,6 +108,8 @@ const Registrarse = () => {
           value={nombre}
           placeholderTextColor="#B0B0B0"
         />
+
+        {/* Campo de entrada para los apellidos */}
         <Text style={styles.label}>
           {language === 'es' ? 'Apellidos' : 'Last Name'}
         </Text>
@@ -96,6 +120,8 @@ const Registrarse = () => {
           value={apellidos}
           placeholderTextColor="#B0B0B0"
         />
+
+        {/* Campo de entrada para el correo electrónico */}
         <Text style={styles.label}>
           {language === 'es' ? 'Correo' : 'Email'}
         </Text>
@@ -108,6 +134,8 @@ const Registrarse = () => {
           autoCapitalize="none"
           placeholderTextColor="#B0B0B0"
         />
+
+        {/* Campo de entrada para la contraseña */}
         <Text style={styles.label}>
           {language === 'es' ? 'Contraseña' : 'Password'}
         </Text>
@@ -115,14 +143,14 @@ const Registrarse = () => {
           <TextInput
             style={[styles.input, styles.inputPassword]}
             placeholder={language === 'es' ? 'Contraseña' : 'Password'}
-            secureTextEntry={!mostrarContrasena}
+            secureTextEntry={!mostrarContrasena} // Mostrar/ocultar contraseña
             onChangeText={(text) => setContrasena(text)}
             value={contrasena}
             placeholderTextColor="#B0B0B0"
           />
           <TouchableOpacity 
             style={styles.iconButton}
-            onPress={() => setMostrarContrasena(!mostrarContrasena)}
+            onPress={() => setMostrarContrasena(!mostrarContrasena)} // Cambiar visibilidad de la contraseña
           >
             <Icon 
               name={mostrarContrasena ? 'visibility' : 'visibility-off'}
@@ -137,12 +165,15 @@ const Registrarse = () => {
           {language === 'es' ? 'Seleccionar Rol' : 'Select Role'}
         </Text>
         <View style={styles.roleSelector}>
+          {/* Botón para seleccionar 'user' */}
           <TouchableOpacity
             style={rol === 'user' ? styles.roleButtonSelected : styles.roleButton}
             onPress={() => setRol('user')}
           >
             <Text>{language === 'es' ? 'Usuario' : 'User'}</Text>
           </TouchableOpacity>
+
+          {/* Botón para seleccionar 'admin' */}
           <TouchableOpacity
             style={rol === 'admin' ? styles.roleButtonSelected : styles.roleButton}
             onPress={() => setRol('admin')}
@@ -150,13 +181,14 @@ const Registrarse = () => {
             <Text>{language === 'es' ? 'Administrador' : 'Admin'}</Text>
           </TouchableOpacity>
         </View>
-
+        {/* Botón para enviar el formulario */}
         <TouchableOpacity style={styles.button} onPress={handleSubmit}>
           <Text style={styles.buttonText}>
             {language === 'es' ? 'Registrar' : 'Register'}
           </Text>
         </TouchableOpacity>
 
+        {/* Enlace para ir a la pantalla de inicio de sesión */}
         <TouchableOpacity onPress={() => navigation.navigate('Sesion')}>
           <Text style={styles.link}>
             {language === 'es' ? '¿Ya tiene una cuenta?' : 'Already have an account?'}
@@ -166,100 +198,5 @@ const Registrarse = () => {
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 0,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#D3D3D3',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoContainer: {
-    marginBottom: 5,
-  },
-  logo: {
-    width: 200,
-    height: 201,
-    marginBottom: 20,
-  },
-  label: {
-    alignSelf: 'flex-start',
-    color: 'black',
-    fontSize: 18,
-    marginBottom: 10,
-    paddingHorizontal: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'black',
-    marginBottom: 20,
-  },
-  input: {
-    width: '90%',
-    height: 40,
-    backgroundColor: 'white',
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    marginBottom: 10,
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '90%',
-    marginBottom: 10,
-  },
-  inputPassword: {
-    flex: 1,
-  },
-  iconButton: {
-    paddingHorizontal: 0,
-    marginLeft: -25,
-    height: 40,
-    justifyContent: 'center',
-  },
-  button: {
-    width: '90%',
-    height: 40,
-    backgroundColor: '#67A6F2',
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  buttonText: {
-    color: 'black',
-    fontSize: 16,
-  },
-  link: {
-    marginTop: 20,
-    color: 'black',
-    textAlign: 'center',
-    textDecorationLine: 'underline',
-  },
-  roleSelector: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '90%',
-    marginVertical: 20,
-  },
-  roleButton: {
-    padding: 10,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#ccc',
-  },
-  roleButtonSelected: {
-    padding: 10,
-    borderRadius: 5,
-    backgroundColor: '#67A6F2',
-    borderColor: '#67A6F2',
-  },
-});
 
 export default Registrarse;

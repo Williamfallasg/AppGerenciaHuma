@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView, Dimensions, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
 import { firestore } from '../firebase/firebase2';
 import { collection, doc, getDoc, setDoc } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useUserRole } from '../context/UserRoleContext'; // Importar el contexto del rol del usuario
+import styles from '../styles/stylesProjectForm';  // Importar los estilos
 
 const ProjectForm = () => {
   const { language } = useLanguage(); 
@@ -224,65 +225,5 @@ const ProjectForm = () => {
     </ScrollView>
   );
 };
-
-const { width, height } = Dimensions.get('window');
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: '#D3D3D3',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  logo: {
-    width: width * 0.5,
-    height: width * 0.5,
-    marginBottom: 30,
-    resizeMode: 'contain',
-  },
-  input: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 15,
-    width: '100%',
-    height: height * 0.07,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: '#67A6F2',
-    borderRadius: 10,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    marginTop: 20,
-    width: '100%',
-    alignItems: 'center',
-  },
-  exitButton: {
-    backgroundColor: '#F28C32',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
-    textAlign: 'center',
-  },
-  activityContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 15,
-    width: '100%',
-  },
-  activityInput: {
-    flex: 1,
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 10,
-    fontSize: 16,
-  },
-  iconButton: {
-    marginLeft: 10,
-  },
-});
 
 export default ProjectForm;
