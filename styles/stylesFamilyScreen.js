@@ -75,9 +75,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonText: {
-    color: '#FFF',
+    color: 'black',
     fontSize: 18,
     textAlign: 'center',
+    fontWeight:"bold"
   },
 });
 

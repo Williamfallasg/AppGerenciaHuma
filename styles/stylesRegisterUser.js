@@ -59,9 +59,10 @@ export default StyleSheet.create({
     alignItems: 'center',
   }),
   buttonText: {
-    color: '#FFF',
+    color: 'black',
     fontSize: 18,
     textAlign: 'center',
+    fontWeight:"bold"
   },
   qrContainer: (width) => ({
     marginTop: 30,
@@ -75,5 +76,6 @@ export default StyleSheet.create({
     marginTop: 20,
     width: '100%',
     alignItems: 'center',
+    
   }),
 });

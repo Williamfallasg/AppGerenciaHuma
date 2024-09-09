@@ -5,13 +5,13 @@ import { useLanguage } from '../context/LanguageContext';
 import { firestore } from '../firebase/firebase2';
 import { collection, doc, getDoc, setDoc } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useUserRole } from '../context/UserRoleContext'; // Importar el contexto del rol del usuario
+import { useUserRole } from '../context/UserRoleContext';
 import styles from '../styles/stylesProjectForm';  // Importar los estilos
 
 const ProjectForm = () => {
   const { language } = useLanguage(); 
   const navigation = useNavigation();
-  const { userRole } = useUserRole(); // Obtener el rol del usuario
+  const { userRole } = useUserRole(); 
 
   const [projectID, setProjectID] = useState('');
   const [projectName, setProjectName] = useState('');
@@ -20,11 +20,11 @@ const ProjectForm = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [activities, setActivities] = useState([{ id: 1, activity: '' }]);
+  const [indicators, setIndicators] = useState([{ id: 1, description: '', beneficiaries: '' }]);
 
-  // Verificar si el usuario es admin
   useEffect(() => {
     if (userRole !== 'admin') {
-      navigation.navigate('Home'); // Redirigir si no es admin
+      navigation.navigate('Home'); 
     }
   }, [userRole]);
 
@@ -47,12 +47,7 @@ const ProjectForm = () => {
 
   const validateDate = (date) => {
     const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
-    if (!dateRegex.test(date)) {
-      return false;
-    }
-    const [day, month, year] = date.split('/').map(Number);
-    const dateObj = new Date(year, month - 1, day);
-    return dateObj.getDate() === day && dateObj.getMonth() === month - 1 && dateObj.getFullYear() === year;
+    return dateRegex.test(date);
   };
 
   const validateInputs = () => {
@@ -72,17 +67,15 @@ const ProjectForm = () => {
       Alert.alert(language === 'es' ? 'Fecha de fin no válida' : 'Invalid end date');
       return false;
     }
-    const [startDay, startMonth, startYear] = startDate.split('/').map(Number);
-    const [endDay, endMonth, endYear] = endDate.split('/').map(Number);
-    const start = new Date(startYear, startMonth - 1, startDay);
-    const end = new Date(endYear, endMonth - 1, endDay);
-    if (end < start) {
-      Alert.alert(language === 'es' ? 'La fecha de fin no puede ser anterior a la fecha de inicio' : 'End date cannot be earlier than start date');
-      return false;
-    }
     for (const activity of activities) {
       if (!activity.activity.trim()) {
         Alert.alert(language === 'es' ? `La actividad ${activity.id} está vacía` : `Activity ${activity.id} is empty`);
+        return false;
+      }
+    }
+    for (const indicator of indicators) {
+      if (!indicator.description.trim() || isNaN(indicator.beneficiaries)) {
+        Alert.alert(language === 'es' ? `El indicador ${indicator.id} está incompleto` : `Indicator ${indicator.id} is incomplete`);
         return false;
       }
     }
@@ -107,6 +100,7 @@ const ProjectForm = () => {
           startDate,
           endDate,
           activities: activities.map(a => a.activity),
+          indicators: indicators.map(i => ({ description: i.description, beneficiaries: i.beneficiaries })),
         });
         Alert.alert(language === 'es' ? 'Guardado exitosamente' : 'Saved successfully');
         navigation.navigate('Home');
@@ -125,11 +119,57 @@ const ProjectForm = () => {
     setActivities([...activities, { id: activities.length + 1, activity: '' }]);
   };
 
+  const handleAddIndicator = () => {
+    setIndicators([...indicators, { id: indicators.length + 1, description: '', beneficiaries: '' }]);
+  };
+
   const handleActivityChange = (text, id) => {
     const newActivities = activities.map(item => 
       item.id === id ? { ...item, activity: text } : item
     );
     setActivities(newActivities);
+  };
+
+  const handleIndicatorChange = (text, id, field) => {
+    const newIndicators = indicators.map(item => 
+      item.id === id ? { ...item, [field]: text } : item
+    );
+    setIndicators(newIndicators);
+  };
+
+  const confirmDeleteActivity = (id) => {
+    Alert.alert(
+      language === 'es' ? 'Eliminar actividad' : 'Delete Activity',
+      language === 'es' ? '¿Está seguro de que desea eliminar esta actividad?' : 'Are you sure you want to delete this activity?',
+      [
+        { text: language === 'es' ? 'Cancelar' : 'Cancel', style: 'cancel' },
+        { text: language === 'es' ? 'Eliminar' : 'Delete', onPress: () => handleDeleteActivity(id) }
+      ]
+    );
+  };
+
+  const confirmDeleteIndicator = (id) => {
+    Alert.alert(
+      language === 'es' ? 'Eliminar indicador' : 'Delete Indicator',
+      language === 'es' ? '¿Está seguro de que desea eliminar este indicador?' : 'Are you sure you want to delete this indicator?',
+      [
+        { text: language === 'es' ? 'Cancelar' : 'Cancel', style: 'cancel' },
+        { text: language === 'es' ? 'Eliminar' : 'Delete', onPress: () => handleDeleteIndicator(id) }
+      ]
+    );
+  };
+
+  const handleDeleteActivity = (id) => {
+    setActivities(activities.filter(item => item.id !== id));
+  };
+
+  const handleDeleteIndicator = (id) => {
+    setIndicators(indicators.filter(item => item.id !== id));
+  };
+
+  const handleEditIndicator = (id) => {
+    Alert.alert(language === 'es' ? `Editar indicador ${id}` : `Edit Indicator ${id}`);
+    // Lógica para editar si es necesario
   };
 
   return (
@@ -196,18 +236,52 @@ const ProjectForm = () => {
             onChangeText={(text) => handleActivityChange(text, id)}
             placeholderTextColor="#B0B0B0"
           />
-          <TouchableOpacity onPress={() => handleEditActivity(id)} style={styles.iconButton}>
+          <TouchableOpacity style={styles.iconButton}>
             <Icon name="edit" size={24} color="#67A6F2" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => handleDeleteActivity(id)} style={styles.iconButton}>
+          <TouchableOpacity onPress={() => confirmDeleteActivity(id)} style={styles.iconButton}>
             <Icon name="delete" size={24} color="#F28C32" />
           </TouchableOpacity>
         </View>
       ))}
-      
+
       <TouchableOpacity style={styles.button} onPress={handleAddActivity}>
         <Text style={styles.buttonText}>
           {language === 'es' ? "Agregar actividad" : "Add Activity"}
+        </Text>
+      </TouchableOpacity>
+
+      {/* Sección de Indicadores */}
+      <Text style={styles.sectionTitle}>{language === 'es' ? 'Indicadores' : 'Indicators'}</Text>
+      {indicators.map(({ id, description, beneficiaries }) => (
+        <View key={id} style={styles.indicatorContainer}>
+          <TextInput
+            style={styles.indicatorInput}
+            placeholder={language === 'es' ? `Descripción del indicador ${id}` : `Indicator Description ${id}`}
+            value={description}
+            onChangeText={(text) => handleIndicatorChange(text, id, 'description')}
+            placeholderTextColor="#B0B0B0"
+          />
+          <TextInput
+            style={styles.beneficiariesInput}
+            placeholder={language === 'es' ? "Número de beneficiarios" : "Number of Beneficiaries"}
+            value={beneficiaries}
+            onChangeText={(text) => handleIndicatorChange(text, id, 'beneficiaries')}
+            keyboardType="numeric"
+            placeholderTextColor="#B0B0B0"
+          />
+          <TouchableOpacity onPress={() => handleEditIndicator(id)} style={styles.iconButton}>
+            <Icon name="edit" size={24} color="#67A6F2" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => confirmDeleteIndicator(id)} style={styles.iconButton}>
+            <Icon name="delete" size={24} color="#F28C32" />
+          </TouchableOpacity>
+        </View>
+      ))}
+
+      <TouchableOpacity style={styles.button} onPress={handleAddIndicator}>
+        <Text style={styles.buttonText}>
+          {language === 'es' ? "Agregar indicador" : "Add Indicator"}
         </Text>
       </TouchableOpacity>
 

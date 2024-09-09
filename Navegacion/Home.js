@@ -24,10 +24,6 @@ const Home = () => {
     navigation.navigate('ProgramForm');
   };
 
-  const navigateToProjectForm = () => {
-    navigation.navigate('ProjectForm');
-  };
-
   const navigateToRegisterUser = () => {
     navigation.navigate('RegisterUser');
   };
@@ -41,17 +37,12 @@ const Home = () => {
       {/* El logotipo se muestra para ambos roles */}
       <Image source={require('../assets/image.png')} style={styles.logo} />
 
+      {/* Mostrar botones solo para administradores */}
       {userRole === 'admin' && (
         <>
           <TouchableOpacity style={styles.mainButton} onPress={navigateToProgramForm}>
             <Text style={styles.mainButtonText}>
               {language === 'es' ? 'Registrar programa' : 'Register Program'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.mainButton} onPress={navigateToProjectForm}>
-            <Text style={styles.mainButtonText}>
-              {language === 'es' ? 'Registrar proyecto' : 'Register Project'}
             </Text>
           </TouchableOpacity>
 
@@ -72,6 +63,7 @@ const Home = () => {
         </TouchableOpacity>
       )}
 
+      {/* Botón de salir */}
       <TouchableOpacity style={styles.exitButton} onPress={handleLogout}>
         <Text style={styles.exitButtonText}>
           {language === 'es' ? 'Salir' : 'Exit'}

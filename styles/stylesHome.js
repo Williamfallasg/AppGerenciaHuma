@@ -5,43 +5,45 @@ const { width, height } = Dimensions.get('window');
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#D3D3D3',
-    alignItems: 'center',
+    backgroundColor: '#F3F3F3', // Fondo claro profesional
     justifyContent: 'center',
-    padding: width > 600 ? 20 : 10, // Ajuste dinámico del padding para pantallas más grandes
+    alignItems: 'center',
+    padding: 20,
   },
   logo: {
-    width: width * 0.5,
-    height: undefined,
-    aspectRatio: 1, // Mantiene la proporción original de la imagen
-    marginBottom: height * 0.05,
+    width: width * 0.6, // Ajustar tamaño de logotipo al 60% del ancho de pantalla
+    height: width * 0.6,
+    resizeMode: 'contain',
+    marginBottom: 40, // Espaciado entre logo y botones
   },
   mainButton: {
-    backgroundColor: '#67A6F2',
+    backgroundColor: '#67A6F2', // Color azul profesional
     borderRadius: 10,
-    paddingVertical: height * 0.02,
-    paddingHorizontal: width * 0.1,
-    marginBottom: height * 0.02,
-    width: width > 600 ? '60%' : '80%', // Ajuste dinámico del ancho del botón para pantallas más grandes
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    marginVertical: 10, // Espaciado vertical entre los botones
+    width: '100%', // Ancho del botón ajustado al 80% del ancho de la pantalla
     alignItems: 'center',
   },
   mainButtonText: {
     color: 'black',
-    fontSize: width > 600 ? 20 : width * 0.05, // Ajuste dinámico del tamaño de la fuente
+    fontSize: 18,
+    fontWeight: 'bold',
     textAlign: 'center',
   },
   exitButton: {
-    backgroundColor: '#F28C32',
+    backgroundColor: '#F28C32', // Color naranja para el botón de salir
     borderRadius: 10,
-    paddingVertical: height * 0.02,
-    paddingHorizontal: width * 0.1,
-    marginTop: height * 0.03,
-    width: width > 600 ? '60%' : '80%', // Ajuste dinámico del ancho del botón para pantallas más grandes
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    marginTop: 20, // Más espaciado superior para el botón de salir
+    width: '100%', // Ancho del botón ajustado al 80% del ancho de la pantalla
     alignItems: 'center',
   },
   exitButtonText: {
-    color: 'white',
-    fontSize: width > 600 ? 20 : width * 0.05, // Ajuste dinámico del tamaño de la fuente
+    color: 'black',
+    fontSize: 18,
+    fontWeight: 'bold',
     textAlign: 'center',
   },
 });

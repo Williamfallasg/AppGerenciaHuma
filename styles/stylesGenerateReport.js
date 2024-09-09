@@ -7,7 +7,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D3D3D3',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
+    padding: 10,
   },
   logo: {
     width: Dimensions.get('window').width * 0.5,
@@ -19,6 +19,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     marginBottom: 20,
     color: '#000',
+    fontWeight: "bold"
   },
   radioContainer: {
     borderWidth: 1,
@@ -43,26 +44,28 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 20,
     marginBottom: 20,
-    width: '90%',
+    width: '100%',
     alignItems: 'center',
   },
   generateButtonText: {
-    color: 'white',
+    color: 'black',
     fontSize: 18,
     textAlign: 'center',
+    fontWeight:"bold",
   },
   exitButton: {
     backgroundColor: '#F28C32',
     borderRadius: 10,
     paddingVertical: 15,
     paddingHorizontal: 20,
-    width: '90%',
+    width: '100%',
     alignItems: 'center',
   },
   exitButtonText: {
-    color: 'white',
+    color: 'black',
     fontSize: 18,
     textAlign: 'center',
+    fontWeight:"bold"
   },
   reportContainer: {
     flex: 1,

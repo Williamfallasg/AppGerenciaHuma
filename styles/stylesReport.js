@@ -53,7 +53,7 @@ export default StyleSheet.create({
     alignItems: 'center',
   },
   exitButtonText: {
-    color: 'white',
+    color: 'black',
     fontSize: 16,
     textAlign: 'center',
   },

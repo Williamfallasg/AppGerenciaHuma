@@ -5,96 +5,73 @@ const { width, height } = Dimensions.get('window');
 export default StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#D3D3D3',
+    backgroundColor: '#D3D3D3', // Fondo gris claro
     alignItems: 'center',
     justifyContent: 'center',
-    padding: width * 0.05,
+    padding: 10,
   },
   logo: {
-    width: width * 0.6,
-    height: undefined,
-    aspectRatio: 1,
-    marginBottom: height * 0.05,
+    width: width * 0.5, // Tamaño dinámico basado en el ancho de la pantalla
+    height: width * 0.5,
+    marginBottom: 30,
+    resizeMode: 'contain', // Evitar que la imagen se deforme
   },
   input: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: height * 0.015,
-    marginBottom: height * 0.025,
-    width: '100%',
-    fontSize: width * 0.04,
-    height: height * 0.07,
+    backgroundColor: 'white', // Fondo blanco para los inputs
+    borderRadius: 10, // Bordes redondeados
+    padding: 10, // Espaciado interno
+    marginBottom: 10, // Espacio entre inputs
+    width: '100%', // Ocupa todo el ancho
+    height: height * 0.07, // Altura basada en la pantalla
+    fontSize: 16, // Tamaño de la fuente
   },
   multilineInput: {
-    minHeight: height * 0.1,
-  },
-  sectionTitle: {
-    fontSize: width * 0.045,
-    color: 'black',
-    marginBottom: height * 0.025,
-    alignSelf: 'flex-start',
-  },
-  activityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: height * 0.025,
+    backgroundColor: 'white', // Igual que los inputs normales
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 10,
     width: '100%',
-  },
-  activityInput: {
-    flex: 1,
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: height * 0.015,
-    fontSize: width * 0.04,
-    marginRight: width * 0.02,
-  },
-  editButton: {
-    backgroundColor: '#67A6F2',
-    borderRadius: 8,
-    paddingVertical: height * 0.015,
-    paddingHorizontal: width * 0.03,
-  },
-  deleteButton: {
-    backgroundColor: '#F28C32',
-    borderRadius: 8,
-    paddingVertical: height * 0.015,
-    paddingHorizontal: width * 0.03,
-    marginLeft: width * 0.02,
-  },
-  addButton: {
-    backgroundColor: '#67A6F2',
-    borderRadius: 8,
-    paddingVertical: height * 0.02,
-    paddingHorizontal: width * 0.05,
-    marginBottom: height * 0.04,
-    alignItems: 'center',
-    width: '100%',
-  },
-  addButtonText: {
-    color: 'white',
-    fontSize: width * 0.045,
+    height: height * 0.1, // Más altura para entradas de múltiples líneas
+    textAlignVertical: 'top', // Texto alineado arriba en el input
+    fontSize: 16,
   },
   button: {
-    backgroundColor: '#67A6F2',
-    borderRadius: 8,
-    paddingVertical: height * 0.025,
-    paddingHorizontal: width * 0.05,
-    marginTop: height * 0.02,
+    backgroundColor: '#67A6F2', // Color azul para los botones de guardar y agregar
+    borderRadius: 10,
+    paddingVertical: 15, // Espaciado vertical
+    paddingHorizontal: 20, // Espaciado horizontal
+    marginTop: 20, // Margen superior
+    width: '100%', // Ancho completo
+    alignItems: 'center', // Alinea el texto al centro
+  },
+  addButton: {
+    backgroundColor: '#67A6F2', // Mismo azul para el botón "Agregar proyecto"
+    borderRadius: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    marginTop: 20,
     width: '100%',
     alignItems: 'center',
   },
   button1: {
-    backgroundColor: '#F28C32',
-    borderRadius: 8,
-    paddingVertical: height * 0.025,
-    paddingHorizontal: width * 0.05,
-    marginTop: height * 0.02,
+    backgroundColor: '#F28C32', // Naranja para el botón "Salir"
+    borderRadius: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    marginTop: 10,
     width: '100%',
     alignItems: 'center',
   },
+  buttontext1:{
+    color: 'black', // Texto blanco en los botones
+    fontSize: 18, // Tamaño de texto grande
+    textAlign: 'center', // Alineado al centro
+    fontWeight:"bold"//negrita al text de los botones
+  },
   buttonText: {
-    color: 'white',
-    fontSize: width * 0.045,
-    textAlign: 'center',
+    color: 'black', // Texto blanco en los botones
+    fontSize: 18, // Tamaño de texto grande
+    textAlign: 'center', // Alineado al centro
+    fontWeight:"bold"
   },
 });

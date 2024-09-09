@@ -4,13 +4,13 @@ import { useNavigation } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
 import { firestore } from '../firebase/firebase1';
 import { collection, addDoc } from 'firebase/firestore';
-import { useUserRole } from '../context/UserRoleContext'; // Importar el contexto del rol del usuario
+import { useUserRole } from '../context/UserRoleContext'; 
 import styles from '../styles/stylesProgramForm';  // Importar los estilos
 
 const ProgramForm = () => {
   const { language } = useLanguage();
   const navigation = useNavigation();
-  const { userRole } = useUserRole(); // Obtener el rol del usuario
+  const { userRole } = useUserRole(); 
 
   const [programID, setProgramID] = useState('');
   const [programName, setProgramName] = useState('');
@@ -18,12 +18,11 @@ const ProgramForm = () => {
   const [programBudget, setProgramBudget] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [activities, setActivities] = useState([{ id: 1, activity: '' }]);
 
   // Verificar si el usuario es admin
   useEffect(() => {
     if (userRole !== 'admin') {
-      navigation.navigate('Home'); // Redirigir si no es admin
+      navigation.navigate('Home');
     }
   }, [userRole]);
 
@@ -82,27 +81,6 @@ const ProgramForm = () => {
     return true;
   };
 
-  const handleActivityChange = (index, value) => {
-    const newActivities = [...activities];
-    newActivities[index].activity = value;
-    setActivities(newActivities);
-  };
-
-  const addActivity = () => {
-    setActivities([...activities, { id: activities.length + 1, activity: '' }]);
-  };
-
-  const editActivity = (index, value) => {
-    const newActivities = [...activities];
-    newActivities[index].activity = value;
-    setActivities(newActivities);
-  };
-
-  const deleteActivity = (index) => {
-    const newActivities = activities.filter((_, i) => i !== index);
-    setActivities(newActivities);
-  };
-
   const handleSave = async () => {
     if (!validateInputs()) return;
 
@@ -114,7 +92,6 @@ const ProgramForm = () => {
         programBudget,
         startDate,
         endDate,
-        activities,
       });
       console.log("Documento añadido con ID: ", docRef.id);
       Alert.alert(language === 'es' ? 'Guardado exitosamente' : 'Saved successfully');
@@ -126,6 +103,10 @@ const ProgramForm = () => {
 
   const handleGoHome = () => {
     navigation.navigate('Home');
+  };
+
+  const handleAddProject = () => {
+    navigation.navigate('ProjectForm');  // Navegar a la página de ProjectForm.js
   };
 
   return (
@@ -184,35 +165,9 @@ const ProgramForm = () => {
         keyboardType="numeric"
       />
       
-      <Text style={styles.sectionTitle}>
-        {language === 'es' ? 'Actividades' : 'Activities'}
-      </Text>
-      
-      {activities.map((activity, index) => (
-        <View key={index} style={styles.activityRow}>
-          <TextInput
-            style={styles.activityInput}
-            placeholder={language === 'es' ? `Actividad ${index + 1}` : `Activity ${index + 1}`}
-            value={activity.activity}
-            onChangeText={(value) => handleActivityChange(index, value)}
-            placeholderTextColor="#B0B0B0"
-          />
-          <TouchableOpacity onPress={() => editActivity(index, activity.activity)} style={styles.editButton}>
-            <Text style={styles.buttonText}>
-              {language === 'es' ? 'Editar' : 'Edit'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => deleteActivity(index)} style={styles.deleteButton}>
-            <Text style={styles.buttonText}>
-              {language === 'es' ? 'Eliminar' : 'Delete'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      ))}
-
-      <TouchableOpacity style={styles.addButton} onPress={addActivity}>
-        <Text style={styles.addButtonText}>
-          {language === 'es' ? 'Agregar actividad' : 'Add Activity'}
+      <TouchableOpacity style={styles.addButton} onPress={handleAddProject}>
+        <Text style={styles.buttontext1}>
+          {language === 'es' ? 'Agregar proyecto' : 'Add Project'}
         </Text>
       </TouchableOpacity>
       
