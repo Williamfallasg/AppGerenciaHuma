@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Text, TextInput, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';  // Import the image manipulator
 import { useNavigation } from '@react-navigation/native';
 import { getAuth, signOut, deleteUser, updatePassword } from 'firebase/auth';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
@@ -65,7 +66,14 @@ const EditPerfil = () => {
     });
 
     if (!result.canceled && result.uri) {
-      setProfileImage({ uri: result.uri });
+      // Resize the image to a professional size (e.g., 300x300)
+      const resizedImage = await ImageManipulator.manipulateAsync(
+        result.uri,
+        [{ resize: { width: 300, height: 300 } }],  // Adjust the size here
+        { compress: 1, format: ImageManipulator.SaveFormat.PNG }
+      );
+
+      setProfileImage({ uri: resizedImage.uri });
       Alert.alert(
         language === 'es' ? 'Imagen seleccionada satisfactoriamente' : 'Image successfully selected'
       );

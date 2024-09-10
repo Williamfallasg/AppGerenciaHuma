@@ -5,7 +5,7 @@ const { width, height } = Dimensions.get('window');
 export default StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#F3F4F6', // Color de fondo claro y limpio
+    backgroundColor: '#D3D3D3', // Color de fondo claro y limpio
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: height * 0.03,

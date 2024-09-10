@@ -38,7 +38,36 @@ const Registrarse = () => {
     verificarRolAdmin();
   }, []);
 
+  const validarEmail = (correo) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(correo);
+  };
+
   const handleSubmit = async () => {
+    if (!nombre || !apellidos || !correo || !contrasena) {
+      Alert.alert(
+        language === 'es' ? 'Error' : 'Error',
+        language === 'es' ? 'Todos los campos son obligatorios' : 'All fields are required'
+      );
+      return;
+    }
+
+    if (!validarEmail(correo)) {
+      Alert.alert(
+        language === 'es' ? 'Error' : 'Error',
+        language === 'es' ? 'El correo no es válido' : 'Invalid email address'
+      );
+      return;
+    }
+
+    if (contrasena.length < 6) {
+      Alert.alert(
+        language === 'es' ? 'Error' : 'Error',
+        language === 'es' ? 'La contraseña debe tener al menos 6 caracteres' : 'Password must be at least 6 characters long'
+      );
+      return;
+    }
+
     const emailDomains = ['gmail.com', 'hotmail.com', 'ucr.ac.cr', 'outlook.com', 'humanitarianconsultants.org'];
     const emailDomain = correo.split('@')[1];
 
@@ -190,6 +219,12 @@ const Registrarse = () => {
         <TouchableOpacity onPress={() => navigation.navigate('Sesion')}>
           <Text style={styles.link}>
             {language === 'es' ? '¿Ya tiene una cuenta?' : 'Already have an account?'}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => navigation.navigate('EditPerfil')}>
+          <Text style={styles.link}>
+            {language === 'es' ? 'Editar Perfil' : 'Edit Profile'}
           </Text>
         </TouchableOpacity>
       </View>
