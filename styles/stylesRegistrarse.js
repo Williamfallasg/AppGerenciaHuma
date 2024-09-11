@@ -90,7 +90,7 @@ export default StyleSheet.create({
     fontWeight: '600',
   },
   link: {
-    marginTop: hp('1%'),
+    marginTop: hp('3%'),
     color: 'black',
     textAlign: 'center',
     fontSize: wp('4%'), // Tamaño dinámico

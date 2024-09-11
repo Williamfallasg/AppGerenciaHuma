@@ -2,7 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { LanguageProvider } from './context/LanguageContext';
-import { UserRoleProvider, useUserRole } from './context/UserRoleContext';
+import { UserRoleProvider } from './context/UserRoleContext';
 
 import Sesion from './Navegacion/Sesion';
 import Registrarse from './Navegacion/Registrarse';

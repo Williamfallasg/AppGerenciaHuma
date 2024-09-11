@@ -1,44 +1,48 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, Alert, ScrollView, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, Alert, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, firestore } from '../firebase/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/Ionicons';
-import styles from '../styles/stylesSesion'; // Importa el archivo de estilos
+import styles from '../styles/stylesSesion';
 
 const Sesion = () => {
   const navigation = useNavigation();
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { language, setLanguage } = useLanguage();
 
   const handleSubmit = async () => {
+    setLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, correo, contrasena);
       const user = userCredential.user;
+      const uid = user.uid;
 
-      // Obtener el rol del usuario desde Firestore
-      const docRef = doc(firestore, 'usuarios', user.email);
+      // Obtener el documento del usuario desde Firestore usando el UID
+      const docRef = doc(firestore, 'usuarios', uid);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
         const userData = docSnap.data();
         const userRole = userData.rol;
 
-        // Redirigir según el rol
+        if (!userRole) {
+          Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Rol no encontrado para este usuario.' : 'Role not found for this user.');
+          setLoading(false);
+          return;
+        }
+
         if (userRole === 'admin') {
-          Alert.alert(
-            language === 'es' ? 'Bienvenido al sistema de Humanitarian Consultants' : 'Welcome to the Humanitarian Consultants system'
-          );
-          navigation.navigate('Home');  // Navegar a la pantalla principal para admin
+          Alert.alert(language === 'es' ? 'Bienvenido al sistema de Humanitarian Consultants' : 'Welcome to the Humanitarian Consultants system');
+          navigation.navigate('Home');
         } else if (userRole === 'user') {
-          Alert.alert(
-            language === 'es' ? 'Bienvenido' : 'Welcome'
-          );
-          navigation.navigate('Home');  // Navegar a la pantalla principal para usuarios
+          Alert.alert(language === 'es' ? 'Bienvenido' : 'Welcome');
+          navigation.navigate('Home');
         } else {
           Alert.alert(language === 'es' ? 'Rol no autorizado' : 'Unauthorized role');
         }
@@ -53,17 +57,15 @@ const Sesion = () => {
       } else {
         Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'No se pudo iniciar sesión. Intente de nuevo.' : 'Could not log in. Please try again.');
       }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1 }}
-    >
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container}>
         <Image source={require('../assets/image.png')} style={styles.logo} resizeMode="contain" />
-        
         <View style={styles.languageButtonsContainer}>
           <TouchableOpacity style={styles.languageButton} onPress={() => setLanguage('es')}>
             <Text style={styles.languageButtonText}>Español</Text>
@@ -99,9 +101,15 @@ const Sesion = () => {
             <Icon name={showPassword ? "eye-off" : "eye"} size={24} color="#B0B0B0" />
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>{language === 'es' ? 'Iniciar sesión' : 'Log In'}</Text>
-        </TouchableOpacity>
+
+        {loading ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : (
+          <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+            <Text style={styles.buttonText}>{language === 'es' ? 'Iniciar sesión' : 'Log In'}</Text>
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity onPress={() => navigation.navigate('Registrarse')}>
           <Text style={styles.linkText}>{language === 'es' ? 'Registrar usuario' : 'Register User'}</Text>
         </TouchableOpacity>
