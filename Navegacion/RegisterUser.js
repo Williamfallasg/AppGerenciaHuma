@@ -1,19 +1,17 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert, Dimensions, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { useNavigation } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
 import { useLanguage } from '../context/LanguageContext';
-import { firestore } from '../firebase/firebase3';
+import { firestore } from '../firebase/firebase';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { useWindowDimensions } from 'react-native';
-import { useUserRole } from '../context/UserRoleContext'; // Importar el contexto del rol del usuario
+import { useFamily } from '../context/FamilyContext'; // Importar el contexto de familia
 import styles from '../styles/stylesRegisterUser'; // Importa el archivo de estilos
 
 const RegisterUser = () => {
   const { language } = useLanguage();
-  const { userRole } = useUserRole(); // Obtener el rol del usuario
-
   const [userData, setUserData] = useState({
     userID: '',
     idType: '',
@@ -28,9 +26,12 @@ const RegisterUser = () => {
     phone: '',
   });
 
+  const [errors, setErrors] = useState({});
   const [qrValue, setQrValue] = useState(null);
+  const [isUserValid, setIsUserValid] = useState(false); // Nuevo estado para verificar si el usuario es válido
   const navigation = useNavigation();
   const { width } = useWindowDimensions();
+  const { familyMembers, setFamilyMembers } = useFamily(); // Usar el contexto de familia
 
   const countries = [
     'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan', 
@@ -52,13 +53,75 @@ const RegisterUser = () => {
     setUserData({ ...userData, [field]: value });
   };
 
-  const handleSave = async () => {
-    const { userID, idType, name, gender, birthDate, age, country, province, canton, district, phone } = userData;
+  // Función para validar los campos
+  const validateFields = () => {
+    let newErrors = {};
 
-    if (!userID || !idType || !name || !gender || !birthDate || !age || !country || !province || !canton || !district || !phone) {
-      Alert.alert(language === 'es' ? 'Por favor, complete todos los campos' : 'Please fill in all fields');
+    if (!userData.userID) {
+      newErrors.userID = language === 'es' ? 'El ID de usuario es obligatorio' : 'User ID is required';
+    }
+
+    if (!userData.idType) {
+      newErrors.idType = language === 'es' ? 'Seleccione un tipo de identificación' : 'Select an ID Type';
+    }
+
+    if (!userData.name) {
+      newErrors.name = language === 'es' ? 'El nombre es obligatorio' : 'Name is required';
+    }
+
+    if (!userData.gender) {
+      newErrors.gender = language === 'es' ? 'Seleccione un género' : 'Select a gender';
+    }
+
+    const birthDateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+    if (!userData.birthDate || !birthDateRegex.test(userData.birthDate)) {
+      newErrors.birthDate = language === 'es' ? 'Fecha de nacimiento inválida (dd/mm/yyyy)' : 'Invalid birth date (dd/mm/yyyy)';
+    }
+
+    if (!userData.age || isNaN(userData.age)) {
+      newErrors.age = language === 'es' ? 'La edad es obligatoria y debe ser un número' : 'Age is required and must be a number';
+    }
+
+    if (!userData.country) {
+      newErrors.country = language === 'es' ? 'Seleccione un país' : 'Select a country';
+    }
+
+    if (!userData.province) {
+      newErrors.province = language === 'es' ? 'La provincia es obligatoria' : 'Province is required';
+    }
+
+    if (!userData.canton) {
+      newErrors.canton = language === 'es' ? 'El cantón es obligatorio' : 'Canton is required';
+    }
+
+    if (!userData.district) {
+      newErrors.district = language === 'es' ? 'El distrito es obligatorio' : 'District is required';
+    }
+
+    const phoneRegex = /^\d{8,15}$/; // Número de teléfono entre 8 y 15 dígitos
+    if (!userData.phone || !phoneRegex.test(userData.phone)) {
+      newErrors.phone = language === 'es' ? 'Número de teléfono inválido' : 'Invalid phone number';
+    }
+
+    setErrors(newErrors);
+
+    // Verificar si todos los campos están correctos
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Efecto para verificar si el formulario es válido
+  useEffect(() => {
+    setIsUserValid(validateFields());
+  }, [userData]);
+
+  const handleSave = async () => {
+    // Validar todos los campos antes de guardar
+    if (!validateFields()) {
+      Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Corrija los errores antes de continuar' : 'Please correct the errors before proceeding');
       return;
     }
+
+    const { userID, idType, name, gender, birthDate, age, country, province, canton, district, phone } = userData;
 
     try {
       const q = query(collection(firestore, "users"), where("userID", "==", userID));
@@ -79,32 +142,13 @@ const RegisterUser = () => {
     }
   };
 
-  const handleBirthDateChange = (value) => {
-    const regex = /^[0-9/]*$/; // Solo aceptar números y '/'
-    if (regex.test(value)) {
-      if (value.length === 2 || value.length === 5) {
-        value += '/';
-      }
-      setUserData({ ...userData, birthDate: value });
-    }
-  };
-
   const handleFamilyNavigation = () => {
-    const { userID, idType, name, gender, birthDate, age, country, province, canton, district, phone } = userData;
-
-    // Validar que todos los campos estén completos
-    if (!userID || !idType || !name || !gender || !birthDate || !age || !country || !province || !canton || !district || !phone) {
-      Alert.alert(language === 'es' ? 'Por favor, complete todos los campos antes de añadir familiar' : 'Please fill in all fields before adding family');
-      return;
+    // Navegar a la pantalla de FamilyScreen solo si el usuario es válido
+    if (isUserValid) {
+      navigation.navigate('FamilyScreen');
+    } else {
+      Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Complete todos los datos del usuario antes de añadir un familiar' : 'Complete all user data before adding a family member');
     }
-
-    // Si todos los campos están completos, navegar a la pantalla de Añadir Familiar
-    navigation.navigate('FamilyScreen', {
-      family: userData.family,
-      updateFamily: (updatedFamily) => {
-        setUserData({ ...userData, family: updatedFamily });
-      },
-    });
   };
 
   const handleSalir = () => {
@@ -126,6 +170,7 @@ const RegisterUser = () => {
           <Picker.Item label={language === 'es' ? "Cédula" : "ID Card"} value="ID Card" />
           <Picker.Item label={language === 'es' ? "Pasaporte" : "Passport"} value="Passport" />
         </Picker>
+        {errors.idType && <Text style={styles.errorText}>{errors.idType}</Text>}
       </View>
 
       <TextInput
@@ -135,14 +180,16 @@ const RegisterUser = () => {
         onChangeText={(value) => handleInputChange('userID', value)}
         placeholderTextColor="#B0B0B0"
       />
+      {errors.userID && <Text style={styles.errorText}>{errors.userID}</Text>}
 
       <TextInput
         style={styles.input(width)}
-        placeholder={language === 'es' ? "Nombre" : "Name"}
+        placeholder={language === 'es' ? "Nombre completo" : "Full name"}
         value={userData.name}
         onChangeText={(value) => handleInputChange('name', value)}
         placeholderTextColor="#B0B0B0"
       />
+      {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
 
       <View style={styles.pickerContainer}>
         <Picker
@@ -151,30 +198,33 @@ const RegisterUser = () => {
           onValueChange={(value) => handleInputChange('gender', value)}
           itemStyle={styles.pickerItem}
         >
-          <Picker.Item label={language === 'es' ? "Seleccione un sexo" : "Select a sex"} value="" />
+          <Picker.Item label={language === 'es' ? "Seleccione un género" : "Select a gender"} value="" />
           <Picker.Item label={language === 'es' ? "Masculino" : "Male"} value="Male" />
           <Picker.Item label={language === 'es' ? "Femenino" : "Female"} value="Female" />
         </Picker>
+        {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
       </View>
 
       <TextInput
         style={styles.input(width)}
         placeholder={language === 'es' ? "Fecha de nacimiento (dd/mm/yyyy)" : "Birth Date (dd/mm/yyyy)"}
         value={userData.birthDate}
-        onChangeText={(value) => handleBirthDateChange(value)}
+        onChangeText={(value) => handleInputChange('birthDate', value)}
         keyboardType="numeric"
         placeholderTextColor="#B0B0B0"
         maxLength={10}
       />
+      {errors.birthDate && <Text style={styles.errorText}>{errors.birthDate}</Text>}
 
       <TextInput
         style={styles.input(width)}
         placeholder={language === 'es' ? "Edad" : "Age"}
         value={userData.age}
         onChangeText={(value) => handleInputChange('age', value)}
-        keyboardType="numeric" // Asegurarse de que solo se acepten números
+        keyboardType="numeric"
         placeholderTextColor="#B0B0B0"
       />
+      {errors.age && <Text style={styles.errorText}>{errors.age}</Text>}
 
       <View style={styles.pickerContainer}>
         <Picker
@@ -188,6 +238,7 @@ const RegisterUser = () => {
             <Picker.Item key={index} label={country} value={country} />
           ))}
         </Picker>
+        {errors.country && <Text style={styles.errorText}>{errors.country}</Text>}
       </View>
 
       <TextInput
@@ -197,6 +248,7 @@ const RegisterUser = () => {
         onChangeText={(value) => handleInputChange('province', value)}
         placeholderTextColor="#B0B0B0"
       />
+      {errors.province && <Text style={styles.errorText}>{errors.province}</Text>}
 
       <TextInput
         style={styles.input(width)}
@@ -205,6 +257,7 @@ const RegisterUser = () => {
         onChangeText={(value) => handleInputChange('canton', value)}
         placeholderTextColor="#B0B0B0"
       />
+      {errors.canton && <Text style={styles.errorText}>{errors.canton}</Text>}
 
       <TextInput
         style={styles.input(width)}
@@ -213,6 +266,7 @@ const RegisterUser = () => {
         onChangeText={(value) => handleInputChange('district', value)}
         placeholderTextColor="#B0B0B0"
       />
+      {errors.district && <Text style={styles.errorText}>{errors.district}</Text>}
 
       <TextInput
         style={styles.input(width)}
@@ -222,8 +276,13 @@ const RegisterUser = () => {
         keyboardType="phone-pad"
         placeholderTextColor="#B0B0B0"
       />
+      {errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
 
-      <TouchableOpacity style={styles.addButton(width)} onPress={handleFamilyNavigation}>
+      <TouchableOpacity
+        style={[styles.addButton(width), !isUserValid && { backgroundColor: '#ccc' }]} // Deshabilitar si no es válido
+        onPress={handleFamilyNavigation}
+        disabled={!isUserValid} // Deshabilitar si no es válido
+      >
         <Text style={styles.buttonText}>
           {language === 'es' ? "Añadir Familiar" : "Add Family Member"}
         </Text>

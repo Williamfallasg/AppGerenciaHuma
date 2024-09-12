@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
-import { firestore } from '../firebase/firebase1';
+import { firestore } from '../firebase/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 import { useUserRole } from '../context/UserRoleContext'; 
 import styles from '../styles/stylesProgramForm';  // Importar los estilos

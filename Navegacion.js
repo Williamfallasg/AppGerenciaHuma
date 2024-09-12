@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { LanguageProvider } from './context/LanguageContext';
 import { UserRoleProvider } from './context/UserRoleContext';
+import { FamilyProvider } from './context/FamilyContext';
 
 import Sesion from './Navegacion/Sesion';
 import Registrarse from './Navegacion/Registrarse';
@@ -15,6 +16,7 @@ import RegisterUser from './Navegacion/RegisterUser';
 import GenerateReport from './Navegacion/GenerateReport';
 import Report from './Navegacion/Report';
 import FamilyScreen from './Navegacion/FamilyScreen';
+
 
 const Stack = createStackNavigator();
 
@@ -82,6 +84,7 @@ const AppStack = () => {
 
 const Navegacion = () => {
   return (
+  <FamilyProvider>
     <LanguageProvider>
       <UserRoleProvider>
         <NavigationContainer>
@@ -89,6 +92,7 @@ const Navegacion = () => {
         </NavigationContainer>
       </UserRoleProvider>
     </LanguageProvider>
+  </FamilyProvider>
   );
 };
 

@@ -83,7 +83,14 @@ const Registrarse = () => {
       setContrasena('');
       navigation.navigate('Sesion');
     } catch (error) {
-      Alert.alert(language === 'es' ? 'Error de registro' : 'Registration error', error.message);
+      if (error.code === 'auth/email-already-in-use') {
+        Alert.alert(
+          language === 'es' ? 'Error de registro' : 'Registration error',
+          language === 'es' ? 'El correo ya existe' : 'Email is already in use'
+        );
+      } else {
+        Alert.alert(language === 'es' ? 'Error de registro' : 'Registration error', error.message);
+      }
     }
   };
 

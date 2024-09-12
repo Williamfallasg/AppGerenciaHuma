@@ -16,7 +16,18 @@ const Sesion = () => {
   const [loading, setLoading] = useState(false);
   const { language, setLanguage } = useLanguage();
 
+  // Valida que los campos de correo y contraseña no estén vacíos
+  const isValidForm = () => correo.trim() !== '' && contrasena.trim() !== '';
+
   const handleSubmit = async () => {
+    if (!isValidForm()) {
+      Alert.alert(
+        language === 'es' ? 'Error' : 'Error',
+        language === 'es' ? 'Por favor, completa todos los campos.' : 'Please fill in all fields.'
+      );
+      return;
+    }
+
     setLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, correo, contrasena);
@@ -50,10 +61,10 @@ const Sesion = () => {
         Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'No se encontró información del usuario.' : 'User information not found.');
       }
     } catch (error) {
-      setCorreo('');
-      setContrasena('');
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
         Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Correo o contraseña incorrectos' : 'Incorrect email or password');
+        setCorreo(''); // Limpiar solo si el error es de credenciales
+        setContrasena('');
       } else {
         Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'No se pudo iniciar sesión. Intente de nuevo.' : 'Could not log in. Please try again.');
       }

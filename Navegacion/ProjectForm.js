@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
-import { firestore } from '../firebase/firebase2';
+import { firestore } from '../firebase/firebase';
 import { collection, doc, getDoc, setDoc } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useUserRole } from '../context/UserRoleContext';
