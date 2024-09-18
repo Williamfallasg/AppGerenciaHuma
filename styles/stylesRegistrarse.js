@@ -65,10 +65,11 @@ export default StyleSheet.create({
 
   },
   iconButton: {
-    paddingHorizontal: wp('5%'),
+    paddingHorizontal: wp('3%'),
     justifyContent: 'center',
     height: hp('5%'),
     backgroundColor: 'transparent',
+    marginLeft: wp('-12%')
   },
   button: {
     width: '90%',

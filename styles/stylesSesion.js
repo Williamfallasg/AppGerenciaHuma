@@ -5,22 +5,23 @@ const { width, height } = Dimensions.get('window');
 export default StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#D3D3D3', 
+    backgroundColor: '#D3D3D3',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: height * 0.03,
-    paddingHorizontal: width > 600 ? 25 : 15,
+    paddingHorizontal: width > 600 ? 25 : 15, // Ajuste de padding para pantallas más grandes
   },
   logo: {
-    width: '60%', 
+    width: '60%',
     height: height * 0.2,
     marginBottom: height * 0.04,
     resizeMode: 'contain',
+    maxWidth: 300,  // Límite para pantallas grandes
   },
   label: {
     alignSelf: 'flex-start',
-    color: '#333', 
-    fontSize: width > 600 ? 20 : width * 0.045,
+    color: '#333',
+    fontSize: width > 600 ? 20 : width * 0.045,  // Ajuste de tamaño basado en pantalla
     marginBottom: height * 0.01,
     fontWeight: 'bold',
   },
@@ -28,10 +29,11 @@ export default StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
-    borderRadius: 12, 
+    borderRadius: 12,
     marginBottom: height * 0.02,
     paddingLeft: 12,
     width: '100%',
+    maxWidth: 400,  // Límite para pantallas grandes
     height: height * 0.07,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -44,7 +46,7 @@ export default StyleSheet.create({
     flex: 1,
     color: '#333',
     fontSize: width > 600 ? 16 : 14,
-    paddingRight: 10, 
+    paddingRight: 10,
   },
   iconContainer: {
     paddingHorizontal: 12,
@@ -56,6 +58,7 @@ export default StyleSheet.create({
     paddingHorizontal: '12%',
     marginBottom: height * 0.02,
     width: '100%',
+    maxWidth: 400,  // Límite para pantallas grandes
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -81,6 +84,7 @@ export default StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
+    maxWidth: 400,  // Límite para pantallas grandes
     marginTop: height * 0.025,
     marginBottom: height * 0.02,
   },

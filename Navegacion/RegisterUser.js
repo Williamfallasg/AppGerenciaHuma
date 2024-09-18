@@ -28,7 +28,8 @@ const RegisterUser = () => {
 
   const [errors, setErrors] = useState({});
   const [qrValue, setQrValue] = useState(null);
-  const [isUserValid, setIsUserValid] = useState(false); // Nuevo estado para verificar si el usuario es válido
+  const [isUserValid, setIsUserValid] = useState(false); // Estado para verificar si el usuario es válido
+  const [formSubmitted, setFormSubmitted] = useState(false); // Nuevo estado para saber si se intentó enviar el formulario
   const navigation = useNavigation();
   const { width } = useWindowDimensions();
   const { familyMembers, setFamilyMembers } = useFamily(); // Usar el contexto de familia
@@ -70,7 +71,7 @@ const RegisterUser = () => {
     }
 
     if (!userData.gender) {
-      newErrors.gender = language === 'es' ? 'Seleccione un género' : 'Select a gender';
+      newErrors.gender = language === 'es' ? 'Seleccione un sexo' : 'Select a sex';
     }
 
     const birthDateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
@@ -105,7 +106,6 @@ const RegisterUser = () => {
 
     setErrors(newErrors);
 
-    // Verificar si todos los campos están correctos
     return Object.keys(newErrors).length === 0;
   };
 
@@ -115,6 +115,9 @@ const RegisterUser = () => {
   }, [userData]);
 
   const handleSave = async () => {
+    // Marcar el formulario como enviado
+    setFormSubmitted(true);
+
     // Validar todos los campos antes de guardar
     if (!validateFields()) {
       Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Corrija los errores antes de continuar' : 'Please correct the errors before proceeding');
@@ -143,7 +146,6 @@ const RegisterUser = () => {
   };
 
   const handleFamilyNavigation = () => {
-    // Navegar a la pantalla de FamilyScreen solo si el usuario es válido
     if (isUserValid) {
       navigation.navigate('FamilyScreen');
     } else {
@@ -170,7 +172,7 @@ const RegisterUser = () => {
           <Picker.Item label={language === 'es' ? "Cédula" : "ID Card"} value="ID Card" />
           <Picker.Item label={language === 'es' ? "Pasaporte" : "Passport"} value="Passport" />
         </Picker>
-        {errors.idType && <Text style={styles.errorText}>{errors.idType}</Text>}
+        {formSubmitted && errors.idType && <Text style={styles.errorText}>{errors.idType}</Text>}
       </View>
 
       <TextInput
@@ -180,7 +182,7 @@ const RegisterUser = () => {
         onChangeText={(value) => handleInputChange('userID', value)}
         placeholderTextColor="#B0B0B0"
       />
-      {errors.userID && <Text style={styles.errorText}>{errors.userID}</Text>}
+      {formSubmitted && errors.userID && <Text style={styles.errorText}>{errors.userID}</Text>}
 
       <TextInput
         style={styles.input(width)}
@@ -189,7 +191,7 @@ const RegisterUser = () => {
         onChangeText={(value) => handleInputChange('name', value)}
         placeholderTextColor="#B0B0B0"
       />
-      {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
+      {formSubmitted && errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
 
       <View style={styles.pickerContainer}>
         <Picker
@@ -198,11 +200,11 @@ const RegisterUser = () => {
           onValueChange={(value) => handleInputChange('gender', value)}
           itemStyle={styles.pickerItem}
         >
-          <Picker.Item label={language === 'es' ? "Seleccione un género" : "Select a gender"} value="" />
+          <Picker.Item label={language === 'es' ? "Seleccione un sexo" : "Select a sex"} value="" />
           <Picker.Item label={language === 'es' ? "Masculino" : "Male"} value="Male" />
           <Picker.Item label={language === 'es' ? "Femenino" : "Female"} value="Female" />
         </Picker>
-        {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
+        {formSubmitted && errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
       </View>
 
       <TextInput
@@ -214,7 +216,7 @@ const RegisterUser = () => {
         placeholderTextColor="#B0B0B0"
         maxLength={10}
       />
-      {errors.birthDate && <Text style={styles.errorText}>{errors.birthDate}</Text>}
+      {formSubmitted && errors.birthDate && <Text style={styles.errorText}>{errors.birthDate}</Text>}
 
       <TextInput
         style={styles.input(width)}
@@ -224,7 +226,7 @@ const RegisterUser = () => {
         keyboardType="numeric"
         placeholderTextColor="#B0B0B0"
       />
-      {errors.age && <Text style={styles.errorText}>{errors.age}</Text>}
+      {formSubmitted && errors.age && <Text style={styles.errorText}>{errors.age}</Text>}
 
       <View style={styles.pickerContainer}>
         <Picker
@@ -238,7 +240,7 @@ const RegisterUser = () => {
             <Picker.Item key={index} label={country} value={country} />
           ))}
         </Picker>
-        {errors.country && <Text style={styles.errorText}>{errors.country}</Text>}
+        {formSubmitted && errors.country && <Text style={styles.errorText}>{errors.country}</Text>}
       </View>
 
       <TextInput
@@ -248,7 +250,7 @@ const RegisterUser = () => {
         onChangeText={(value) => handleInputChange('province', value)}
         placeholderTextColor="#B0B0B0"
       />
-      {errors.province && <Text style={styles.errorText}>{errors.province}</Text>}
+      {formSubmitted && errors.province && <Text style={styles.errorText}>{errors.province}</Text>}
 
       <TextInput
         style={styles.input(width)}
@@ -257,7 +259,7 @@ const RegisterUser = () => {
         onChangeText={(value) => handleInputChange('canton', value)}
         placeholderTextColor="#B0B0B0"
       />
-      {errors.canton && <Text style={styles.errorText}>{errors.canton}</Text>}
+      {formSubmitted && errors.canton && <Text style={styles.errorText}>{errors.canton}</Text>}
 
       <TextInput
         style={styles.input(width)}
@@ -266,7 +268,7 @@ const RegisterUser = () => {
         onChangeText={(value) => handleInputChange('district', value)}
         placeholderTextColor="#B0B0B0"
       />
-      {errors.district && <Text style={styles.errorText}>{errors.district}</Text>}
+      {formSubmitted && errors.district && <Text style={styles.errorText}>{errors.district}</Text>}
 
       <TextInput
         style={styles.input(width)}
@@ -276,7 +278,7 @@ const RegisterUser = () => {
         keyboardType="phone-pad"
         placeholderTextColor="#B0B0B0"
       />
-      {errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
+      {formSubmitted && errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
 
       <TouchableOpacity
         style={[styles.addButton(width), !isUserValid && { backgroundColor: '#ccc' }]} // Deshabilitar si no es válido
