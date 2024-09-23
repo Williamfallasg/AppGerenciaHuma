@@ -5,96 +5,125 @@ const { width, height } = Dimensions.get('window');
 export default StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#D3D3D3', // Fondo gris claro
+    backgroundColor: '#D3D3D3',
     alignItems: 'center',
-    justifyContent: 'center',
     padding: 10,
   },
   logo: {
-    width: width * 0.5, // Tamaño dinámico basado en el ancho de la pantalla
+    width: width * 0.5,
     height: width * 0.5,
     marginBottom: 30,
-    resizeMode: 'contain', // Evitar que la imagen se deforme
+    resizeMode: 'contain',
   },
   input: {
-    backgroundColor: 'white', // Fondo blanco para los inputs
-    borderRadius: 10, // Bordes redondeados
-    padding: 10, // Espaciado interno
-    marginBottom: 10, // Espacio entre inputs
-    width: '100%', // Ocupa todo el ancho
-    height: height * 0.07, // Altura dinámica basada en la pantalla
-    fontSize: 16, // Tamaño de la fuente
-  },
-  multilineInput: {
-    backgroundColor: 'white', // Igual que los inputs normales
+    backgroundColor: 'white',
     borderRadius: 10,
     padding: 10,
     marginBottom: 10,
     width: '100%',
-    height: height * 0.1, // Más altura para entradas de múltiples líneas
-    textAlignVertical: 'top', // Texto alineado arriba en el input
+    height: height * 0.07,
     fontSize: 16,
   },
   button: {
-    backgroundColor: '#67A6F2', // Azul claro para los botones
+    backgroundColor: '#67A6F2',
     borderRadius: 10,
-    paddingVertical: 10, // Espaciado vertical
-    paddingHorizontal: 10, // Espaciado horizontal
-    marginTop: 10, // Margen superior
-    width: '100%', // Ancho completo
-    alignItems: 'center', // Alinea el texto al centro
-  },
-  buttonText: {
-    color: 'black', // Texto blanco en los botones
-    fontSize: 18, // Tamaño de texto grande
-    textAlign: 'center', // Alineado al centro
-    fontWeight: "bold"
-  },
-  exitButton: {
-    backgroundColor: '#F28C32', // Naranja para el botón "Salir"
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     marginTop: 10,
     width: '100%',
     alignItems: 'center',
   },
-  activityContainer: {
-    flexDirection: 'row', // Alinear elementos en fila
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  exitButton: {
+    backgroundColor: '#F28C32',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginTop: 10,
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 15,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    color: '#000',
+    textAlign: 'left',
+    alignSelf: 'flex-start',
+  },
+  addButton: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10, // Espacio entre actividades
+    backgroundColor: '#67A6F2',
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 10,
     width: '100%',
   },
+  addButtonText: {
+    color: 'white',
+    fontSize: 18,
+    marginLeft: 10,
+    fontWeight: 'bold',
+  },
   activityInput: {
-    flex: 1, // Ocupa todo el espacio disponible
+    flex: 1,
     backgroundColor: 'white',
     borderRadius: 10,
     padding: 10,
     fontSize: 16,
   },
   iconButton: {
-    marginLeft: 20, // Separar los íconos de los inputs
+    marginLeft: 15,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#000',
-    textAlign: 'center', // Título centrado para las secciones
-  },
-  // Estilos para Indicadores
-  indicatorContainer: {
-    flexDirection: 'row', // Los indicadores van en filas para los iconos
-    alignItems: 'center',
+  // Cambiado a columna
+  radioButtonContainer: {
+    flexDirection: 'column', // Cambiado a 'column' para que se vea uno debajo de otro
+    alignItems: 'flex-start', // Alinea el texto a la izquierda
     marginBottom: 10,
     width: '100%',
+  },
+  radioButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10, // Espacio entre las opciones
+  },
+  radioSelected: {
+    height: 20,
+    width: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#007AFF',
+    backgroundColor: '#007AFF',
+    marginRight: 10,
+  },
+  radioUnselected: {
+    height: 20,
+    width: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#B0B0B0',
+    backgroundColor: '#FFFFFF',
+    marginRight: 10,
   },
   indicatorInput: {
     flex: 1,
     backgroundColor: 'white',
     borderRadius: 10,
     padding: 10,
-    marginBottom: 10, // Espacio entre el input y el siguiente
     fontSize: 16,
   },
   beneficiariesInput: {
@@ -102,7 +131,6 @@ export default StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 10,
     padding: 10,
-    marginBottom: 10, // Espacio para el número de beneficiarios
     fontSize: 16,
   },
 });

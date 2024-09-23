@@ -28,33 +28,60 @@ const RegisterUser = () => {
 
   const [errors, setErrors] = useState({});
   const [qrValue, setQrValue] = useState(null);
-  const [isUserValid, setIsUserValid] = useState(false); // Estado para verificar si el usuario es válido
-  const [formSubmitted, setFormSubmitted] = useState(false); // Nuevo estado para saber si se intentó enviar el formulario
+  const [isUserValid, setIsUserValid] = useState(false); 
+  const [formSubmitted, setFormSubmitted] = useState(false); 
   const navigation = useNavigation();
   const { width } = useWindowDimensions();
-  const { familyMembers, setFamilyMembers } = useFamily(); // Usar el contexto de familia
+  const { familyMembers, setFamilyMembers } = useFamily(); 
 
-  const countries = [
-    'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan', 
-    'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina', 
-    'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Cambodia', 'Cameroon', 'Canada', 'Chile', 'China', 'Colombia', 
-    'Congo', 'Costa Rica', 'Croatia', 'Cuba', 'Cyprus', 'Czech Republic', 'Denmark', 'Dominica', 'Dominican Republic', 'Ecuador', 
-    'Egypt', 'El Salvador', 'Eritrea', 'Estonia', 'Ethiopia', 'Fiji', 'Finland', 'France', 'Germany', 'Greece', 'Grenada', 'Guatemala', 
-    'Guinea', 'Haiti', 'Honduras', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel', 'Italy', 'Jamaica', 
-    'Japan', 'Jordan', 'Kazakhstan', 'Kenya', 'Kuwait', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Lithuania', 'Luxembourg', 
-    'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Mexico', 'Micronesia', 'Monaco', 'Morocco', 'Mozambique', 'Nepal', 
-    'Netherlands', 'New Zealand', 'Nicaragua', 'Nigeria', 'Norway', 'Pakistan', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 
-    'Philippines', 'Poland', 'Portugal', 'Qatar', 'Russia', 'Rwanda', 'Saint Lucia', 'Saint Vincent and the Grenadines', 'Samoa', 
-    'Saudi Arabia', 'Serbia', 'Seychelles', 'Singapore', 'Slovakia', 'Slovenia', 'Somalia', 'South Africa', 'South Korea', 'Spain', 
-    'Sri Lanka', 'Sudan', 'Sweden', 'Switzerland', 'Thailand', 'Turkey', 'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 
-    'United States', 'Uruguay', 'Vatican City', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'
+  // Lista de países en español
+  const countriesSpanish = [
+    'Afganistán', 'Albania', 'Argelia', 'Andorra', 'Angola', 'Antigua y Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaiyán',
+    'Bahamas', 'Baréin', 'Bangladés', 'Barbados', 'Bielorrusia', 'Bélgica', 'Belice', 'Benín', 'Bután', 'Bolivia', 'Bosnia y Herzegovina',
+    'Botsuana', 'Brasil', 'Brunéi', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Cabo Verde', 'Camboya', 'Camerún', 'Canadá', 'República Centroafricana',
+    'Chad', 'Chile', 'China', 'Colombia', 'Comoras', 'Congo', 'República Democrática del Congo', 'Costa Rica', 'Croacia', 'Cuba', 'Chipre',
+    'República Checa', 'Dinamarca', 'Yibuti', 'Dominica', 'República Dominicana', 'Timor Oriental', 'Ecuador', 'Egipto', 'El Salvador', 'Guinea Ecuatorial',
+    'Eritrea', 'Estonia', 'Esuatini', 'Etiopía', 'Fiyi', 'Finlandia', 'Francia', 'Gabón', 'Gambia', 'Georgia', 'Alemania', 'Ghana', 'Grecia', 'Granada',
+    'Guatemala', 'Guinea', 'Guinea-Bisáu', 'Guyana', 'Haití', 'Honduras', 'Hungría', 'Islandia', 'India', 'Indonesia', 'Irán', 'Irak', 'Irlanda',
+    'Israel', 'Italia', 'Costa de Marfil', 'Jamaica', 'Japón', 'Jordania', 'Kazajistán', 'Kenia', 'Kiribati', 'Kuwait', 'Kirguistán', 'Laos', 'Letonia',
+    'Líbano', 'Lesoto', 'Liberia', 'Libia', 'Liechtenstein', 'Lituania', 'Luxemburgo', 'Madagascar', 'Malaui', 'Malasia', 'Maldivas', 'Malí',
+    'Malta', 'Islas Marshall', 'Mauritania', 'Mauricio', 'México', 'Micronesia', 'Moldavia', 'Mónaco', 'Mongolia', 'Montenegro', 'Marruecos',
+    'Mozambique', 'Birmania', 'Namibia', 'Nauru', 'Nepal', 'Países Bajos', 'Nueva Zelanda', 'Nicaragua', 'Níger', 'Nigeria', 'Corea del Norte', 'Macedonia del Norte',
+    'Noruega', 'Omán', 'Pakistán', 'Palaos', 'Panamá', 'Papúa Nueva Guinea', 'Paraguay', 'Perú', 'Filipinas', 'Polonia', 'Portugal', 'Catar',
+    'Rumanía', 'Rusia', 'Ruanda', 'San Cristóbal y Nieves', 'Santa Lucía', 'San Vicente y las Granadinas', 'Samoa', 'San Marino', 'Santo Tomé y Príncipe',
+    'Arabia Saudita', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leona', 'Singapur', 'Eslovaquia', 'Eslovenia', 'Islas Salomón', 'Somalia',
+    'Sudáfrica', 'Corea del Sur', 'Sudán del Sur', 'España', 'Sri Lanka', 'Sudán', 'Surinam', 'Suecia', 'Suiza', 'Siria', 'Taiwán',
+    'Tayikistán', 'Tanzania', 'Tailandia', 'Togo', 'Tonga', 'Trinidad y Tobago', 'Túnez', 'Turquía', 'Turkmenistán', 'Tuvalu', 'Uganda',
+    'Ucrania', 'Emiratos Árabes Unidos', 'Reino Unido', 'Estados Unidos', 'Uruguay', 'Uzbekistán', 'Vanuatu', 'Ciudad del Vaticano', 'Venezuela',
+    'Vietnam', 'Yemen', 'Zambia', 'Zimbabue'
+  ];
+
+  // Lista de países en inglés
+  const countriesEnglish = [
+    'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan',
+    'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina',
+    'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Cabo Verde', 'Cambodia', 'Cameroon', 'Canada', 'Central African Republic',
+    'Chad', 'Chile', 'China', 'Colombia', 'Comoros', 'Congo', 'Democratic Republic of the Congo', 'Costa Rica', 'Croatia', 'Cuba', 'Cyprus',
+    'Czech Republic', 'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic', 'East Timor', 'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea',
+    'Eritrea', 'Estonia', 'Eswatini', 'Ethiopia', 'Fiji', 'Finland', 'France', 'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada',
+    'Guatemala', 'Guinea', 'Guinea-Bissau', 'Guyana', 'Haiti', 'Honduras', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland',
+    'Israel', 'Italy', 'Ivory Coast', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya', 'Kiribati', 'Kuwait', 'Kyrgyzstan', 'Laos', 'Latvia',
+    'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg', 'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali',
+    'Malta', 'Marshall Islands', 'Mauritania', 'Mauritius', 'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Morocco',
+    'Mozambique', 'Myanmar', 'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Korea', 'North Macedonia',
+    'Norway', 'Oman', 'Pakistan', 'Palau', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Poland', 'Portugal', 'Qatar',
+    'Romania', 'Russia', 'Rwanda', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent and the Grenadines', 'Samoa', 'San Marino', 'Sao Tome and Principe',
+    'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia',
+    'South Africa', 'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Sweden', 'Switzerland', 'Syria', 'Taiwan',
+    'Tajikistan', 'Tanzania', 'Thailand', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu', 'Uganda',
+    'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay', 'Uzbekistan', 'Vanuatu', 'Vatican City', 'Venezuela',
+    'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'
   ];
 
   const handleInputChange = (field, value) => {
     setUserData({ ...userData, [field]: value });
   };
 
-  // Función para validar los campos
   const validateFields = () => {
     let newErrors = {};
 
@@ -99,7 +126,7 @@ const RegisterUser = () => {
       newErrors.district = language === 'es' ? 'El distrito es obligatorio' : 'District is required';
     }
 
-    const phoneRegex = /^\d{8,15}$/; // Número de teléfono entre 8 y 15 dígitos
+    const phoneRegex = /^\d{8,15}$/; 
     if (!userData.phone || !phoneRegex.test(userData.phone)) {
       newErrors.phone = language === 'es' ? 'Número de teléfono inválido' : 'Invalid phone number';
     }
@@ -109,16 +136,13 @@ const RegisterUser = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Efecto para verificar si el formulario es válido
   useEffect(() => {
     setIsUserValid(validateFields());
   }, [userData]);
 
   const handleSave = async () => {
-    // Marcar el formulario como enviado
     setFormSubmitted(true);
 
-    // Validar todos los campos antes de guardar
     if (!validateFields()) {
       Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Corrija los errores antes de continuar' : 'Please correct the errors before proceeding');
       return;
@@ -156,6 +180,9 @@ const RegisterUser = () => {
   const handleSalir = () => {
     navigation.navigate('Home');
   };
+
+  // Selecciona la lista de países dependiendo del idioma
+  const selectedCountries = language === 'es' ? countriesSpanish : countriesEnglish;
 
   return (
     <ScrollView contentContainerStyle={styles.container(width)}>
@@ -236,7 +263,7 @@ const RegisterUser = () => {
           itemStyle={styles.pickerItem}
         >
           <Picker.Item label={language === 'es' ? "Seleccione un país" : "Select a country"} value="" />
-          {countries.map((country, index) => (
+          {selectedCountries.map((country, index) => (
             <Picker.Item key={index} label={country} value={country} />
           ))}
         </Picker>
@@ -281,9 +308,9 @@ const RegisterUser = () => {
       {formSubmitted && errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
 
       <TouchableOpacity
-        style={[styles.addButton(width), !isUserValid && { backgroundColor: '#ccc' }]} // Deshabilitar si no es válido
+        style={[styles.addButton(width), !isUserValid && { backgroundColor: '#ccc' }]} 
         onPress={handleFamilyNavigation}
-        disabled={!isUserValid} // Deshabilitar si no es válido
+        disabled={!isUserValid} 
       >
         <Text style={styles.buttonText}>
           {language === 'es' ? "Añadir Familiar" : "Add Family Member"}
