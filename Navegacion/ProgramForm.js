@@ -3,184 +3,313 @@ import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert } fro
 import { useNavigation } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
 import { firestore } from '../firebase/firebase';
-import { collection, addDoc } from 'firebase/firestore';
-import { useUserRole } from '../context/UserRoleContext'; 
-import styles from '../styles/stylesProgramForm';  // Importar los estilos
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useUserRole } from '../context/UserRoleContext';
+import styles from '../styles/stylesProgramForm';
 
 const ProgramForm = () => {
-  const { language } = useLanguage();
+  const { language } = useLanguage(); 
   const navigation = useNavigation();
   const { userRole } = useUserRole(); 
 
-  const [programID, setProgramID] = useState('');
-  const [programName, setProgramName] = useState('');
-  const [programDescription, setProgramDescription] = useState('');
-  const [programBudget, setProgramBudget] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [programas, setProgramas] = useState([{
+    programID: '',
+    programName: '',
+    programDescription: '',
+    programBudget: '',
+    startDate: '',
+    endDate: ''
+  }]);
 
-  // Verificar si el usuario es admin
+  const [searchID, setSearchID] = useState(''); // ID del programa a buscar
+
   useEffect(() => {
     if (userRole !== 'admin') {
-      navigation.navigate('Home');
+      Alert.alert(
+        language === 'es' ? 'Acceso Denegado' : 'Access Denied',
+        language === 'es' ? 'No tienes permisos para acceder a esta sección' : 'You do not have permission to access this section',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Home'),
+          }
+        ]
+      );
     }
   }, [userRole]);
 
-  const formatDateInput = (text) => {
-    if (/^\d{2}$/.test(text) || /^\d{2}\/\d{2}$/.test(text)) {
-      text += '/';
+  // Validar que un programa existente tenga el formato correcto
+  const validateProgram = (programa) => {
+    // Validar que ningún campo esté vacío
+    if (!programa.programID || !programa.programName || !programa.programDescription || !programa.programBudget || !programa.startDate || !programa.endDate) {
+      Alert.alert(language === 'es' ? "Error" : "Error", language === 'es' ? "Por favor, completa todos los campos del programa" : "Please complete all fields for the program");
+      return false;
     }
-    return text;
-  };
 
-  const handleStartDateChange = (text) => {
-    const formattedText = formatDateInput(text);
-    setStartDate(formattedText);
-  };
+    // Validar que el presupuesto sea un número positivo
+    const budget = parseFloat(programa.programBudget);
+    if (isNaN(budget) || budget <= 0) {
+      Alert.alert(language === 'es' ? "Error de presupuesto" : "Budget Error", language === 'es' ? "El presupuesto debe ser un número positivo" : "The budget must be a positive number");
+      return false;
+    }
 
-  const handleEndDateChange = (text) => {
-    const formattedText = formatDateInput(text);
-    setEndDate(formattedText);
-  };
+    // Validar longitud mínima del nombre del programa (por ejemplo, al menos 3 caracteres)
+    if (programa.programName.length < 3) {
+      Alert.alert(language === 'es' ? "Error en el nombre" : "Name Error", language === 'es' ? "El nombre del programa debe tener al menos 3 caracteres" : "The program name must have at least 3 characters");
+      return false;
+    }
 
-  const validateDate = (date) => {
-    const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
-    if (!dateRegex.test(date)) {
+    // Validar longitud mínima de la descripción del programa
+    if (programa.programDescription.length < 10) {
+      Alert.alert(language === 'es' ? "Error en la descripción" : "Description Error", language === 'es' ? "La descripción del programa debe tener al menos 10 caracteres" : "The program description must have at least 10 characters");
       return false;
     }
-    const [day, month, year] = date.split('/').map(Number);
-    const dateObj = new Date(year, month - 1, day);
-    return dateObj.getDate() === day && dateObj.getMonth() === month - 1 && dateObj.getFullYear() === year;
-  };
 
-  const validateInputs = () => {
-    if (!programID || !programName || !programDescription || !programBudget || !startDate || !endDate) {
-      Alert.alert(language === 'es' ? 'Por favor, complete todos los campos' : 'Please fill in all fields');
-      return false;
-    }
-    if (isNaN(programBudget)) {
-      Alert.alert(language === 'es' ? 'Presupuesto debe ser un número' : 'Budget must be a number');
-      return false;
-    }
-    if (!validateDate(startDate)) {
-      Alert.alert(language === 'es' ? 'Fecha de inicio no válida' : 'Invalid start date');
-      return false;
-    }
-    if (!validateDate(endDate)) {
-      Alert.alert(language === 'es' ? 'Fecha de fin no válida' : 'Invalid end date');
-      return false;
-    }
-    const [startDay, startMonth, startYear] = startDate.split('/').map(Number);
-    const [endDay, endMonth, endYear] = endDate.split('/').map(Number);
-    const start = new Date(startYear, startMonth - 1, startDay);
-    const end = new Date(endYear, endMonth - 1, endDay);
-    if (end < start) {
-      Alert.alert(language === 'es' ? 'La fecha de fin no puede ser anterior a la fecha de inicio' : 'End date cannot be earlier than start date');
-      return false;
-    }
     return true;
   };
 
-  const handleSave = async () => {
-    if (!validateInputs()) return;
+  // Función para validar fechas válidas (evitar días/meses inválidos)
+  const isValidDate = (day, month, year) => {
+    const dayInt = parseInt(day, 10);
+    const monthInt = parseInt(month, 10);
+    const yearInt = parseInt(year, 10);
+
+    // Validar que el mes esté entre 1 y 12
+    if (monthInt < 1 || monthInt > 12) return false;
+
+    // Verificar que el día sea válido según el mes
+    const daysInMonth = [31, (yearInt % 4 === 0 && yearInt % 100 !== 0) || (yearInt % 400 === 0) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    return dayInt > 0 && dayInt <= daysInMonth[monthInt - 1];
+  };
+
+  // Validar y formatear la fecha en formato dd/mm/yyyy mientras el usuario escribe
+  const formatAndSetDate = (index, field, value) => {
+    // Remover cualquier carácter que no sea un número
+    let formattedValue = value.replace(/[^\d]/g, '');
+    
+    if (formattedValue.length >= 2 && formattedValue.length <= 4) {
+      formattedValue = `${formattedValue.substring(0, 2)}/${formattedValue.substring(2)}`;
+    } else if (formattedValue.length > 4) {
+      formattedValue = `${formattedValue.substring(0, 2)}/${formattedValue.substring(2, 4)}/${formattedValue.substring(4, 8)}`;
+    }
+
+    // Validar la fecha una vez que está completa
+    if (formattedValue.length === 10) {
+      const [day, month, year] = formattedValue.split('/');
+      if (!isValidDate(day, month, year)) {
+        Alert.alert(language === 'es' ? "Error de fecha" : "Date Error", language === 'es' ? "La fecha es inválida. Verifica los días y meses." : "Invalid date. Check the day and month.");
+        return;
+      }
+    }
+
+    // Actualizar el estado con la fecha formateada
+    const newProgramas = [...programas];
+    newProgramas[index][field] = formattedValue;
+    setProgramas(newProgramas);
+  };
+
+  // Buscar un programa existente en Firestore
+  const handleSearchProgram = async () => {
+    if (!searchID) {
+      Alert.alert(language === 'es' ? "Error" : "Error", language === 'es' ? "Por favor, introduce el ID del programa" : "Please enter the Program ID");
+      return;
+    }
 
     try {
-      const docRef = await addDoc(collection(firestore, "programs"), {
-        programID,
-        programName,
-        programDescription,
-        programBudget,
-        startDate,
-        endDate,
-      });
-      console.log("Documento añadido con ID: ", docRef.id);
-      Alert.alert(language === 'es' ? 'Guardado exitosamente' : 'Saved successfully');
-    } catch (e) {
-      console.error("Error al agregar documento: ", e);
-      Alert.alert(language === 'es' ? 'Error al guardar' : 'Error saving');
+      const docRef = doc(firestore, 'programs', searchID);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setProgramas([{
+          programID: searchID,
+          programName: data.programName,
+          programDescription: data.programDescription,
+          programBudget: data.programBudget,
+          startDate: data.startDate,
+          endDate: data.endDate
+        }]);
+        Alert.alert(language === 'es' ? "Programa encontrado" : "Program Found");
+      } else {
+        Alert.alert(language === 'es' ? "No encontrado" : "Not Found", language === 'es' ? "No existe un programa con este ID" : "There is no program with this ID");
+      }
+    } catch (error) {
+      Alert.alert(language === 'es' ? "Error de búsqueda" : "Search Error", language === 'es' ? "Hubo un error al buscar el programa" : "There was an error searching for the program");
     }
   };
 
-  const handleGoHome = () => {
-    navigation.navigate('Home');
+  const handleSave = async () => {
+    for (const programa of programas) {
+      if (!validateProgram(programa)) {
+        return; // Detener el proceso de guardado si falla alguna validación
+      }
+    }
+    
+    try {
+      for (const programa of programas) {
+        const docRef = doc(firestore, 'programs', programa.programID);
+        await setDoc(docRef, {
+          programName: programa.programName,
+          programDescription: programa.programDescription,
+          programBudget: programa.programBudget,
+          startDate: programa.startDate,
+          endDate: programa.endDate,
+        });
+      }
+      Alert.alert(language === 'es' ? "Guardado exitoso" : "Saved successfully");
+    } catch (error) {
+      Alert.alert(language === 'es' ? "Error al guardar" : "Save Error", language === 'es' ? "Hubo un error al guardar los datos" : "There was an error saving the data");
+    }
   };
 
-  const handleAddProject = () => {
-    navigation.navigate('ProjectForm');  // Navegar a la página de ProjectForm.js
+  const handleAddProgram = () => {
+    setProgramas([
+      ...programas,
+      {
+        programID: '',
+        programName: '',
+        programDescription: '',
+        programBudget: '',
+        startDate: '',
+        endDate: ''
+      }
+    ]);
+  };
+
+  const handleRemoveProgram = (index) => {
+    Alert.alert(
+      language === 'es' ? 'Eliminar programa' : 'Remove Program',
+      language === 'es' ? '¿Estás seguro de que deseas eliminar este programa?' : 'Are you sure you want to remove this program?',
+      [
+        {
+          text: language === 'es' ? 'Cancelar' : 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: language === 'es' ? 'Eliminar' : 'Remove',
+          style: 'destructive',
+          onPress: () => {
+            const newProgramas = programas.filter((_, i) => i !== index);
+            setProgramas(newProgramas);
+          }
+        }
+      ]
+    );
+  };
+
+  const handleLinkProject = () => {
+    Alert.alert(
+      language === 'es' ? 'Vincular proyecto' : 'Link Project',
+      language === 'es' ? '¿Estás seguro de que deseas vincular un nuevo proyecto?' : 'Are you sure you want to link a new project?',
+      [
+        {
+          text: language === 'es' ? 'Cancelar' : 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: language === 'es' ? 'Vincular' : 'Link',
+          onPress: () => {
+            navigation.navigate('ProjectForm');
+          }
+        }
+      ]
+    );
+  };
+
+  const handleProgramChange = (index, field, value) => {
+    const newProgramas = [...programas];
+    newProgramas[index][field] = value;
+    setProgramas(newProgramas);
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Image source={require('../assets/image.png')} style={styles.logo} />
-      
-      <TextInput
-        style={styles.input}
-        placeholder={language === 'es' ? "ID del programa" : "Program ID"}
-        value={programID}
-        onChangeText={setProgramID}
-        placeholderTextColor="#B0B0B0"
-      />
-      
-      <TextInput
-        style={styles.input}
-        placeholder={language === 'es' ? "Nombre del programa" : "Program Name"}
-        value={programName}
-        onChangeText={setProgramName}
-        placeholderTextColor="#B0B0B0"
-      />
-      
-      <TextInput
-        style={[styles.input, styles.multilineInput]}
-        placeholder={language === 'es' ? "Descripción del programa" : "Program Description"}
-        value={programDescription}
-        onChangeText={setProgramDescription}
-        placeholderTextColor="#B0B0B0"
-        multiline={true}
-      />
-      
-      <TextInput
-        style={styles.input}
-        placeholder={language === 'es' ? "Presupuesto del programa" : "Program Budget"}
-        value={programBudget}
-        onChangeText={setProgramBudget}
-        keyboardType="numeric"
-        placeholderTextColor="#B0B0B0"
-      />
-      
-      <TextInput
-        style={styles.input}
-        placeholder={language === 'es' ? "Fecha de inicio (dd/mm/yyyy)" : "Start Date (dd/mm/yyyy)"}
-        value={startDate}
-        onChangeText={handleStartDateChange}
-        placeholderTextColor="#B0B0B0"
-        keyboardType="numeric"
-      />
-      
-      <TextInput
-        style={styles.input}
-        placeholder={language === 'es' ? "Fecha de fin (dd/mm/yyyy)" : "End Date (dd/mm/yyyy)"}
-        value={endDate}
-        onChangeText={handleEndDateChange}
-        placeholderTextColor="#B0B0B0"
-        keyboardType="numeric"
-      />
-      
-      <TouchableOpacity style={styles.addButton} onPress={handleAddProject}>
-        <Text style={styles.buttontext1}>
-          {language === 'es' ? 'Agregar proyecto' : 'Add Project'}
-        </Text>
-      </TouchableOpacity>
-      
+
+      {programas.map((programa, index) => (
+        <View key={index} style={styles.programContainer}>
+          <Text>{`${language === 'es' ? "Programa" : "Program"} ${index + 1}`}</Text>
+
+          <TextInput
+            style={styles.input}
+            placeholder={language === 'es' ? "ID del programa" : "Program ID"}
+            value={programa.programID}
+            onChangeText={(value) => handleProgramChange(index, 'programID', value)}
+            placeholderTextColor="#B0B0B0"
+          />
+          
+          <TextInput
+            style={styles.input}
+            placeholder={language === 'es' ? "Nombre del programa" : "Program Name"}
+            value={programa.programName}
+            onChangeText={(value) => handleProgramChange(index, 'programName', value)}
+            placeholderTextColor="#B0B0B0"
+          />
+          
+          <TextInput
+            style={styles.input}
+            placeholder={language === 'es' ? "Descripción del programa" : "Program Description"}
+            value={programa.programDescription}
+            onChangeText={(value) => handleProgramChange(index, 'programDescription', value)}
+            placeholderTextColor="#B0B0B0"
+          />
+          
+          <TextInput
+            style={styles.input}
+            placeholder={language === 'es' ? "Presupuesto del programa" : "Program Budget"}
+            value={programa.programBudget}
+            onChangeText={(value) => handleProgramChange(index, 'programBudget', value)}
+            keyboardType="numeric"
+            placeholderTextColor="#B0B0B0"
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder={language === 'es' ? "Fecha de inicio (dd/mm/yyyy)" : "Start Date (dd/mm/yyyy)"}
+            value={programa.startDate}
+            onChangeText={(value) => formatAndSetDate(index, 'startDate', value)}
+            placeholderTextColor="#B0B0B0"
+            keyboardType="numeric"
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder={language === 'es' ? "Fecha de fin (dd/mm/yyyy)" : "End Date (dd/mm/yyyy)"}
+            value={programa.endDate}
+            onChangeText={(value) => formatAndSetDate(index, 'endDate', value)}
+            placeholderTextColor="#B0B0B0"
+            keyboardType="numeric"
+          />
+
+          {index > 0 && (
+            <TouchableOpacity style={styles.deleteButton} onPress={() => handleRemoveProgram(index)}>
+              <Icon name="delete" size={24} color="#F28C32" />
+              <Text style={styles.deleteButtonText}>{language === 'es' ? 'Eliminar programa' : 'Remove Program'}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      ))}
+
+      {/* Botón para guardar */}
       <TouchableOpacity style={styles.button} onPress={handleSave}>
-        <Text style={styles.buttonText}>
-          {language === 'es' ? 'Guardar' : 'Save'}
-        </Text>
+        <Text style={styles.buttonText}>{language === 'es' ? "Guardar" : "Save"}</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button1} onPress={handleGoHome}>
-        <Text style={styles.buttonText}>
-          {language === 'es' ? 'Salir' : 'Exit'}
-        </Text>
+      {/* Botón para vincular proyecto */}
+      <TouchableOpacity style={[styles.button, styles.linkProjectButton]} onPress={handleLinkProject}>
+        <Text style={styles.buttonText}>{language === 'es' ? "Vincular proyecto" : "Link Project"}</Text>
+      </TouchableOpacity>
+
+      {/* Botón para agregar otro programa */}
+      <TouchableOpacity style={styles.addButton} onPress={handleAddProgram}>
+        <Icon name="add" size={24} color="#FFFFFF" />
+        <Text style={styles.addButtonText}>{language === 'es' ? 'Agregar programa' : 'Add Program'}</Text>
+      </TouchableOpacity>
+
+      {/* Botón para salir */}
+      <TouchableOpacity style={[styles.button, styles.exitButton]} onPress={() => navigation.navigate('Home')}>
+        <Text style={styles.buttonText}>{language === 'es' ? "Salir" : "Exit"}</Text>
       </TouchableOpacity>
     </ScrollView>
   );

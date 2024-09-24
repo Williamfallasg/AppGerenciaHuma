@@ -89,17 +89,16 @@ export default StyleSheet.create({
   iconButton: {
     marginLeft: 15,
   },
-  // Cambiado a columna
   radioButtonContainer: {
-    flexDirection: 'column', // Cambiado a 'column' para que se vea uno debajo de otro
-    alignItems: 'flex-start', // Alinea el texto a la izquierda
+    flexDirection: 'column',
+    alignItems: 'flex-start',
     marginBottom: 10,
     width: '100%',
   },
   radioButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10, // Espacio entre las opciones
+    marginBottom: 10,
   },
   radioSelected: {
     height: 20,
@@ -132,5 +131,20 @@ export default StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     fontSize: 16,
+  },
+  selected: {
+    backgroundColor: '#FFA500', // Naranja para el programa seleccionado
+    padding: 10,
+    marginVertical: 5,
+    borderRadius: 5,
+  },
+  option: {
+    backgroundColor: '#FFFFFF', // Blanco para las opciones no seleccionadas
+    padding: 10,
+    marginVertical: 5,
+    borderRadius: 5,
+  },
+  optionText: {
+    color: '#000000',
   },
 });

@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react'; 
-import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useLanguage } from '../context/LanguageContext';
-import { firestore } from '../firebase/firebase';
-import { collection, doc, getDoc, setDoc } from 'firebase/firestore';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
+import { getDocs, collection, doc, setDoc, getDoc } from 'firebase/firestore';
+import { firestore } from '../firebase/firebase'; // Importar Firestore de la configuración
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useUserRole } from '../context/UserRoleContext';
-import styles from '../styles/stylesProjectForm';  // Importar los estilos
+import styles from '../styles/stylesProjectForm'; // Importar el archivo de estilos
+import { useNavigation } from '@react-navigation/native'; // Para la navegación
+import { useLanguage } from '../context/LanguageContext'; // Contexto de idioma
+import { useUserRole } from '../context/UserRoleContext'; // Contexto del rol del usuario
 
 const ProjectForm = () => {
-  const { language } = useLanguage(); 
   const navigation = useNavigation();
+  const { language } = useLanguage(); 
   const { userRole } = useUserRole(); 
 
   const [projectID, setProjectID] = useState('');
@@ -21,23 +21,78 @@ const ProjectForm = () => {
   const [endDate, setEndDate] = useState('');
   const [activities, setActivities] = useState([{ id: 1, activity: '' }]);
   const [indicators, setIndicators] = useState([{ id: 1, description: '', beneficiaries: '', selectedOption: 'number' }]);
+  const [programID, setProgramID] = useState(''); // Estado para vincular proyecto con programa
+  const [availablePrograms, setAvailablePrograms] = useState([]); // Lista de programas disponibles
 
   useEffect(() => {
     if (userRole !== 'admin') {
-      navigation.navigate('Home'); 
+      Alert.alert(
+        language === 'es' ? 'Acceso Denegado' : 'Access Denied',
+        language === 'es' ? 'No tienes permisos para acceder a esta sección' : 'You do not have permission to access this section',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Home'), 
+          }
+        ]
+      );
     }
-  }, [userRole]);
+  }, [userRole, language, navigation]);
+
+  useEffect(() => {
+    fetchPrograms();
+    // Formatear fechas al montar el componente
+    const currentDate = new Date();
+    const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}/${(currentDate.getMonth() + 1).toString().padStart(2, '0')}/${currentDate.getFullYear()}`;
+    setStartDate(formattedDate);
+    setEndDate(formattedDate);
+  }, []);
+
+  const fetchPrograms = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(firestore, 'programs'));
+      const programs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setAvailablePrograms(programs);
+    } catch (error) {
+      console.error("Error fetching programs:", error);
+    }
+  };
 
   const handleSave = async () => {
-    // Lógica de validación y guardado omitida por brevedad
+    try {
+      if (!projectID || !projectName || !programID) {
+        Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Por favor, completa todos los campos obligatorios' : 'Please fill out all required fields');
+        return;
+      }
+
+      await setDoc(doc(firestore, 'projects', projectID), {
+        projectName,
+        projectDescription,
+        projectBudget,
+        startDate,
+        endDate,
+        programID,
+        activities,
+        indicators,
+      });
+
+      const programRef = doc(firestore, 'programs', programID);
+      const programSnap = await getDoc(programRef);
+      if (programSnap.exists()) {
+        const programData = programSnap.data();
+        const updatedProjects = [...(programData.projects || []), projectID];
+        await setDoc(programRef, { ...programData, projects: updatedProjects }, { merge: true });
+      }
+
+      Alert.alert(language === 'es' ? 'Guardado exitoso' : 'Saved successfully');
+    } catch (error) {
+      console.error("Error saving project:", error);
+      Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Hubo un error al guardar el proyecto' : 'There was an error saving the project');
+    }
   };
 
   const handleAddActivity = () => {
     setActivities([...activities, { id: activities.length + 1, activity: '' }]);
-  };
-
-  const handleAddIndicator = () => {
-    setIndicators([...indicators, { id: indicators.length + 1, description: '', beneficiaries: '', selectedOption: 'number' }]);
   };
 
   const handleActivityChange = (text, id) => {
@@ -45,6 +100,14 @@ const ProjectForm = () => {
       item.id === id ? { ...item, activity: text } : item
     );
     setActivities(newActivities);
+  };
+
+  const handleDeleteActivity = (id) => {
+    setActivities(activities.filter(item => item.id !== id));
+  };
+
+  const handleAddIndicator = () => {
+    setIndicators([...indicators, { id: indicators.length + 1, description: '', beneficiaries: '', selectedOption: 'number' }]);
   };
 
   const handleIndicatorChange = (text, id, field) => {
@@ -61,93 +124,84 @@ const ProjectForm = () => {
     setIndicators(updatedIndicators);
   };
 
-  const confirmDeleteActivity = (id) => {
-    Alert.alert(
-      language === 'es' ? 'Eliminar actividad' : 'Delete Activity',
-      language === 'es' ? '¿Está seguro de que desea eliminar esta actividad?' : 'Are you sure you want to delete this activity?',
-      [
-        { text: language === 'es' ? 'Cancelar' : 'Cancel', style: 'cancel' },
-        { text: language === 'es' ? 'Eliminar' : 'Delete', onPress: () => handleDeleteActivity(id) }
-      ]
-    );
-  };
-
-  const confirmDeleteIndicator = (id) => {
-    Alert.alert(
-      language === 'es' ? 'Eliminar indicador' : 'Delete Indicator',
-      language === 'es' ? '¿Está seguro de que desea eliminar este indicador?' : 'Are you sure you want to delete this indicator?',
-      [
-        { text: language === 'es' ? 'Cancelar' : 'Cancel', style: 'cancel' },
-        { text: language === 'es' ? 'Eliminar' : 'Delete', onPress: () => handleDeleteIndicator(id) }
-      ]
-    );
-  };
-
-  const handleDeleteActivity = (id) => {
-    setActivities(activities.filter(item => item.id !== id));
-  };
-
   const handleDeleteIndicator = (id) => {
     setIndicators(indicators.filter(item => item.id !== id));
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Image source={require('../assets/image.png')} style={styles.logo} />
-      
+      <Image
+        source={require('../assets/image.png')}
+        style={styles.logo}
+      />
+
+      <Text style={styles.sectionTitle}>
+        {language === 'es' ? 'Seleccionar Programa' : 'Select Program'}
+      </Text>
+      <View style={styles.selectContainer}>
+        {availablePrograms.length > 0 ? (
+          availablePrograms.map((program) => (
+            <TouchableOpacity 
+              key={program.id} 
+              onPress={() => setProgramID(program.id)}
+              style={programID === program.id ? styles.selected : styles.option} // Aplicar estilo condicional
+            >
+              <Text style={styles.optionText}>{program.programName}</Text>
+            </TouchableOpacity>
+          ))
+        ) : (
+          <Text>{language === 'es' ? 'No hay programas disponibles' : 'No programs available'}</Text>
+        )}
+      </View>
+
       <TextInput
         style={styles.input}
-        placeholder={language === 'es' ? "ID del proyecto" : "Project ID"}
+        placeholder={language === 'es' ? 'ID del proyecto' : 'Project ID'}
         value={projectID}
         onChangeText={setProjectID}
-        placeholderTextColor="#B0B0B0"
       />
       
       <TextInput
         style={styles.input}
-        placeholder={language === 'es' ? "Nombre del proyecto" : "Project Name"}
+        placeholder={language === 'es' ? 'Nombre del proyecto' : 'Project Name'}
         value={projectName}
         onChangeText={setProjectName}
-        placeholderTextColor="#B0B0B0"
       />
-      
+
       <TextInput
         style={styles.input}
-        placeholder={language === 'es' ? "Descripción del proyecto" : "Project Description"}
+        placeholder={language === 'es' ? 'Descripción del proyecto' : 'Project Description'}
         value={projectDescription}
         onChangeText={setProjectDescription}
-        placeholderTextColor="#B0B0B0"
       />
       
       <TextInput
         style={styles.input}
-        placeholder={language === 'es' ? "Presupuesto del proyecto" : "Project Budget"}
+        placeholder={language === 'es' ? 'Presupuesto del proyecto' : 'Project Budget'}
         value={projectBudget}
         onChangeText={setProjectBudget}
         keyboardType="numeric"
-        placeholderTextColor="#B0B0B0"
       />
 
       <TextInput
         style={styles.input}
-        placeholder={language === 'es' ? "Fecha de inicio (dd/mm/yyyy)" : "Start Date (dd/mm/yyyy)"}
+        placeholder={language === 'es' ? 'Fecha de inicio (dd/mm/yyyy)' : 'Start Date (dd/mm/yyyy)'}
         value={startDate}
         onChangeText={setStartDate}
-        placeholderTextColor="#B0B0B0"
         keyboardType="numeric"
       />
 
       <TextInput
         style={styles.input}
-        placeholder={language === 'es' ? "Fecha de fin (dd/mm/yyyy)" : "End Date (dd/mm/yyyy)"}
+        placeholder={language === 'es' ? 'Fecha de fin (dd/mm/yyyy)' : 'End Date (dd/mm/yyyy)'}
         value={endDate}
         onChangeText={setEndDate}
-        placeholderTextColor="#B0B0B0"
         keyboardType="numeric"
       />
 
-      {/* Actividades */}
-      <Text style={styles.sectionTitle}>{language === 'es' ? 'Actividades' : 'Activities'}</Text>
+      <Text style={styles.sectionTitle}>
+        {language === 'es' ? 'Actividades' : 'Activities'}
+      </Text>
       {activities.map(({ id, activity }) => (
         <View key={id} style={styles.card}>
           <TextInput
@@ -155,9 +209,8 @@ const ProjectForm = () => {
             placeholder={language === 'es' ? `Actividad ${id}` : `Activity ${id}`}
             value={activity}
             onChangeText={(text) => handleActivityChange(text, id)}
-            placeholderTextColor="#B0B0B0"
           />
-          <TouchableOpacity onPress={() => confirmDeleteActivity(id)} style={styles.iconButton}>
+          <TouchableOpacity onPress={() => handleDeleteActivity(id)} style={styles.iconButton}>
             <Icon name="delete" size={24} color="#F28C32" />
           </TouchableOpacity>
         </View>
@@ -165,11 +218,14 @@ const ProjectForm = () => {
 
       <TouchableOpacity style={styles.addButton} onPress={handleAddActivity}>
         <Icon name="add" size={24} color="#FFFFFF" />
-        <Text style={styles.addButtonText}>{language === 'es' ? 'Agregar actividad' : 'Add Activity'}</Text>
+        <Text style={styles.addButtonText}>
+          {language === 'es' ? 'Agregar actividad' : 'Add Activity'}
+        </Text>
       </TouchableOpacity>
 
-      {/* Indicadores */}
-      <Text style={styles.sectionTitle}>{language === 'es' ? 'Indicadores' : 'Indicators'}</Text>
+      <Text style={styles.sectionTitle}>
+        {language === 'es' ? 'Indicadores' : 'Indicators'}
+      </Text>
       {indicators.map(({ id, description, beneficiaries, selectedOption }) => (
         <View key={id} style={styles.card}>
           <TextInput
@@ -177,7 +233,6 @@ const ProjectForm = () => {
             placeholder={language === 'es' ? `Descripción del indicador ${id}` : `Indicator Description ${id}`}
             value={description}
             onChangeText={(text) => handleIndicatorChange(text, id, 'description')}
-            placeholderTextColor="#B0B0B0"
           />
           <View style={styles.radioButtonContainer}>
             <TouchableOpacity onPress={() => handleOptionChange(id, 'number')} style={styles.radioButton}>
@@ -194,24 +249,22 @@ const ProjectForm = () => {
           {selectedOption === 'number' ? (
             <TextInput
               style={styles.beneficiariesInput}
-              placeholder={language === 'es' ? "Número de beneficiarios" : "Number of Beneficiaries"}
+              placeholder={language === 'es' ? 'Número de beneficiarios' : 'Number of Beneficiaries'}
               value={beneficiaries}
               onChangeText={(text) => handleIndicatorChange(text, id, 'beneficiaries')}
               keyboardType="numeric"
-              placeholderTextColor="#B0B0B0"
             />
           ) : (
             <TextInput
               style={styles.beneficiariesInput}
-              placeholder={language === 'es' ? "Porcentaje de beneficiarios" : "Percentage of Beneficiaries"}
+              placeholder={language === 'es' ? 'Porcentaje de beneficiarios' : 'Percentage of Beneficiaries'}
               value={`${beneficiaries}%`}
               onChangeText={(text) => handleIndicatorChange(text.replace('%', ''), id, 'beneficiaries')}
               keyboardType="numeric"
-              placeholderTextColor="#B0B0B0"
             />
           )}
 
-          <TouchableOpacity onPress={() => confirmDeleteIndicator(id)} style={styles.iconButton}>
+          <TouchableOpacity onPress={() => handleDeleteIndicator(id)} style={styles.iconButton}>
             <Icon name="delete" size={24} color="#F28C32" />
           </TouchableOpacity>
         </View>
@@ -219,15 +272,21 @@ const ProjectForm = () => {
 
       <TouchableOpacity style={styles.addButton} onPress={handleAddIndicator}>
         <Icon name="add" size={24} color="#FFFFFF" />
-        <Text style={styles.addButtonText}>{language === 'es' ? 'Agregar indicador' : 'Add Indicator'}</Text>
+        <Text style={styles.addButtonText}>
+          {language === 'es' ? 'Agregar indicador' : 'Add Indicator'}
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.button} onPress={handleSave}>
-        <Text style={styles.buttonText}>{language === 'es' ? "Guardar" : "Save"}</Text>
+        <Text style={styles.buttonText}>
+          {language === 'es' ? 'Guardar' : 'Save'}
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={[styles.button, styles.exitButton]} onPress={() => navigation.navigate('Home')}>
-        <Text style={styles.buttonText}>{language === 'es' ? "Salir" : "Exit"}</Text>
+        <Text style={styles.buttonText}>
+          {language === 'es' ? 'Salir' : 'Exit'}
+        </Text>
       </TouchableOpacity>
     </ScrollView>
   );
