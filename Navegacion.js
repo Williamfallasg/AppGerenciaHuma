@@ -16,6 +16,7 @@ import RegisterUser from './Navegacion/RegisterUser';
 import GenerateReport from './Navegacion/GenerateReport';
 import Report from './Navegacion/Report';
 import FamilyScreen from './Navegacion/FamilyScreen';
+import ProgramProjectList from './Navegacion/ProgramProjectList';
 
 
 const Stack = createStackNavigator();
@@ -78,6 +79,14 @@ const AppStack = () => {
         component={FamilyScreen}
         options={{ headerShown: false }}
       />
+
+      <Stack.Screen
+        name="ProgramProjectList"
+        component={ProgramProjectList}
+        options={{ headerShown: false }}
+      />
+
+
     </Stack.Navigator>
   );
 };

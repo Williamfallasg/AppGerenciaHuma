@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; 
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
 import { getDocs, collection, doc, setDoc, getDoc } from 'firebase/firestore';
 import { firestore } from '../firebase/firebase'; // Importar Firestore de la configuración
@@ -41,7 +41,6 @@ const ProjectForm = () => {
 
   useEffect(() => {
     fetchPrograms();
-    // Formatear fechas al montar el componente
     const currentDate = new Date();
     const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}/${(currentDate.getMonth() + 1).toString().padStart(2, '0')}/${currentDate.getFullYear()}`;
     setStartDate(formattedDate);
@@ -56,6 +55,18 @@ const ProjectForm = () => {
     } catch (error) {
       console.error("Error fetching programs:", error);
     }
+  };
+
+  const clearForm = () => {
+    setProjectID('');
+    setProjectName('');
+    setProjectDescription('');
+    setProjectBudget('');
+    setStartDate('');
+    setEndDate('');
+    setActivities([{ id: 1, activity: '' }]);
+    setIndicators([{ id: 1, description: '', beneficiaries: '', selectedOption: 'number' }]);
+    setProgramID('');
   };
 
   const handleSave = async () => {
@@ -85,9 +96,40 @@ const ProjectForm = () => {
       }
 
       Alert.alert(language === 'es' ? 'Guardado exitoso' : 'Saved successfully');
+      clearForm(); // Limpiar los campos después de guardar
     } catch (error) {
       console.error("Error saving project:", error);
       Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Hubo un error al guardar el proyecto' : 'There was an error saving the project');
+    }
+  };
+
+  const handleEdit = async () => {
+    try {
+      if (!projectID) {
+        Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Por favor, ingresa el ID del proyecto' : 'Please enter the project ID');
+        return;
+      }
+
+      const projectRef = doc(firestore, 'projects', projectID);
+      const projectSnap = await getDoc(projectRef);
+
+      if (projectSnap.exists()) {
+        const projectData = projectSnap.data();
+        setProjectName(projectData.projectName);
+        setProjectDescription(projectData.projectDescription);
+        setProjectBudget(projectData.projectBudget);
+        setStartDate(projectData.startDate);
+        setEndDate(projectData.endDate);
+        setProgramID(projectData.programID);
+        setActivities(projectData.activities || []);
+        setIndicators(projectData.indicators || []);
+        Alert.alert(language === 'es' ? 'Datos cargados' : 'Data loaded');
+      } else {
+        Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Proyecto no encontrado' : 'Project not found');
+      }
+    } catch (error) {
+      console.error("Error fetching project:", error);
+      Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Hubo un error al cargar el proyecto' : 'There was an error loading the project');
     }
   };
 
@@ -280,6 +322,12 @@ const ProjectForm = () => {
       <TouchableOpacity style={styles.button} onPress={handleSave}>
         <Text style={styles.buttonText}>
           {language === 'es' ? 'Guardar' : 'Save'}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.button} onPress={handleEdit}>
+        <Text style={styles.buttonText}>
+          {language === 'es' ? 'Editar' : 'Edit'}
         </Text>
       </TouchableOpacity>
 

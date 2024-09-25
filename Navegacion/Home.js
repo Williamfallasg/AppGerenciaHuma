@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect } from 'react'; 
 import { View, Text, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
@@ -32,6 +32,11 @@ const Home = () => {
     navigation.navigate('GenerateReport');
   };
 
+  // Nueva función para navegar a la lista de programas y proyectos
+  const navigateToProgramProjectList = () => {
+    navigation.navigate('ProgramProjectList'); // Asegúrate de que 'ProgramProjectList' esté registrado en tu sistema de navegación
+  };
+
   return (
     <View style={styles.container}>
       {/* El logotipo se muestra para ambos roles */}
@@ -62,6 +67,13 @@ const Home = () => {
           </Text>
         </TouchableOpacity>
       )}
+
+      {/* Botón para mostrar la lista de programas y proyectos */}
+      <TouchableOpacity style={styles.mainButton} onPress={navigateToProgramProjectList}>
+        <Text style={styles.mainButtonText}>
+          {language === 'es' ? 'Mostrar Programas y Proyectos' : 'Show Programs and Projects'}
+        </Text>
+      </TouchableOpacity>
 
       {/* Botón de salir */}
       <TouchableOpacity style={styles.exitButton} onPress={handleLogout}>

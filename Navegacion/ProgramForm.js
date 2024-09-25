@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert } fro
 import { useNavigation } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
 import { firestore } from '../firebase/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore'; // Incluí deleteDoc para eliminar programas
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useUserRole } from '../context/UserRoleContext';
 import styles from '../styles/stylesProgramForm';
@@ -41,26 +41,22 @@ const ProgramForm = () => {
 
   // Validar que un programa existente tenga el formato correcto
   const validateProgram = (programa) => {
-    // Validar que ningún campo esté vacío
     if (!programa.programID || !programa.programName || !programa.programDescription || !programa.programBudget || !programa.startDate || !programa.endDate) {
       Alert.alert(language === 'es' ? "Error" : "Error", language === 'es' ? "Por favor, completa todos los campos del programa" : "Please complete all fields for the program");
       return false;
     }
 
-    // Validar que el presupuesto sea un número positivo
     const budget = parseFloat(programa.programBudget);
     if (isNaN(budget) || budget <= 0) {
       Alert.alert(language === 'es' ? "Error de presupuesto" : "Budget Error", language === 'es' ? "El presupuesto debe ser un número positivo" : "The budget must be a positive number");
       return false;
     }
 
-    // Validar longitud mínima del nombre del programa (por ejemplo, al menos 3 caracteres)
     if (programa.programName.length < 3) {
       Alert.alert(language === 'es' ? "Error en el nombre" : "Name Error", language === 'es' ? "El nombre del programa debe tener al menos 3 caracteres" : "The program name must have at least 3 characters");
       return false;
     }
 
-    // Validar longitud mínima de la descripción del programa
     if (programa.programDescription.length < 10) {
       Alert.alert(language === 'es' ? "Error en la descripción" : "Description Error", language === 'es' ? "La descripción del programa debe tener al menos 10 caracteres" : "The program description must have at least 10 characters");
       return false;
@@ -69,23 +65,19 @@ const ProgramForm = () => {
     return true;
   };
 
-  // Función para validar fechas válidas (evitar días/meses inválidos)
+  // Validar fechas válidas (evitar días/meses inválidos)
   const isValidDate = (day, month, year) => {
     const dayInt = parseInt(day, 10);
     const monthInt = parseInt(month, 10);
     const yearInt = parseInt(year, 10);
-
-    // Validar que el mes esté entre 1 y 12
     if (monthInt < 1 || monthInt > 12) return false;
 
-    // Verificar que el día sea válido según el mes
     const daysInMonth = [31, (yearInt % 4 === 0 && yearInt % 100 !== 0) || (yearInt % 400 === 0) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     return dayInt > 0 && dayInt <= daysInMonth[monthInt - 1];
   };
 
-  // Validar y formatear la fecha en formato dd/mm/yyyy mientras el usuario escribe
+  // Formatear fecha en formato dd/mm/yyyy
   const formatAndSetDate = (index, field, value) => {
-    // Remover cualquier carácter que no sea un número
     let formattedValue = value.replace(/[^\d]/g, '');
     
     if (formattedValue.length >= 2 && formattedValue.length <= 4) {
@@ -94,7 +86,6 @@ const ProgramForm = () => {
       formattedValue = `${formattedValue.substring(0, 2)}/${formattedValue.substring(2, 4)}/${formattedValue.substring(4, 8)}`;
     }
 
-    // Validar la fecha una vez que está completa
     if (formattedValue.length === 10) {
       const [day, month, year] = formattedValue.split('/');
       if (!isValidDate(day, month, year)) {
@@ -103,7 +94,6 @@ const ProgramForm = () => {
       }
     }
 
-    // Actualizar el estado con la fecha formateada
     const newProgramas = [...programas];
     newProgramas[index][field] = formattedValue;
     setProgramas(newProgramas);
@@ -139,10 +129,11 @@ const ProgramForm = () => {
     }
   };
 
+  // Guardar programa en Firestore
   const handleSave = async () => {
     for (const programa of programas) {
       if (!validateProgram(programa)) {
-        return; // Detener el proceso de guardado si falla alguna validación
+        return; 
       }
     }
     
@@ -163,6 +154,7 @@ const ProgramForm = () => {
     }
   };
 
+  // Añadir un nuevo programa
   const handleAddProgram = () => {
     setProgramas([
       ...programas,
@@ -177,6 +169,7 @@ const ProgramForm = () => {
     ]);
   };
 
+  // Eliminar un programa
   const handleRemoveProgram = (index) => {
     Alert.alert(
       language === 'es' ? 'Eliminar programa' : 'Remove Program',
@@ -198,6 +191,7 @@ const ProgramForm = () => {
     );
   };
 
+  // Función para navegar a la pantalla de vinculación de proyectos
   const handleLinkProject = () => {
     Alert.alert(
       language === 'es' ? 'Vincular proyecto' : 'Link Project',
@@ -210,13 +204,14 @@ const ProgramForm = () => {
         {
           text: language === 'es' ? 'Vincular' : 'Link',
           onPress: () => {
-            navigation.navigate('ProjectForm');
+            navigation.navigate('ProjectForm'); // Asegúrate de que la ruta a 'ProjectForm' esté definida en tu navegación
           }
         }
       ]
     );
   };
 
+  // Cambiar valor de un campo del programa
   const handleProgramChange = (index, field, value) => {
     const newProgramas = [...programas];
     newProgramas[index][field] = value;
