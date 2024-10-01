@@ -1,14 +1,16 @@
+// Path: src/components/RegisterUser.js
+
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { useNavigation } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
 import { useLanguage } from '../context/LanguageContext';
 import { firestore } from '../firebase/firebase';
-import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, onSnapshot, setDoc, doc, updateDoc } from 'firebase/firestore';
 import { useWindowDimensions } from 'react-native';
-import { useFamily } from '../context/FamilyContext'; // Importar el contexto de familia
-import styles from '../styles/stylesRegisterUser'; // Importa el archivo de estilos
+import { useFamily } from '../context/FamilyContext'; 
+import styles from '../styles/stylesRegisterUser';
 
 const RegisterUser = () => {
   const { language } = useLanguage();
@@ -24,62 +26,140 @@ const RegisterUser = () => {
     canton: '',
     district: '',
     phone: '',
+    projects: [],
   });
 
   const [errors, setErrors] = useState({});
-  const [qrValue, setQrValue] = useState(null);
+  const [qrValue, setQrValue] = useState('');
   const [isUserValid, setIsUserValid] = useState(false); 
   const [formSubmitted, setFormSubmitted] = useState(false); 
+  const [projects, setProjects] = useState([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
   const navigation = useNavigation();
   const { width } = useWindowDimensions();
   const { familyMembers, setFamilyMembers } = useFamily(); 
 
-  // Lista de países en español
+  // Lista de países en español e inglés
   const countriesSpanish = [
-    'Afganistán', 'Albania', 'Argelia', 'Andorra', 'Angola', 'Antigua y Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaiyán',
-    'Bahamas', 'Baréin', 'Bangladés', 'Barbados', 'Bielorrusia', 'Bélgica', 'Belice', 'Benín', 'Bután', 'Bolivia', 'Bosnia y Herzegovina',
-    'Botsuana', 'Brasil', 'Brunéi', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Cabo Verde', 'Camboya', 'Camerún', 'Canadá', 'República Centroafricana',
-    'Chad', 'Chile', 'China', 'Colombia', 'Comoras', 'Congo', 'República Democrática del Congo', 'Costa Rica', 'Croacia', 'Cuba', 'Chipre',
-    'República Checa', 'Dinamarca', 'Yibuti', 'Dominica', 'República Dominicana', 'Timor Oriental', 'Ecuador', 'Egipto', 'El Salvador', 'Guinea Ecuatorial',
-    'Eritrea', 'Estonia', 'Esuatini', 'Etiopía', 'Fiyi', 'Finlandia', 'Francia', 'Gabón', 'Gambia', 'Georgia', 'Alemania', 'Ghana', 'Grecia', 'Granada',
-    'Guatemala', 'Guinea', 'Guinea-Bisáu', 'Guyana', 'Haití', 'Honduras', 'Hungría', 'Islandia', 'India', 'Indonesia', 'Irán', 'Irak', 'Irlanda',
-    'Israel', 'Italia', 'Costa de Marfil', 'Jamaica', 'Japón', 'Jordania', 'Kazajistán', 'Kenia', 'Kiribati', 'Kuwait', 'Kirguistán', 'Laos', 'Letonia',
-    'Líbano', 'Lesoto', 'Liberia', 'Libia', 'Liechtenstein', 'Lituania', 'Luxemburgo', 'Madagascar', 'Malaui', 'Malasia', 'Maldivas', 'Malí',
-    'Malta', 'Islas Marshall', 'Mauritania', 'Mauricio', 'México', 'Micronesia', 'Moldavia', 'Mónaco', 'Mongolia', 'Montenegro', 'Marruecos',
-    'Mozambique', 'Birmania', 'Namibia', 'Nauru', 'Nepal', 'Países Bajos', 'Nueva Zelanda', 'Nicaragua', 'Níger', 'Nigeria', 'Corea del Norte', 'Macedonia del Norte',
-    'Noruega', 'Omán', 'Pakistán', 'Palaos', 'Panamá', 'Papúa Nueva Guinea', 'Paraguay', 'Perú', 'Filipinas', 'Polonia', 'Portugal', 'Catar',
-    'Rumanía', 'Rusia', 'Ruanda', 'San Cristóbal y Nieves', 'Santa Lucía', 'San Vicente y las Granadinas', 'Samoa', 'San Marino', 'Santo Tomé y Príncipe',
-    'Arabia Saudita', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leona', 'Singapur', 'Eslovaquia', 'Eslovenia', 'Islas Salomón', 'Somalia',
-    'Sudáfrica', 'Corea del Sur', 'Sudán del Sur', 'España', 'Sri Lanka', 'Sudán', 'Surinam', 'Suecia', 'Suiza', 'Siria', 'Taiwán',
-    'Tayikistán', 'Tanzania', 'Tailandia', 'Togo', 'Tonga', 'Trinidad y Tobago', 'Túnez', 'Turquía', 'Turkmenistán', 'Tuvalu', 'Uganda',
-    'Ucrania', 'Emiratos Árabes Unidos', 'Reino Unido', 'Estados Unidos', 'Uruguay', 'Uzbekistán', 'Vanuatu', 'Ciudad del Vaticano', 'Venezuela',
-    'Vietnam', 'Yemen', 'Zambia', 'Zimbabue'
+    'Afganistán', 'Albania', 'Alemania', 'Andorra', 'Angola', 'Antigua y Barbuda', 'Arabia Saudita', 
+    'Argelia', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaiyán', 'Bahamas', 'Bangladés', 
+    'Barbados', 'Baréin', 'Bélgica', 'Belice', 'Benín', 'Bielorrusia', 'Birmania', 'Bolivia', 'Bosnia y Herzegovina',
+    'Botsuana', 'Brasil', 'Brunéi', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Bután', 'Cabo Verde', 'Camboya',
+    'Camerún', 'Canadá', 'Catar', 'Chad', 'Chile', 'China', 'Chipre', 'Colombia', 'Comoras', 'Corea del Norte',
+    'Corea del Sur', 'Costa de Marfil', 'Costa Rica', 'Croacia', 'Cuba', 'Dinamarca', 'Dominica', 'Ecuador',
+    'Egipto', 'El Salvador', 'Emiratos Árabes Unidos', 'Eritrea', 'Eslovaquia', 'Eslovenia', 'España', 
+    'Estados Unidos', 'Estonia', 'Esuatini', 'Etiopía', 'Filipinas', 'Finlandia', 'Fiyi', 'Francia', 
+    'Gabón', 'Gambia', 'Georgia', 'Ghana', 'Granada', 'Grecia', 'Guatemala', 'Guinea', 'Guinea-Bisáu', 
+    'Guinea Ecuatorial', 'Guyana', 'Haití', 'Honduras', 'Hungría', 'India', 'Indonesia', 'Irak', 'Irán', 
+    'Irlanda', 'Islandia', 'Islas Marshall', 'Islas Salomón', 'Israel', 'Italia', 'Jamaica', 'Japón', 
+    'Jordania', 'Kazajistán', 'Kenia', 'Kirguistán', 'Kiribati', 'Kuwait', 'Laos', 'Lesoto', 'Letonia', 
+    'Líbano', 'Liberia', 'Libia', 'Liechtenstein', 'Lituania', 'Luxemburgo', 'Macedonia del Norte', 
+    'Madagascar', 'Malasia', 'Malaui', 'Maldivas', 'Malí', 'Malta', 'Marruecos', 'Mauricio', 'Mauritania', 
+    'México', 'Micronesia', 'Moldavia', 'Mónaco', 'Mongolia', 'Montenegro', 'Mozambique', 'Namibia', 
+    'Nauru', 'Nepal', 'Nicaragua', 'Níger', 'Nigeria', 'Noruega', 'Nueva Zelanda', 'Omán', 'Países Bajos',
+    'Pakistán', 'Palaos', 'Panamá', 'Papúa Nueva Guinea', 'Paraguay', 'Perú', 'Polonia', 'Portugal', 
+    'Reino Unido', 'República Centroafricana', 'República Checa', 'República Democrática del Congo', 
+    'República Dominicana', 'Ruanda', 'Rumania', 'Rusia', 'Samoa', 'San Cristóbal y Nieves', 'San Marino', 
+    'San Vicente y las Granadinas', 'Santa Lucía', 'Santo Tomé y Príncipe', 'Senegal', 'Serbia', 
+    'Seychelles', 'Sierra Leona', 'Singapur', 'Siria', 'Somalia', 'Sri Lanka', 'Suazilandia', 'Sudáfrica', 
+    'Sudán', 'Sudán del Sur', 'Suecia', 'Suiza', 'Surinam', 'Tailandia', 'Tanzania', 'Tayikistán', 
+    'Timor Oriental', 'Togo', 'Tonga', 'Trinidad y Tobago', 'Túnez', 'Turkmenistán', 'Turquía', 
+    'Tuvalu', 'Ucrania', 'Uganda', 'Uruguay', 'Uzbekistán', 'Vanuatu', 'Venezuela', 'Vietnam', 
+    'Yemen', 'Yibuti', 'Zambia', 'Zimbabue'
   ];
 
-  // Lista de países en inglés
   const countriesEnglish = [
-    'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan',
-    'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina',
-    'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Cabo Verde', 'Cambodia', 'Cameroon', 'Canada', 'Central African Republic',
-    'Chad', 'Chile', 'China', 'Colombia', 'Comoros', 'Congo', 'Democratic Republic of the Congo', 'Costa Rica', 'Croatia', 'Cuba', 'Cyprus',
-    'Czech Republic', 'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic', 'East Timor', 'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea',
-    'Eritrea', 'Estonia', 'Eswatini', 'Ethiopia', 'Fiji', 'Finland', 'France', 'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada',
-    'Guatemala', 'Guinea', 'Guinea-Bissau', 'Guyana', 'Haiti', 'Honduras', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland',
-    'Israel', 'Italy', 'Ivory Coast', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya', 'Kiribati', 'Kuwait', 'Kyrgyzstan', 'Laos', 'Latvia',
-    'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg', 'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali',
-    'Malta', 'Marshall Islands', 'Mauritania', 'Mauritius', 'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Morocco',
-    'Mozambique', 'Myanmar', 'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Korea', 'North Macedonia',
-    'Norway', 'Oman', 'Pakistan', 'Palau', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Poland', 'Portugal', 'Qatar',
-    'Romania', 'Russia', 'Rwanda', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent and the Grenadines', 'Samoa', 'San Marino', 'Sao Tome and Principe',
-    'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia',
-    'South Africa', 'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Sweden', 'Switzerland', 'Syria', 'Taiwan',
-    'Tajikistan', 'Tanzania', 'Thailand', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu', 'Uganda',
-    'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay', 'Uzbekistan', 'Vanuatu', 'Vatican City', 'Venezuela',
-    'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'
+    'Afghanistan', 'Albania', 'Germany', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Saudi Arabia', 
+    'Algeria', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan', 'Bahamas', 'Bangladesh', 
+    'Barbados', 'Bahrain', 'Belgium', 'Belize', 'Benin', 'Belarus', 'Myanmar', 'Bolivia', 'Bosnia and Herzegovina',
+    'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Bhutan', 'Cape Verde', 'Cambodia',
+    'Cameroon', 'Canada', 'Qatar', 'Chad', 'Chile', 'China', 'Cyprus', 'Colombia', 'Comoros', 'North Korea',
+    'South Korea', 'Ivory Coast', 'Costa Rica', 'Croatia', 'Cuba', 'Denmark', 'Dominica', 'Ecuador',
+    'Egypt', 'El Salvador', 'United Arab Emirates', 'Eritrea', 'Slovakia', 'Slovenia', 'Spain', 
+    'United States', 'Estonia', 'Eswatini', 'Ethiopia', 'Philippines', 'Finland', 'Fiji', 'France', 
+    'Gabon', 'Gambia', 'Georgia', 'Ghana', 'Grenada', 'Greece', 'Guatemala', 'Guinea', 'Guinea-Bissau', 
+    'Equatorial Guinea', 'Guyana', 'Haiti', 'Honduras', 'Hungary', 'India', 'Indonesia', 'Iraq', 'Iran', 
+    'Ireland', 'Iceland', 'Marshall Islands', 'Solomon Islands', 'Israel', 'Italy', 'Jamaica', 'Japan', 
+    'Jordan', 'Kazakhstan', 'Kenya', 'Kyrgyzstan', 'Kiribati', 'Kuwait', 'Laos', 'Lesotho', 'Latvia', 
+    'Lebanon', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg', 'North Macedonia', 
+    'Madagascar', 'Malaysia', 'Malawi', 'Maldives', 'Mali', 'Malta', 'Morocco', 'Mauritius', 'Mauritania', 
+    'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Mozambique', 'Namibia', 
+    'Nauru', 'Nepal', 'Nicaragua', 'Niger', 'Nigeria', 'Norway', 'New Zealand', 'Oman', 'Netherlands',
+    'Pakistan', 'Palau', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Poland', 'Portugal', 
+    'United Kingdom', 'Central African Republic', 'Czech Republic', 'Democratic Republic of the Congo', 
+    'Dominican Republic', 'Rwanda', 'Romania', 'Russia', 'Samoa', 'Saint Kitts and Nevis', 'San Marino', 
+    'Saint Vincent and the Grenadines', 'Saint Lucia', 'Sao Tome and Principe', 'Senegal', 'Serbia', 
+    'Seychelles', 'Sierra Leone', 'Singapore', 'Syria', 'Somalia', 'Sri Lanka', 'Swaziland', 'South Africa', 
+    'Sudan', 'South Sudan', 'Sweden', 'Switzerland', 'Suriname', 'Thailand', 'Tanzania', 'Tajikistan', 
+    'East Timor', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkmenistan', 'Turkey', 
+    'Tuvalu', 'Ukraine', 'Uganda', 'Uruguay', 'Uzbekistan', 'Vanuatu', 'Venezuela', 'Vietnam', 
+    'Yemen', 'Djibouti', 'Zambia', 'Zimbabwe'
   ];
 
-  const handleInputChange = (field, value) => {
-    setUserData({ ...userData, [field]: value });
+  const selectedCountries = language === 'es' ? countriesSpanish : countriesEnglish;
+
+  // useEffect para escuchar los cambios de los proyectos en tiempo real
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(firestore, "projects"), (snapshot) => {
+      try {
+        setLoadingProjects(true);
+        const projectsList = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            label: data?.projectName || 'Nombre no disponible',
+            value: doc.id,
+            beneficiaries: data?.beneficiaries || 0,
+          };
+        });
+
+        setProjects(projectsList);
+      } catch (error) {
+        console.error("Error fetching projects: ", error);
+        Alert.alert(language === 'es' ? 'Error al obtener proyectos' : 'Error fetching projects');
+      } finally {
+        setLoadingProjects(false);
+      }
+    });
+
+    return () => unsubscribe(); 
+  }, []);
+
+  const handleInputChange = async (field, value) => {
+    const updatedUserData = { ...userData, [field]: value };
+    setUserData(updatedUserData);
+
+    if (field === 'userID') {
+      // Verificar si el usuario ya está registrado
+      try {
+        const q = query(collection(firestore, "users"), where("userID", "==", value));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0].data();
+          // Autocompletar los campos con la información del usuario existente
+          const completedUserData = {
+            ...updatedUserData,
+            idType: userDoc.idType || '',
+            name: userDoc.name || '',
+            gender: userDoc.gender || '',
+            birthDate: userDoc.birthDate || '',
+            age: userDoc.age || '', 
+            country: userDoc.country || '',
+            province: userDoc.province || '',
+            canton: userDoc.canton || '',
+            district: userDoc.district || '',
+            phone: userDoc.phone || '',
+            projects: userDoc.projects || [],
+          };
+          setUserData(completedUserData);
+          setQrValue(JSON.stringify(completedUserData));
+          Alert.alert(language === 'es' ? 'Usuario encontrado y datos completados automáticamente' : 'User found, data completed automatically');
+        }
+      } catch (error) {
+        console.error("Error fetching user data: ", error);
+        Alert.alert(language === 'es' ? 'Error al buscar usuario' : 'Error fetching user');
+      }
+    }
   };
 
   const validateFields = () => {
@@ -98,7 +178,7 @@ const RegisterUser = () => {
     }
 
     if (!userData.gender) {
-      newErrors.gender = language === 'es' ? 'Seleccione un sexo' : 'Select a sex';
+      newErrors.gender = language === 'es' ? 'Seleccione un sexo' : 'Select a gender';
     }
 
     const birthDateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
@@ -126,6 +206,10 @@ const RegisterUser = () => {
       newErrors.district = language === 'es' ? 'El distrito es obligatorio' : 'District is required';
     }
 
+    if (userData.projects.length === 0) {
+      newErrors.projects = language === 'es' ? 'Seleccione al menos un proyecto' : 'Select at least one project';
+    }
+
     const phoneRegex = /^\d{8,15}$/; 
     if (!userData.phone || !phoneRegex.test(userData.phone)) {
       newErrors.phone = language === 'es' ? 'Número de teléfono inválido' : 'Invalid phone number';
@@ -138,7 +222,22 @@ const RegisterUser = () => {
 
   useEffect(() => {
     setIsUserValid(validateFields());
+    // Actualizar el valor del QR si todos los campos son válidos
+    if (validateFields()) {
+      setQrValue(JSON.stringify(userData));
+    }
   }, [userData]);
+
+  const handleProjectSelection = (value) => {
+    if (userData.projects.includes(value)) {
+      Alert.alert(language === 'es' ? 'Ya está registrado en este proyecto' : 'You are already registered for this project');
+    } else {
+      setUserData({
+        ...userData,
+        projects: [...userData.projects, value],
+      });
+    }
+  };
 
   const handleSave = async () => {
     setFormSubmitted(true);
@@ -148,23 +247,36 @@ const RegisterUser = () => {
       return;
     }
 
-    const { userID, idType, name, gender, birthDate, age, country, province, canton, district, phone } = userData;
-
     try {
-      const q = query(collection(firestore, "users"), where("userID", "==", userID));
+      const q = query(collection(firestore, "users"), where("userID", "==", userData.userID));
       const querySnapshot = await getDocs(q);
+
       if (!querySnapshot.empty) {
-        Alert.alert(language === 'es' ? 'Este ID de usuario ya existe' : 'This User ID already exists');
-        return;
+        // Si el usuario ya existe, actualizar los datos
+        const userDocId = querySnapshot.docs[0].id;
+        await setDoc(doc(firestore, "users", userDocId), userData);
+        Alert.alert(language === 'es' ? 'Datos actualizados exitosamente' : 'Data updated successfully');
+      } else {
+        // Si el usuario no existe, guardar un nuevo documento
+        await addDoc(collection(firestore, "users"), userData);
+        Alert.alert(language === 'es' ? 'Guardado exitosamente' : 'Saved successfully');
       }
 
-      const dataToSave = { ...userData, birthDate: userData.birthDate };
-      await addDoc(collection(firestore, "users"), dataToSave);
+      // Reducir el número de beneficiarios de los proyectos seleccionados
+      userData.projects.forEach(async (projectId) => {
+        const selectedProject = projects.find(p => p.value === projectId);
+        if (selectedProject) {
+          const projectDocRef = doc(firestore, "projects", selectedProject.value);
+          await updateDoc(projectDocRef, {
+            beneficiaries: selectedProject.beneficiaries - 1,
+          });
+        }
+      });
 
-      setQrValue(JSON.stringify(dataToSave));
-      Alert.alert(language === 'es' ? 'Guardado exitosamente' : 'Saved successfully');
+      // Actualizar el valor del código QR para reflejar los datos completos del usuario
+      setQrValue(JSON.stringify(userData));
     } catch (error) {
-      console.error("Error adding document: ", error);
+      console.error("Error adding/updating document: ", error);
       Alert.alert(language === 'es' ? 'Error al guardar' : 'Error saving');
     }
   };
@@ -180,9 +292,6 @@ const RegisterUser = () => {
   const handleSalir = () => {
     navigation.navigate('Home');
   };
-
-  // Selecciona la lista de países dependiendo del idioma
-  const selectedCountries = language === 'es' ? countriesSpanish : countriesEnglish;
 
   return (
     <ScrollView contentContainerStyle={styles.container(width)}>
@@ -227,7 +336,7 @@ const RegisterUser = () => {
           onValueChange={(value) => handleInputChange('gender', value)}
           itemStyle={styles.pickerItem}
         >
-          <Picker.Item label={language === 'es' ? "Seleccione un sexo" : "Select a sex"} value="" />
+          <Picker.Item label={language === 'es' ? "Seleccione un sexo" : "Select a gender"} value="" />
           <Picker.Item label={language === 'es' ? "Masculino" : "Male"} value="Male" />
           <Picker.Item label={language === 'es' ? "Femenino" : "Female"} value="Female" />
         </Picker>
@@ -306,6 +415,26 @@ const RegisterUser = () => {
         placeholderTextColor="#B0B0B0"
       />
       {formSubmitted && errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
+
+      {/* Input para seleccionar Proyecto */}
+      <View style={styles.pickerContainer}>
+        {loadingProjects ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : (
+          <Picker
+            selectedValue=""
+            style={styles.picker}
+            onValueChange={(value) => handleProjectSelection(value)}
+            itemStyle={styles.pickerItem}
+          >
+            <Picker.Item label={language === 'es' ? "Seleccione un proyecto" : "Select a project"} value="" />
+            {projects.map((project, index) => (
+              <Picker.Item key={index} label={project.label} value={project.value} />
+            ))}
+          </Picker>
+        )}
+        {formSubmitted && errors.projects && <Text style={styles.errorText}>{errors.projects}</Text>}
+      </View>
 
       <TouchableOpacity
         style={[styles.addButton(width), !isUserValid && { backgroundColor: '#ccc' }]} 

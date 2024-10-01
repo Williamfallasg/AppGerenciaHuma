@@ -3,9 +3,10 @@ import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert } fro
 import { useNavigation } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
 import { firestore } from '../firebase/firebase';
-import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore'; // Incluí deleteDoc para eliminar programas
+import { doc, setDoc } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useUserRole } from '../context/UserRoleContext';
+import { Picker } from '@react-native-picker/picker'; // Import Picker
 import styles from '../styles/stylesProgramForm';
 
 const ProgramForm = () => {
@@ -18,11 +19,10 @@ const ProgramForm = () => {
     programName: '',
     programDescription: '',
     programBudget: '',
+    programCurrency: 'USD', // Moneda inicial
     startDate: '',
     endDate: ''
   }]);
-
-  const [searchID, setSearchID] = useState(''); // ID del programa a buscar
 
   useEffect(() => {
     if (userRole !== 'admin') {
@@ -39,101 +39,100 @@ const ProgramForm = () => {
     }
   }, [userRole]);
 
-  // Validar que un programa existente tenga el formato correcto
-  const validateProgram = (programa) => {
-    if (!programa.programID || !programa.programName || !programa.programDescription || !programa.programBudget || !programa.startDate || !programa.endDate) {
-      Alert.alert(language === 'es' ? "Error" : "Error", language === 'es' ? "Por favor, completa todos los campos del programa" : "Please complete all fields for the program");
-      return false;
+  const getCurrencySymbol = (currency) => {
+    switch (currency) {
+      case 'CRC': return '₡'; // Colones Costarricenses
+      case 'USD': return '$';  // Dólares Estadounidenses
+      case 'MXN': return '$';  // Pesos Mexicanos
+      case 'HNL': return 'L';  // Lempiras Hondureñas
+      case 'EUR': return '€';  // Euros
+      case 'NIO': return 'C$'; // Córdoba Nicaragüense
+      case 'SVC': return '₡';  // Colón Salvadoreño
+      case 'PAB': return 'B/.'; // Balboa Panameño
+      case 'GTQ': return 'Q';   // Quetzal Guatemalteco
+      case 'CAD': return 'CA$'; // Dólar Canadiense
+      case 'AUD': return 'A$';  // Dólar Australiano
+      case 'GBP': return '£';   // Libra Esterlina
+      case 'JPY': return '¥';   // Yen Japonés
+      default: return '';
     }
-
-    const budget = parseFloat(programa.programBudget);
-    if (isNaN(budget) || budget <= 0) {
-      Alert.alert(language === 'es' ? "Error de presupuesto" : "Budget Error", language === 'es' ? "El presupuesto debe ser un número positivo" : "The budget must be a positive number");
-      return false;
-    }
-
-    if (programa.programName.length < 3) {
-      Alert.alert(language === 'es' ? "Error en el nombre" : "Name Error", language === 'es' ? "El nombre del programa debe tener al menos 3 caracteres" : "The program name must have at least 3 characters");
-      return false;
-    }
-
-    if (programa.programDescription.length < 10) {
-      Alert.alert(language === 'es' ? "Error en la descripción" : "Description Error", language === 'es' ? "La descripción del programa debe tener al menos 10 caracteres" : "The program description must have at least 10 characters");
-      return false;
-    }
-
-    return true;
   };
 
-  // Validar fechas válidas (evitar días/meses inválidos)
-  const isValidDate = (day, month, year) => {
-    const dayInt = parseInt(day, 10);
-    const monthInt = parseInt(month, 10);
-    const yearInt = parseInt(year, 10);
-    if (monthInt < 1 || monthInt > 12) return false;
+  // Función para validar que la fecha de fin sea posterior a la fecha de inicio
+  const isEndDateValid = (startDate, endDate) => {
+    const [startDay, startMonth, startYear] = startDate.split('/').map(Number);
+    const [endDay, endMonth, endYear] = endDate.split('/').map(Number);
 
-    const daysInMonth = [31, (yearInt % 4 === 0 && yearInt % 100 !== 0) || (yearInt % 400 === 0) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-    return dayInt > 0 && dayInt <= daysInMonth[monthInt - 1];
+    const start = new Date(startYear, startMonth - 1, startDay);
+    const end = new Date(endYear, endMonth - 1, endDay);
+
+    return end >= start; // La fecha de fin debe ser igual o posterior a la fecha de inicio
   };
 
-  // Formatear fecha en formato dd/mm/yyyy
-  const formatAndSetDate = (index, field, value) => {
-    let formattedValue = value.replace(/[^\d]/g, '');
-    
-    if (formattedValue.length >= 2 && formattedValue.length <= 4) {
-      formattedValue = `${formattedValue.substring(0, 2)}/${formattedValue.substring(2)}`;
-    } else if (formattedValue.length > 4) {
-      formattedValue = `${formattedValue.substring(0, 2)}/${formattedValue.substring(2, 4)}/${formattedValue.substring(4, 8)}`;
-    }
-
-    if (formattedValue.length === 10) {
-      const [day, month, year] = formattedValue.split('/');
-      if (!isValidDate(day, month, year)) {
-        Alert.alert(language === 'es' ? "Error de fecha" : "Date Error", language === 'es' ? "La fecha es inválida. Verifica los días y meses." : "Invalid date. Check the day and month.");
-        return;
-      }
-    }
-
+  // Maneja el cambio de moneda
+  const handleCurrencyChange = (index, value) => {
     const newProgramas = [...programas];
-    newProgramas[index][field] = formattedValue;
+    const symbol = getCurrencySymbol(value);
+    
+    const currentBudget = newProgramas[index].programBudget.replace(/[^\d.]/g, ''); // Remover cualquier símbolo actual
+    
+    newProgramas[index].programCurrency = value;
+    newProgramas[index].programBudget = `${symbol}${currentBudget}`; // Agregar símbolo al presupuesto
+
     setProgramas(newProgramas);
   };
 
-  // Buscar un programa existente en Firestore
-  const handleSearchProgram = async () => {
-    if (!searchID) {
-      Alert.alert(language === 'es' ? "Error" : "Error", language === 'es' ? "Por favor, introduce el ID del programa" : "Please enter the Program ID");
-      return;
-    }
-
-    try {
-      const docRef = doc(firestore, 'programs', searchID);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setProgramas([{
-          programID: searchID,
-          programName: data.programName,
-          programDescription: data.programDescription,
-          programBudget: data.programBudget,
-          startDate: data.startDate,
-          endDate: data.endDate
-        }]);
-        Alert.alert(language === 'es' ? "Programa encontrado" : "Program Found");
-      } else {
-        Alert.alert(language === 'es' ? "No encontrado" : "Not Found", language === 'es' ? "No existe un programa con este ID" : "There is no program with this ID");
-      }
-    } catch (error) {
-      Alert.alert(language === 'es' ? "Error de búsqueda" : "Search Error", language === 'es' ? "Hubo un error al buscar el programa" : "There was an error searching for the program");
-    }
+  // Maneja el cambio de cualquier campo del programa
+  const handleProgramChange = (index, field, value) => {
+    const newProgramas = [...programas];
+    newProgramas[index][field] = value;
+    setProgramas(newProgramas);
   };
 
-  // Guardar programa en Firestore
+  // Confirmar y guardar el programa en Firestore
+  const confirmAndSave = () => {
+    // Crear un resumen de los programas para la confirmación
+    let summary = '';
+    programas.forEach((programa, index) => {
+      summary += `${language === 'es' ? 'Programa' : 'Program'} ${index + 1}:\n`;
+      summary += `${language === 'es' ? 'ID del programa' : 'Program ID'}: ${programa.programID}\n`;
+      summary += `${language === 'es' ? 'Nombre' : 'Name'}: ${programa.programName}\n`;
+      summary += `${language === 'es' ? 'Descripción' : 'Description'}: ${programa.programDescription}\n`;
+      summary += `${language === 'es' ? 'Presupuesto' : 'Budget'}: ${programa.programBudget}\n`;
+      summary += `${language === 'es' ? 'Fecha de inicio' : 'Start Date'}: ${programa.startDate}\n`;
+      summary += `${language === 'es' ? 'Fecha de fin' : 'End Date'}: ${programa.endDate}\n\n`;
+    });
+
+    // Mostrar alerta de confirmación
+    Alert.alert(
+      language === 'es' ? 'Confirmar Guardado' : 'Confirm Save',
+      `${language === 'es' ? '¿Estás seguro de que deseas guardar los siguientes programas?\n\n' : 'Are you sure you want to save the following programs?\n\n'}${summary}`,
+      [
+        {
+          text: language === 'es' ? 'Cancelar' : 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: language === 'es' ? 'Confirmar' : 'Confirm',
+          onPress: () => handleSave(),
+        },
+      ]
+    );
+  };
+
+  // Guardar el programa en Firestore
   const handleSave = async () => {
     for (const programa of programas) {
       if (!validateProgram(programa)) {
         return; 
+      }
+
+      if (!isEndDateValid(programa.startDate, programa.endDate)) {
+        Alert.alert(
+          language === 'es' ? "Error de fecha" : "Date Error",
+          language === 'es' ? "La fecha de fin debe ser posterior a la fecha de inicio" : "The end date must be after the start date"
+        );
+        return;
       }
     }
     
@@ -144,6 +143,7 @@ const ProgramForm = () => {
           programName: programa.programName,
           programDescription: programa.programDescription,
           programBudget: programa.programBudget,
+          programCurrency: programa.programCurrency, // Guardar la moneda
           startDate: programa.startDate,
           endDate: programa.endDate,
         });
@@ -154,7 +154,7 @@ const ProgramForm = () => {
     }
   };
 
-  // Añadir un nuevo programa
+  // Agregar un nuevo programa al estado
   const handleAddProgram = () => {
     setProgramas([
       ...programas,
@@ -163,13 +163,14 @@ const ProgramForm = () => {
         programName: '',
         programDescription: '',
         programBudget: '',
+        programCurrency: 'USD',
         startDate: '',
         endDate: ''
       }
     ]);
   };
 
-  // Eliminar un programa
+  // Eliminar un programa del estado
   const handleRemoveProgram = (index) => {
     Alert.alert(
       language === 'es' ? 'Eliminar programa' : 'Remove Program',
@@ -191,7 +192,7 @@ const ProgramForm = () => {
     );
   };
 
-  // Función para navegar a la pantalla de vinculación de proyectos
+  // Vincular proyecto con programa
   const handleLinkProject = () => {
     Alert.alert(
       language === 'es' ? 'Vincular proyecto' : 'Link Project',
@@ -204,18 +205,11 @@ const ProgramForm = () => {
         {
           text: language === 'es' ? 'Vincular' : 'Link',
           onPress: () => {
-            navigation.navigate('ProjectForm'); // Asegúrate de que la ruta a 'ProjectForm' esté definida en tu navegación
+            navigation.navigate('ProjectForm');
           }
         }
       ]
     );
-  };
-
-  // Cambiar valor de un campo del programa
-  const handleProgramChange = (index, field, value) => {
-    const newProgramas = [...programas];
-    newProgramas[index][field] = value;
-    setProgramas(newProgramas);
   };
 
   return (
@@ -249,12 +243,37 @@ const ProgramForm = () => {
             onChangeText={(value) => handleProgramChange(index, 'programDescription', value)}
             placeholderTextColor="#B0B0B0"
           />
-          
+
+          {/* Nuevo picker para seleccionar la moneda */}
+          <Picker
+            selectedValue={programa.programCurrency}
+            style={styles.picker}
+            onValueChange={(value) => handleCurrencyChange(index, value)}
+          >
+            <Picker.Item label="USD (Dólares)" value="USD" />
+            <Picker.Item label="CRC (Colones Costarricenses)" value="CRC" />
+            <Picker.Item label="MXN (Pesos Mexicanos)" value="MXN" />
+            <Picker.Item label="HNL (Lempiras Hondureñas)" value="HNL" />
+            <Picker.Item label="EUR (Euros)" value="EUR" />
+            <Picker.Item label="NIO (Córdoba Nicaragüense)" value="NIO" />
+            <Picker.Item label="SVC (Colón Salvadoreño)" value="SVC" />
+            <Picker.Item label="PAB (Balboa Panameño)" value="PAB" />
+            <Picker.Item label="GTQ (Quetzal Guatemalteco)" value="GTQ" />
+            <Picker.Item label="CAD (Dólar Canadiense)" value="CAD" />
+            <Picker.Item label="AUD (Dólar Australiano)" value="AUD" />
+            <Picker.Item label="GBP (Libra Esterlina)" value="GBP" />
+            <Picker.Item label="JPY (Yen Japonés)" value="JPY" />
+          </Picker>
+
           <TextInput
             style={styles.input}
             placeholder={language === 'es' ? "Presupuesto del programa" : "Program Budget"}
             value={programa.programBudget}
-            onChangeText={(value) => handleProgramChange(index, 'programBudget', value)}
+            onChangeText={(value) => {
+              const symbol = getCurrencySymbol(programa.programCurrency);
+              const numericValue = value.replace(/[^\d.]/g, ''); // Solo permitir números
+              handleProgramChange(index, 'programBudget', `${symbol}${numericValue}`);
+            }}
             keyboardType="numeric"
             placeholderTextColor="#B0B0B0"
           />
@@ -263,7 +282,7 @@ const ProgramForm = () => {
             style={styles.input}
             placeholder={language === 'es' ? "Fecha de inicio (dd/mm/yyyy)" : "Start Date (dd/mm/yyyy)"}
             value={programa.startDate}
-            onChangeText={(value) => formatAndSetDate(index, 'startDate', value)}
+            onChangeText={(value) => handleProgramChange(index, 'startDate', value)}
             placeholderTextColor="#B0B0B0"
             keyboardType="numeric"
           />
@@ -272,7 +291,7 @@ const ProgramForm = () => {
             style={styles.input}
             placeholder={language === 'es' ? "Fecha de fin (dd/mm/yyyy)" : "End Date (dd/mm/yyyy)"}
             value={programa.endDate}
-            onChangeText={(value) => formatAndSetDate(index, 'endDate', value)}
+            onChangeText={(value) => handleProgramChange(index, 'endDate', value)}
             placeholderTextColor="#B0B0B0"
             keyboardType="numeric"
           />
@@ -286,23 +305,19 @@ const ProgramForm = () => {
         </View>
       ))}
 
-      {/* Botón para guardar */}
-      <TouchableOpacity style={styles.button} onPress={handleSave}>
+      <TouchableOpacity style={styles.button} onPress={confirmAndSave}>
         <Text style={styles.buttonText}>{language === 'es' ? "Guardar" : "Save"}</Text>
       </TouchableOpacity>
 
-      {/* Botón para vincular proyecto */}
-      <TouchableOpacity style={[styles.button, styles.linkProjectButton]} onPress={handleLinkProject}>
-        <Text style={styles.buttonText}>{language === 'es' ? "Vincular proyecto" : "Link Project"}</Text>
-      </TouchableOpacity>
-
-      {/* Botón para agregar otro programa */}
       <TouchableOpacity style={styles.addButton} onPress={handleAddProgram}>
         <Icon name="add" size={24} color="#FFFFFF" />
         <Text style={styles.addButtonText}>{language === 'es' ? 'Agregar programa' : 'Add Program'}</Text>
       </TouchableOpacity>
 
-      {/* Botón para salir */}
+      <TouchableOpacity style={[styles.button, styles.linkProjectButton]} onPress={handleLinkProject}>
+        <Text style={styles.buttonText}>{language === 'es' ? "Vincular Proyecto" : "Link Project"}</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={[styles.button, styles.exitButton]} onPress={() => navigation.navigate('Home')}>
         <Text style={styles.buttonText}>{language === 'es' ? "Salir" : "Exit"}</Text>
       </TouchableOpacity>

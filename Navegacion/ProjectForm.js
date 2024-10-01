@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; 
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
 import { getDocs, collection, doc, setDoc, getDoc } from 'firebase/firestore';
 import { firestore } from '../firebase/firebase'; // Importar Firestore de la configuración
@@ -7,6 +7,7 @@ import styles from '../styles/stylesProjectForm'; // Importar el archivo de esti
 import { useNavigation } from '@react-navigation/native'; // Para la navegación
 import { useLanguage } from '../context/LanguageContext'; // Contexto de idioma
 import { useUserRole } from '../context/UserRoleContext'; // Contexto del rol del usuario
+import { Picker } from '@react-native-picker/picker'; // Importar Picker desde el paquete correcto
 
 const ProjectForm = () => {
   const navigation = useNavigation();
@@ -17,12 +18,31 @@ const ProjectForm = () => {
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [projectBudget, setProjectBudget] = useState('');
+  const [selectedCurrency, setSelectedCurrency] = useState('USD'); // Estado para la moneda seleccionada
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [activities, setActivities] = useState([{ id: 1, activity: '' }]);
   const [indicators, setIndicators] = useState([{ id: 1, description: '', beneficiaries: '', selectedOption: 'number' }]);
   const [programID, setProgramID] = useState(''); // Estado para vincular proyecto con programa
   const [availablePrograms, setAvailablePrograms] = useState([]); // Lista de programas disponibles
+
+  const currencySymbols = {
+    USD: '$',
+    MXN: 'MX$',
+    EUR: '€',
+    GBP: '£',
+    JPY: '¥',
+    CAD: 'CA$',
+    AUD: 'A$',
+    CHF: 'CHF',
+    CNY: '¥',
+    INR: '₹',
+    CRC: '₡',
+    NIO: 'C$',
+    SVC: '₡',
+    PAB: 'B/.',
+    GTQ: 'Q'
+  };
 
   useEffect(() => {
     if (userRole !== 'admin') {
@@ -62,6 +82,7 @@ const ProjectForm = () => {
     setProjectName('');
     setProjectDescription('');
     setProjectBudget('');
+    setSelectedCurrency('USD'); // Limpiar moneda seleccionada
     setStartDate('');
     setEndDate('');
     setActivities([{ id: 1, activity: '' }]);
@@ -70,6 +91,11 @@ const ProjectForm = () => {
   };
 
   const handleSave = async () => {
+    if (!validateDate(startDate) || !validateDate(endDate)) {
+      Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Las fechas ingresadas no son válidas' : 'The entered dates are not valid');
+      return;
+    }
+
     try {
       if (!projectID || !projectName || !programID) {
         Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Por favor, completa todos los campos obligatorios' : 'Please fill out all required fields');
@@ -79,7 +105,8 @@ const ProjectForm = () => {
       await setDoc(doc(firestore, 'projects', projectID), {
         projectName,
         projectDescription,
-        projectBudget,
+        projectBudget: `${currencySymbols[selectedCurrency]} ${projectBudget}`, // Guardar el presupuesto con la moneda seleccionada
+        selectedCurrency,
         startDate,
         endDate,
         programID,
@@ -103,10 +130,10 @@ const ProjectForm = () => {
     }
   };
 
-  const handleEdit = async () => {
+  const handleEditProject = async () => {
     try {
       if (!projectID) {
-        Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Por favor, ingresa el ID del proyecto' : 'Please enter the project ID');
+        Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Por favor, ingresa el ID del proyecto' : 'Please enter the Project ID');
         return;
       }
 
@@ -117,22 +144,59 @@ const ProjectForm = () => {
         const projectData = projectSnap.data();
         setProjectName(projectData.projectName);
         setProjectDescription(projectData.projectDescription);
-        setProjectBudget(projectData.projectBudget);
+        setProjectBudget(projectData.projectBudget.replace(/[^0-9.]/g, '')); // Remover símbolo de moneda
+        setSelectedCurrency(projectData.selectedCurrency);
         setStartDate(projectData.startDate);
         setEndDate(projectData.endDate);
         setProgramID(projectData.programID);
         setActivities(projectData.activities || []);
         setIndicators(projectData.indicators || []);
-        Alert.alert(language === 'es' ? 'Datos cargados' : 'Data loaded');
+
+        Alert.alert(language === 'es' ? 'Proyecto cargado para edición' : 'Project loaded for editing');
       } else {
-        Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Proyecto no encontrado' : 'Project not found');
+        Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'El proyecto no existe' : 'The project does not exist');
       }
     } catch (error) {
       console.error("Error fetching project:", error);
-      Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Hubo un error al cargar el proyecto' : 'There was an error loading the project');
+      Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Hubo un error al obtener el proyecto' : 'There was an error fetching the project');
     }
   };
 
+  // Función para formatear la fecha e insertar '/' automáticamente
+  const formatDate = (text) => {
+    let cleaned = text.replace(/[^0-9]/g, ''); // Elimina cualquier caracter que no sea un número
+    let formattedText = '';
+
+    if (cleaned.length >= 1) formattedText += cleaned.substring(0, 2);
+    if (cleaned.length >= 3) formattedText += '/' + cleaned.substring(2, 4);
+    if (cleaned.length >= 5) formattedText += '/' + cleaned.substring(4, 8);
+
+    return formattedText;
+  };
+
+  // Función para validar la fecha
+  const validateDate = (date) => {
+    const datePattern = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+    const match = date.match(datePattern);
+
+    if (!match) return false;
+
+    const day = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const year = parseInt(match[3], 10);
+
+    if (day < 1 || day > 31) return false;
+    if (month < 1 || month > 12) return false;
+    if (year < 1000 || year > 9999) return false;
+
+    // Verificar días máximos por mes (sin considerar años bisiestos en este simple ejemplo)
+    const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if (day > daysInMonth[month - 1]) return false;
+
+    return true;
+  };
+
+  // Gestión de Actividades
   const handleAddActivity = () => {
     setActivities([...activities, { id: activities.length + 1, activity: '' }]);
   };
@@ -148,6 +212,7 @@ const ProjectForm = () => {
     setActivities(activities.filter(item => item.id !== id));
   };
 
+  // Gestión de Indicadores
   const handleAddIndicator = () => {
     setIndicators([...indicators, { id: indicators.length + 1, description: '', beneficiaries: '', selectedOption: 'number' }]);
   };
@@ -216,31 +281,50 @@ const ProjectForm = () => {
         value={projectDescription}
         onChangeText={setProjectDescription}
       />
-      
-      <TextInput
-        style={styles.input}
-        placeholder={language === 'es' ? 'Presupuesto del proyecto' : 'Project Budget'}
-        value={projectBudget}
-        onChangeText={setProjectBudget}
-        keyboardType="numeric"
-      />
+
+      {/* Selector de moneda */}
+      <View style={[styles.input, { justifyContent: 'center' }]}>
+        <Picker
+          selectedValue={selectedCurrency}
+          style={{ height: '100%', width: '100%' }}
+          onValueChange={(itemValue) => setSelectedCurrency(itemValue)}
+        >
+          {Object.entries(currencySymbols).map(([key, value]) => (
+            <Picker.Item key={key} label={`${key} - ${value}`} value={key} />
+          ))}
+        </Picker>
+      </View>
+
+      {/* Input del presupuesto con moneda */}
+      <View style={styles.input}>
+        <TextInput
+          style={{ flex: 1 }}
+          placeholder={language === 'es' ? 'Presupuesto del proyecto' : 'Project Budget'}
+          value={projectBudget}
+          onChangeText={(text) => setProjectBudget(text.replace(/[^0-9]/g, ''))} // Evita caracteres no numéricos
+          keyboardType="numeric"
+        />
+      </View>
 
       <TextInput
         style={styles.input}
         placeholder={language === 'es' ? 'Fecha de inicio (dd/mm/yyyy)' : 'Start Date (dd/mm/yyyy)'}
         value={startDate}
-        onChangeText={setStartDate}
+        onChangeText={(text) => setStartDate(formatDate(text))}
         keyboardType="numeric"
+        maxLength={10}
       />
 
       <TextInput
         style={styles.input}
         placeholder={language === 'es' ? 'Fecha de fin (dd/mm/yyyy)' : 'End Date (dd/mm/yyyy)'}
         value={endDate}
-        onChangeText={setEndDate}
+        onChangeText={(text) => setEndDate(formatDate(text))}
         keyboardType="numeric"
+        maxLength={10}
       />
 
+      {/* Sección para gestionar actividades */}
       <Text style={styles.sectionTitle}>
         {language === 'es' ? 'Actividades' : 'Activities'}
       </Text>
@@ -265,6 +349,7 @@ const ProjectForm = () => {
         </Text>
       </TouchableOpacity>
 
+      {/* Sección para gestionar indicadores */}
       <Text style={styles.sectionTitle}>
         {language === 'es' ? 'Indicadores' : 'Indicators'}
       </Text>
@@ -288,23 +373,13 @@ const ProjectForm = () => {
             </TouchableOpacity>
           </View>
 
-          {selectedOption === 'number' ? (
-            <TextInput
-              style={styles.beneficiariesInput}
-              placeholder={language === 'es' ? 'Número de beneficiarios' : 'Number of Beneficiaries'}
-              value={beneficiaries}
-              onChangeText={(text) => handleIndicatorChange(text, id, 'beneficiaries')}
-              keyboardType="numeric"
-            />
-          ) : (
-            <TextInput
-              style={styles.beneficiariesInput}
-              placeholder={language === 'es' ? 'Porcentaje de beneficiarios' : 'Percentage of Beneficiaries'}
-              value={`${beneficiaries}%`}
-              onChangeText={(text) => handleIndicatorChange(text.replace('%', ''), id, 'beneficiaries')}
-              keyboardType="numeric"
-            />
-          )}
+          <TextInput
+            style={styles.beneficiariesInput}
+            placeholder={language === 'es' ? (selectedOption === 'number' ? 'Número de beneficiarios' : 'Porcentaje de beneficiarios') : (selectedOption === 'number' ? 'Number of Beneficiaries' : 'Percentage of Beneficiaries')}
+            value={beneficiaries}
+            onChangeText={(text) => handleIndicatorChange(text.replace('%', ''), id, 'beneficiaries')}
+            keyboardType="numeric"
+          />
 
           <TouchableOpacity onPress={() => handleDeleteIndicator(id)} style={styles.iconButton}>
             <Icon name="delete" size={24} color="#F28C32" />
@@ -319,18 +394,21 @@ const ProjectForm = () => {
         </Text>
       </TouchableOpacity>
 
+      {/* Botón para guardar el proyecto */}
       <TouchableOpacity style={styles.button} onPress={handleSave}>
         <Text style={styles.buttonText}>
           {language === 'es' ? 'Guardar' : 'Save'}
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button} onPress={handleEdit}>
+      {/* Botón para editar el proyecto */}
+      <TouchableOpacity style={styles.button} onPress={handleEditProject}>
         <Text style={styles.buttonText}>
-          {language === 'es' ? 'Editar' : 'Edit'}
+          {language === 'es' ? 'Editar Proyecto' : 'Edit Project'}
         </Text>
       </TouchableOpacity>
 
+      {/* Botón para salir */}
       <TouchableOpacity style={[styles.button, styles.exitButton]} onPress={() => navigation.navigate('Home')}>
         <Text style={styles.buttonText}>
           {language === 'es' ? 'Salir' : 'Exit'}

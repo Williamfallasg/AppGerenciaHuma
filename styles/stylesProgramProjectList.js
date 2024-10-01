@@ -51,7 +51,7 @@ const styles = {
       marginTop: 15,
     },
     editButton: {
-      backgroundColor: '#4CAF50', // Color verde para el botón "Guardar" y "Editar"
+      backgroundColor: '#67A6F2', // Color celeste para el botón "Guardar" y "Editar"
       padding: 12,
       borderRadius: 5,
       flexDirection: 'row',
@@ -66,7 +66,7 @@ const styles = {
       marginLeft: 8,
     },
     deleteButton: {
-      backgroundColor: '#FFA500', // Rojo como el botón "Salir"
+      backgroundColor: '#F28C32', // Naranja como el botón "Salir"
       padding: 12,
       borderRadius: 5,
       flexDirection: 'row',
@@ -80,7 +80,7 @@ const styles = {
       marginLeft: 8,
     },
     exitButton: {
-      backgroundColor: '#FFA500', // Color del botón "Salir"
+      backgroundColor: '#F28C32', // Color del botón "Salir"
       padding: 15,
       borderRadius: 5,
       marginTop: 20,
