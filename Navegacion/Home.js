@@ -32,9 +32,13 @@ const Home = () => {
     navigation.navigate('GenerateReport');
   };
 
-  // Nueva función para navegar a la lista de programas y proyectos
   const navigateToProgramProjectList = () => {
-    navigation.navigate('ProgramProjectList'); // Asegúrate de que 'ProgramProjectList' esté registrado en tu sistema de navegación
+    navigation.navigate('ProgramProjectList');
+  };
+
+  // Nueva función para navegar a la pantalla de ResultsForm
+  const navigateToResultsForm = () => {
+    navigation.navigate('ResultsForm'); // Asegúrate de que 'ResultsForm' esté registrado en tu sistema de navegación
   };
 
   return (
@@ -72,6 +76,13 @@ const Home = () => {
       <TouchableOpacity style={styles.mainButton} onPress={navigateToProgramProjectList}>
         <Text style={styles.mainButtonText}>
           {language === 'es' ? 'Mostrar Programas y Proyectos' : 'Show Programs and Projects'}
+        </Text>
+      </TouchableOpacity>
+
+      {/* Botón para ir a ResultsForm */}
+      <TouchableOpacity style={styles.mainButton} onPress={navigateToResultsForm}>
+        <Text style={styles.mainButtonText}>
+          {language === 'es' ? 'Actividades del proyecto' : 'Project activities'}
         </Text>
       </TouchableOpacity>
 

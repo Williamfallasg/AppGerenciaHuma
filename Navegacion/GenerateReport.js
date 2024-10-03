@@ -1,8 +1,9 @@
+// Ruta sugerida: components/GenerateReport.js
+
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Image, Alert, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Alert } from 'react-native';
 import { RadioButton } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
-import { LineChart, BarChart } from 'react-native-chart-kit';
 import { useLanguage } from '../context/LanguageContext';
 import { useUserRole } from '../context/UserRoleContext';
 import styles from '../styles/stylesGenerateReport'; // Importar los estilos desde el archivo separado
@@ -13,31 +14,42 @@ const GenerateReport = () => {
   const [selectedOption, setSelectedOption] = useState('Programas');
   const navigation = useNavigation();
 
-  useEffect(() => {
+  // Helper para cambiar el idioma
+  const translate = (textEs, textEn) => (language === 'es' ? textEs : textEn);
+
+  // Función para validar el acceso y redirigir si el usuario no tiene permisos
+  const checkAccessAndRedirect = () => {
     if (userRole !== 'admin') {
       Alert.alert(
-        language === 'es' ? 'Acceso denegado' : 'Access Denied',
-        language === 'es' ? 'No tiene permisos para acceder a esta sección.' : 'You do not have permission to access this section.',
-        [{ text: language === 'es' ? 'Aceptar' : 'OK', onPress: () => navigation.navigate('Home') }]
+        translate('Acceso denegado', 'Access Denied'),
+        translate('No tiene permisos para acceder a esta sección.', 'You do not have permission to access this section.'),
+        [{ text: translate('Aceptar', 'OK'), onPress: () => navigation.navigate('Home') }]
       );
     }
-  }, [userRole, navigation, language]);
+  };
 
+  useEffect(() => {
+    checkAccessAndRedirect();
+  }, [userRole]);
+
+  // Si no es admin, no renderizamos nada
   if (userRole !== 'admin') {
     return null;
   }
 
+  // Manejo de la generación de reporte
   const handleGenerateReport = () => {
     if (!selectedOption) {
       Alert.alert(
-        language === 'es' ? 'Error' : 'Error',
-        language === 'es' ? 'Por favor, seleccione una opción' : 'Please select an option'
+        translate('Error', 'Error'),
+        translate('Por favor, seleccione una opción', 'Please select an option')
       );
       return;
     }
     navigation.navigate('Report', { selectedOption });
   };
 
+  // Manejo del botón de salir
   const handleGoHome = () => {
     navigation.navigate('Home');
   };
@@ -46,41 +58,36 @@ const GenerateReport = () => {
     <View style={styles.container}>
       <Image source={require('../assets/image.png')} style={styles.logo} />
       <Text style={styles.title}>
-        {language === 'es' ? 'Generar informe' : 'Generate Report'}
+        {translate('Generar informe', 'Generate Report')}
       </Text>
 
       <View style={styles.radioContainer}>
-        <TouchableOpacity style={styles.radioButton} onPress={() => setSelectedOption('Programas')}>
-          <RadioButton value="Programas" status={selectedOption === 'Programas' ? 'checked' : 'unchecked'} />
-          <Text style={styles.radioText}>
-            {language === 'es' ? 'Programas' : 'Programs'}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.radioButton} onPress={() => setSelectedOption('Proyectos')}>
-          <RadioButton value="Proyectos" status={selectedOption === 'Proyectos' ? 'checked' : 'unchecked'} />
-          <Text style={styles.radioText}>
-            {language === 'es' ? 'Proyectos' : 'Projects'}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.radioButton} onPress={() => setSelectedOption('Beneficiarios')}>
-          <RadioButton value="Beneficiarios" status={selectedOption === 'Beneficiarios' ? 'checked' : 'unchecked'} />
-          <Text style={styles.radioText}>
-            {language === 'es' ? 'Beneficiarios' : 'Beneficiaries'}
-          </Text>
-        </TouchableOpacity>
+        {['Programas', 'Proyectos', 'Beneficiarios'].map((option) => (
+          <TouchableOpacity
+            key={option}
+            style={styles.radioButton}
+            onPress={() => setSelectedOption(option)}
+          >
+            <RadioButton
+              value={option}
+              status={selectedOption === option ? 'checked' : 'unchecked'}
+            />
+            <Text style={styles.radioText}>
+              {translate(option, option === 'Programas' ? 'Programs' : option === 'Proyectos' ? 'Projects' : 'Beneficiaries')}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       <TouchableOpacity style={styles.generateButton} onPress={handleGenerateReport}>
         <Text style={styles.generateButtonText}>
-          {language === 'es' ? 'Generar Informe' : 'Generate Report'}
+          {translate('Generar Informe', 'Generate Report')}
         </Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.exitButton} onPress={handleGoHome}>
         <Text style={styles.exitButtonText}>
-          {language === 'es' ? 'Salir' : 'Exit'}
+          {translate('Salir', 'Exit')}
         </Text>
       </TouchableOpacity>
     </View>

@@ -69,6 +69,35 @@ const ProgramForm = () => {
     return end >= start; // La fecha de fin debe ser igual o posterior a la fecha de inicio
   };
 
+  // Nueva función para validar los datos de un programa
+  const validateProgram = (programa) => {
+    if (!programa.programID) {
+      Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'El ID del programa es obligatorio' : 'Program ID is required');
+      return false;
+    }
+    if (!programa.programName) {
+      Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'El nombre del programa es obligatorio' : 'Program name is required');
+      return false;
+    }
+    if (!programa.programBudget || isNaN(parseFloat(programa.programBudget.replace(/[^0-9.]/g, '')))) {
+      Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'El presupuesto del programa es obligatorio y debe ser un número válido' : 'Program budget is required and must be a valid number');
+      return false;
+    }
+    if (!programa.startDate) {
+      Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'La fecha de inicio es obligatoria' : 'Start date is required');
+      return false;
+    }
+    if (!programa.endDate) {
+      Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'La fecha de fin es obligatoria' : 'End date is required');
+      return false;
+    }
+    if (!isEndDateValid(programa.startDate, programa.endDate)) {
+      Alert.alert(language === 'es' ? 'Error de fecha' : 'Date Error', language === 'es' ? 'La fecha de fin debe ser posterior a la fecha de inicio' : 'The end date must be after the start date');
+      return false;
+    }
+    return true;
+  };
+
   // Maneja el cambio de moneda
   const handleCurrencyChange = (index, value) => {
     const newProgramas = [...programas];
@@ -125,14 +154,6 @@ const ProgramForm = () => {
     for (const programa of programas) {
       if (!validateProgram(programa)) {
         return; 
-      }
-
-      if (!isEndDateValid(programa.startDate, programa.endDate)) {
-        Alert.alert(
-          language === 'es' ? "Error de fecha" : "Date Error",
-          language === 'es' ? "La fecha de fin debe ser posterior a la fecha de inicio" : "The end date must be after the start date"
-        );
-        return;
       }
     }
     
@@ -192,7 +213,7 @@ const ProgramForm = () => {
     );
   };
 
-  // Vincular proyecto con programa
+  // Función para manejar el botón "Vincular Proyecto"
   const handleLinkProject = () => {
     Alert.alert(
       language === 'es' ? 'Vincular proyecto' : 'Link Project',
@@ -205,7 +226,7 @@ const ProgramForm = () => {
         {
           text: language === 'es' ? 'Vincular' : 'Link',
           onPress: () => {
-            navigation.navigate('ProjectForm');
+            navigation.navigate('ProjectForm'); // Navega hacia la pantalla del formulario de proyecto
           }
         }
       ]
@@ -227,7 +248,7 @@ const ProgramForm = () => {
             onChangeText={(value) => handleProgramChange(index, 'programID', value)}
             placeholderTextColor="#B0B0B0"
           />
-          
+
           <TextInput
             style={styles.input}
             placeholder={language === 'es' ? "Nombre del programa" : "Program Name"}
@@ -235,7 +256,7 @@ const ProgramForm = () => {
             onChangeText={(value) => handleProgramChange(index, 'programName', value)}
             placeholderTextColor="#B0B0B0"
           />
-          
+
           <TextInput
             style={styles.input}
             placeholder={language === 'es' ? "Descripción del programa" : "Program Description"}

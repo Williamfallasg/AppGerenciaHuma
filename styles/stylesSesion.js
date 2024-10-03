@@ -1,4 +1,6 @@
+// styles.js
 import { StyleSheet, Dimensions, Platform } from 'react-native';
+import { useWindowDimensions } from 'react-native-web'; // Importamos para ayudar a gestionar dimensiones en web
 
 const { width, height } = Dimensions.get('window');
 
@@ -16,12 +18,12 @@ export default StyleSheet.create({
     height: height * 0.2,
     marginBottom: height * 0.04,
     resizeMode: 'contain',
-    maxWidth: 300,  // Límite para pantallas grandes
+    maxWidth: 300,
   },
   label: {
     alignSelf: 'flex-start',
     color: '#333',
-    fontSize: width > 600 ? 20 : width * 0.045,  // Ajuste de tamaño basado en pantalla
+    fontSize: width > 600 ? 20 : width * 0.045,
     marginBottom: height * 0.01,
     fontWeight: 'bold',
   },
@@ -33,10 +35,10 @@ export default StyleSheet.create({
     marginBottom: height * 0.02,
     paddingLeft: 12,
     width: '100%',
-    maxWidth: 400,  // Límite para pantallas grandes
+    maxWidth: 400,
     height: height * 0.07,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: Platform.OS === 'web' ? 2 : 4 }, // Ajuste para web
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 6,
@@ -58,11 +60,11 @@ export default StyleSheet.create({
     paddingHorizontal: '12%',
     marginBottom: height * 0.02,
     width: '100%',
-    maxWidth: 400,  // Límite para pantallas grandes
+    maxWidth: 400,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: Platform.OS === 'web' ? 2 : 4 }, // Ajuste para web
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 8,
@@ -84,7 +86,7 @@ export default StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    maxWidth: 400,  // Límite para pantallas grandes
+    maxWidth: 400,
     marginTop: height * 0.025,
     marginBottom: height * 0.02,
   },
@@ -97,7 +99,7 @@ export default StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: { width: 0, height: Platform.OS === 'web' ? 2 : 3 }, // Ajuste para web
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 6,

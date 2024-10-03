@@ -17,6 +17,7 @@ import GenerateReport from './Navegacion/GenerateReport';
 import Report from './Navegacion/Report';
 import FamilyScreen from './Navegacion/FamilyScreen';
 import ProgramProjectList from './Navegacion/ProgramProjectList';
+import ResultsForm from './Navegacion/ResultsForm';
 
 
 const Stack = createStackNavigator();
@@ -83,6 +84,12 @@ const AppStack = () => {
       <Stack.Screen
         name="ProgramProjectList"
         component={ProgramProjectList}
+        options={{ headerShown: false }}
+      />
+
+     <Stack.Screen
+        name="ResultsForm"
+        component={ResultsForm}
         options={{ headerShown: false }}
       />
 

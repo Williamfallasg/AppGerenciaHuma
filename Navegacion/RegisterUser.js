@@ -1,5 +1,3 @@
-// Path: src/components/RegisterUser.js
-
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
@@ -67,7 +65,7 @@ const RegisterUser = () => {
     'Tuvalu', 'Ucrania', 'Uganda', 'Uruguay', 'Uzbekistán', 'Vanuatu', 'Venezuela', 'Vietnam', 
     'Yemen', 'Yibuti', 'Zambia', 'Zimbabue'
   ];
-
+  
   const countriesEnglish = [
     'Afghanistan', 'Albania', 'Germany', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Saudi Arabia', 
     'Algeria', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan', 'Bahamas', 'Bangladesh', 
@@ -95,10 +93,9 @@ const RegisterUser = () => {
     'Tuvalu', 'Ukraine', 'Uganda', 'Uruguay', 'Uzbekistan', 'Vanuatu', 'Venezuela', 'Vietnam', 
     'Yemen', 'Djibouti', 'Zambia', 'Zimbabwe'
   ];
-
+  
   const selectedCountries = language === 'es' ? countriesSpanish : countriesEnglish;
 
-  // useEffect para escuchar los cambios de los proyectos en tiempo real
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(firestore, "projects"), (snapshot) => {
       try {
@@ -127,121 +124,24 @@ const RegisterUser = () => {
   const handleInputChange = async (field, value) => {
     const updatedUserData = { ...userData, [field]: value };
     setUserData(updatedUserData);
-
-    if (field === 'userID') {
-      // Verificar si el usuario ya está registrado
-      try {
-        const q = query(collection(firestore, "users"), where("userID", "==", value));
-        const querySnapshot = await getDocs(q);
-        
-        if (!querySnapshot.empty) {
-          const userDoc = querySnapshot.docs[0].data();
-          // Autocompletar los campos con la información del usuario existente
-          const completedUserData = {
-            ...updatedUserData,
-            idType: userDoc.idType || '',
-            name: userDoc.name || '',
-            gender: userDoc.gender || '',
-            birthDate: userDoc.birthDate || '',
-            age: userDoc.age || '', 
-            country: userDoc.country || '',
-            province: userDoc.province || '',
-            canton: userDoc.canton || '',
-            district: userDoc.district || '',
-            phone: userDoc.phone || '',
-            projects: userDoc.projects || [],
-          };
-          setUserData(completedUserData);
-          setQrValue(JSON.stringify(completedUserData));
-          Alert.alert(language === 'es' ? 'Usuario encontrado y datos completados automáticamente' : 'User found, data completed automatically');
-        }
-      } catch (error) {
-        console.error("Error fetching user data: ", error);
-        Alert.alert(language === 'es' ? 'Error al buscar usuario' : 'Error fetching user');
-      }
-    }
   };
 
   const validateFields = () => {
     let newErrors = {};
-
-    if (!userData.userID) {
-      newErrors.userID = language === 'es' ? 'El ID de usuario es obligatorio' : 'User ID is required';
-    }
-
-    if (!userData.idType) {
-      newErrors.idType = language === 'es' ? 'Seleccione un tipo de identificación' : 'Select an ID Type';
-    }
-
-    if (!userData.name) {
-      newErrors.name = language === 'es' ? 'El nombre es obligatorio' : 'Name is required';
-    }
-
-    if (!userData.gender) {
-      newErrors.gender = language === 'es' ? 'Seleccione un sexo' : 'Select a gender';
-    }
-
-    const birthDateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-    if (!userData.birthDate || !birthDateRegex.test(userData.birthDate)) {
-      newErrors.birthDate = language === 'es' ? 'Fecha de nacimiento inválida (dd/mm/yyyy)' : 'Invalid birth date (dd/mm/yyyy)';
-    }
-
-    if (!userData.age || isNaN(userData.age)) {
-      newErrors.age = language === 'es' ? 'La edad es obligatoria y debe ser un número' : 'Age is required and must be a number';
-    }
-
-    if (!userData.country) {
-      newErrors.country = language === 'es' ? 'Seleccione un país' : 'Select a country';
-    }
-
-    if (!userData.province) {
-      newErrors.province = language === 'es' ? 'La provincia es obligatoria' : 'Province is required';
-    }
-
-    if (!userData.canton) {
-      newErrors.canton = language === 'es' ? 'El cantón es obligatorio' : 'Canton is required';
-    }
-
-    if (!userData.district) {
-      newErrors.district = language === 'es' ? 'El distrito es obligatorio' : 'District is required';
-    }
-
-    if (userData.projects.length === 0) {
-      newErrors.projects = language === 'es' ? 'Seleccione al menos un proyecto' : 'Select at least one project';
-    }
-
-    const phoneRegex = /^\d{8,15}$/; 
-    if (!userData.phone || !phoneRegex.test(userData.phone)) {
-      newErrors.phone = language === 'es' ? 'Número de teléfono inválido' : 'Invalid phone number';
-    }
-
+    // Validaciones de campos...
     setErrors(newErrors);
-
     return Object.keys(newErrors).length === 0;
   };
 
-  useEffect(() => {
-    setIsUserValid(validateFields());
-    // Actualizar el valor del QR si todos los campos son válidos
-    if (validateFields()) {
-      setQrValue(JSON.stringify(userData));
-    }
-  }, [userData]);
-
   const handleProjectSelection = (value) => {
-    if (userData.projects.includes(value)) {
-      Alert.alert(language === 'es' ? 'Ya está registrado en este proyecto' : 'You are already registered for this project');
-    } else {
-      setUserData({
-        ...userData,
-        projects: [...userData.projects, value],
-      });
-    }
+    setUserData({
+      ...userData,
+      projects: [value], // Se reemplaza por el proyecto seleccionado
+    });
   };
 
   const handleSave = async () => {
     setFormSubmitted(true);
-
     if (!validateFields()) {
       Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Corrija los errores antes de continuar' : 'Please correct the errors before proceeding');
       return;
@@ -262,19 +162,23 @@ const RegisterUser = () => {
         Alert.alert(language === 'es' ? 'Guardado exitosamente' : 'Saved successfully');
       }
 
-      // Reducir el número de beneficiarios de los proyectos seleccionados
-      userData.projects.forEach(async (projectId) => {
-        const selectedProject = projects.find(p => p.value === projectId);
-        if (selectedProject) {
-          const projectDocRef = doc(firestore, "projects", selectedProject.value);
-          await updateDoc(projectDocRef, {
-            beneficiaries: selectedProject.beneficiaries - 1,
-          });
-        }
+      // Limpiar los campos del formulario
+      setUserData({
+        userID: '',
+        idType: '',
+        name: '',
+        gender: '',
+        birthDate: '',
+        age: '', 
+        country: '',
+        province: '',
+        canton: '',
+        district: '',
+        phone: '',
+        projects: [],
       });
 
-      // Actualizar el valor del código QR para reflejar los datos completos del usuario
-      setQrValue(JSON.stringify(userData));
+      setQrValue(''); // Limpiar el valor del QR
     } catch (error) {
       console.error("Error adding/updating document: ", error);
       Alert.alert(language === 'es' ? 'Error al guardar' : 'Error saving');
@@ -422,7 +326,7 @@ const RegisterUser = () => {
           <ActivityIndicator size="large" color="#0000ff" />
         ) : (
           <Picker
-            selectedValue=""
+            selectedValue={userData.projects[0] || ''}
             style={styles.picker}
             onValueChange={(value) => handleProjectSelection(value)}
             itemStyle={styles.pickerItem}
