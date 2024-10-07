@@ -3,8 +3,8 @@ import { View, Text, Dimensions, TouchableOpacity, ScrollView, Alert, ActivityIn
 import { useNavigation } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
 import { useUserRole } from '../context/UserRoleContext';
-import { firestore } from '../firebase/firebase'; // Importar firestore desde la configuración de Firebase
-import { collection, getDocs } from 'firebase/firestore';
+import { firestore } from '../firebase/firebase';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import styles from '../styles/stylesReport';
 
 const Report = ({ route }) => {
@@ -15,58 +15,100 @@ const Report = ({ route }) => {
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
-  const [beneficiariesCount, setBeneficiariesCount] = useState(0); // Nuevo estado para contar los beneficiarios
+  const [itemCount, setItemCount] = useState(0);
   const screenWidth = Dimensions.get('window').width;
 
-  // Helper para cambiar el idioma
+  // Función de traducción
   const translate = (textEs, textEn) => (language === 'es' ? textEs : textEn);
 
-  // Función para validar acceso del usuario
+  // Verificar acceso del usuario
   const checkAccessAndRedirect = () => {
     if (userRole !== 'admin') {
       Alert.alert(
-        'Acceso denegado',
-        'No tiene permisos para acceder a esta sección.',
-        [{ text: 'Aceptar', onPress: () => navigation.goBack() }]
+        translate('Acceso denegado', 'Access Denied'),
+        translate('No tiene permisos para acceder a esta sección.', 'You do not have permission to access this section.'),
+        [{ text: translate('Aceptar', 'OK'), onPress: () => navigation.goBack() }]
       );
     }
   };
 
   useEffect(() => {
     checkAccessAndRedirect();
-    fetchData(); // Llamada a la función para obtener datos
+    fetchData();
   }, [userRole]);
 
-  // Función para obtener datos de Firestore según la opción seleccionada
+  // Obtener datos de Firestore según la opción seleccionada
   const fetchData = async () => {
     setLoading(true);
     try {
       let querySnapshot;
 
-      // Obtener la colección correspondiente según la opción seleccionada
       if (selectedOption === 'Programas') {
         querySnapshot = await getDocs(collection(firestore, 'programs'));
+        setItemCount(querySnapshot.size);
+
+        const programsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Obtener nombres de proyectos vinculados
+        const updatedProgramsData = await Promise.all(programsData.map(async (program) => {
+          if (program.projects && program.projects.length > 0) {
+            const projectNames = await Promise.all(program.projects.map(async (projectId) => {
+              try {
+                const projectDoc = await getDoc(doc(firestore, 'projects', projectId));
+                return projectDoc.exists() ? projectDoc.data().projectName : translate('Nombre no disponible', 'Name not available');
+              } catch (error) {
+                console.error(`Error al obtener el nombre del proyecto con ID: ${projectId}`, error);
+                return translate('Nombre no disponible', 'Name not available');
+              }
+            }));
+            return { ...program, projectNames };
+          }
+          return { ...program, projectNames: [] };
+        }));
+
+        setData(updatedProgramsData);
       } else if (selectedOption === 'Proyectos') {
         querySnapshot = await getDocs(collection(firestore, 'projects'));
-      } else if (selectedOption === 'Beneficiarios') {
-        querySnapshot = await getDocs(collection(firestore, 'users')); // Cambiamos a 'users' para obtener beneficiarios
-        setBeneficiariesCount(querySnapshot.size); // Guardar el número total de beneficiarios
-      } else {
-        throw new Error('Opción desconocida seleccionada');
-      }
+        setItemCount(querySnapshot.size);
 
-      // Mapear los documentos para obtener los datos
-      const itemsList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setData(itemsList);
+        const projectsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setData(projectsData);
+      } else if (selectedOption === 'Beneficiarios') {
+        querySnapshot = await getDocs(collection(firestore, 'users'));
+        setItemCount(querySnapshot.size);
+
+        const usersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Obtener nombres de proyectos asignados a cada usuario
+        const updatedUsersData = await Promise.all(usersData.map(async (user) => {
+          if (user.projects && user.projects.length > 0) {
+            const projectNames = await Promise.all(user.projects.map(async (projectId) => {
+              try {
+                const projectDoc = await getDoc(doc(firestore, 'projects', projectId));
+                return projectDoc.exists() ? projectDoc.data().projectName : translate('Nombre no disponible', 'Name not available');
+              } catch (error) {
+                console.error(`Error al obtener el nombre del proyecto con ID: ${projectId}`, error);
+                return translate('Nombre no disponible', 'Name not available');
+              }
+            }));
+            return { ...user, projectNames };
+          }
+          return { ...user, projectNames: [] };
+        }));
+
+        setData(updatedUsersData);
+      } else {
+        throw new Error(translate('Opción desconocida seleccionada', 'Unknown option selected'));
+      }
     } catch (error) {
-      Alert.alert('Error', `No se pudo obtener la información. Detalles del error: ${error.message}`);
+      Alert.alert('Error', `${translate('No se pudo obtener la información.', 'Could not fetch information.')}\n${translate('Detalles del error:', 'Error details:')} ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
   if (userRole !== 'admin') {
-    return null; 
+    return null;
   }
 
   const handleGoBack = () => {
@@ -82,37 +124,73 @@ const Report = ({ route }) => {
         {translate('Tipo de Informe:', 'Report Type:')} {selectedOption}
       </Text>
 
-      {/* Mostrar el número de beneficiarios si se seleccionó "Beneficiarios" */}
-      {selectedOption === 'Beneficiarios' && !loading && (
+      {!loading && (
         <Text style={styles.subtitle}>
-          {translate('Número de Beneficiarios Registrados:', 'Number of Registered Beneficiaries:')} {beneficiariesCount}
+          {translate(
+            `Número de ${selectedOption}:`,
+            `Number of ${selectedOption}:`
+          )} {itemCount}
         </Text>
       )}
 
-      {/* Mostrar el indicador de carga mientras se obtienen los datos */}
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <View style={styles.dataContainer}>
-          {/* Renderizar los datos obtenidos */}
           {data.length > 0 ? (
             data.map((item, index) => (
               <View key={index} style={styles.dataItem}>
-                <Text style={styles.itemTitle}>
-                  {item.programName || item.projectName || item.name || 'Nombre no disponible'}
-                </Text>
-                <Text style={styles.itemDescription}>
-                  {item.programDescription || item.projectDescription || item.country || 'Descripción no disponible'}
-                </Text>
-                <Text style={styles.itemDetail}>
-                  {`${translate('Edad', 'Age')}: ${item.age || 'N/A'}`}
-                </Text>
-                <Text style={styles.itemDetail}>
-                  {`${translate('Teléfono', 'Phone')}: ${item.phone || 'N/A'}`}
-                </Text>
-                <Text style={styles.itemDetail}>
-                  {`${translate('Proyectos Asignados', 'Assigned Projects')}: ${item.projects ? item.projects.join(', ') : 'N/A'}`}
-                </Text>
+                {selectedOption === 'Programas' && (
+                  <>
+                    <Text style={styles.itemTitle}>
+                      {`${translate('Nombre del Programa', 'Program Name')}: ${item.programName || 'N/A'}`}
+                    </Text>
+                    <Text style={styles.itemDetail}>
+                      {`${translate('Proyectos Vinculados', 'Linked Projects')}: ${
+                        item.projectNames && item.projectNames.length > 0 ? item.projectNames.join(', ') : 'N/A'
+                      }`}
+                    </Text>
+                  </>
+                )}
+
+                {selectedOption === 'Proyectos' && (
+                  <>
+                    <Text style={styles.itemTitle}>
+                      {`${translate('Nombre del Proyecto', 'Project Name')}: ${item.projectName || 'N/A'}`}
+                    </Text>
+                    <Text style={styles.itemDetail}>
+                      {`${translate('Actividades Vinculadas', 'Linked Activities')}: ${item.activities ? item.activities.join(', ') : 'N/A'}`}
+                    </Text>
+                  </>
+                )}
+
+                {selectedOption === 'Beneficiarios' && (
+                  <>
+                    <Text style={styles.itemTitle}>
+                      {`${translate('Nombre', 'Name')}: ${item.name || 'N/A'}`}
+                    </Text>
+                    <Text style={styles.itemDetail}>
+                      {`${translate('País', 'Country')}: ${item.countries ? item.countries.join(', ') : 'N/A'}`}
+                    </Text>
+                    <Text style={styles.itemDetail}>
+                      {`${translate('Edad', 'Age')}: ${item.age || 'N/A'}`}
+                    </Text>
+                    <Text style={styles.itemDetail}>
+                      {`${translate('Teléfono', 'Phone')}: ${item.phone || 'N/A'}`}
+                    </Text>
+                    <Text style={styles.itemDetail}>
+                      {`${translate('Padecimiento', 'Medical Condition')}: ${item.medicalCondition || 'N/A'}`}
+                    </Text>
+                    <Text style={styles.itemDetail}>
+                      {`${translate('Proyectos Asignados', 'Assigned Projects')}: ${
+                        item.projectNames && item.projectNames.length > 0 ? item.projectNames.join(', ') : 'N/A'
+                      }`}
+                    </Text>
+                    <Text style={styles.itemDetail}>
+                      {`${translate('Actividades', 'Activities')}: ${item.activities ? item.activities.join(', ') : 'N/A'}`}
+                    </Text>
+                  </>
+                )}
               </View>
             ))
           ) : (
