@@ -18,6 +18,7 @@ import Report from './Navegacion/Report';
 import FamilyScreen from './Navegacion/FamilyScreen';
 import ProgramProjectList from './Navegacion/ProgramProjectList';
 import ResultsForm from './Navegacion/ResultsForm';
+import ChartScreen from './Navegacion/ChartScreen';
 
 
 const Stack = createStackNavigator();
@@ -93,6 +94,13 @@ const AppStack = () => {
         options={{ headerShown: false }}
       />
 
+      <Stack.Screen
+        name="ChartScreen"
+        component={ChartScreen}
+        options={{ headerShown: false }}
+      />
+
+     
 
     </Stack.Navigator>
   );

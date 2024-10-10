@@ -21,6 +21,11 @@ const Report = ({ route }) => {
   // Función de traducción
   const translate = (textEs, textEn) => (language === 'es' ? textEs : textEn);
 
+  // Función para navegar a la pantalla de gráficos
+  const handleNavigateToChart = () => {
+    navigation.navigate('ChartScreen', { selectedOption });
+  };
+
   // Verificar acceso del usuario
   const checkAccessAndRedirect = () => {
     if (userRole !== 'admin') {
@@ -126,10 +131,7 @@ const Report = ({ route }) => {
 
       {!loading && (
         <Text style={styles.subtitle}>
-          {translate(
-            `Número de ${selectedOption}:`,
-            `Number of ${selectedOption}:`
-          )} {itemCount}
+          {translate(`Número de ${selectedOption}:`, `Number of ${selectedOption}:`)} {itemCount}
         </Text>
       )}
 
@@ -146,9 +148,7 @@ const Report = ({ route }) => {
                       {`${translate('Nombre del Programa', 'Program Name')}: ${item.programName || 'N/A'}`}
                     </Text>
                     <Text style={styles.itemDetail}>
-                      {`${translate('Proyectos Vinculados', 'Linked Projects')}: ${
-                        item.projectNames && item.projectNames.length > 0 ? item.projectNames.join(', ') : 'N/A'
-                      }`}
+                      {`${translate('Proyectos Vinculados', 'Linked Projects')}: ${item.projectNames && item.projectNames.length > 0 ? item.projectNames.join(', ') : 'N/A'}`}
                     </Text>
                   </>
                 )}
@@ -182,9 +182,7 @@ const Report = ({ route }) => {
                       {`${translate('Padecimiento', 'Medical Condition')}: ${item.medicalCondition || 'N/A'}`}
                     </Text>
                     <Text style={styles.itemDetail}>
-                      {`${translate('Proyectos Asignados', 'Assigned Projects')}: ${
-                        item.projectNames && item.projectNames.length > 0 ? item.projectNames.join(', ') : 'N/A'
-                      }`}
+                      {`${translate('Proyectos Asignados', 'Assigned Projects')}: ${item.projectNames && item.projectNames.length > 0 ? item.projectNames.join(', ') : 'N/A'}`}
                     </Text>
                     <Text style={styles.itemDetail}>
                       {`${translate('Actividades', 'Activities')}: ${item.activities ? item.activities.join(', ') : 'N/A'}`}
@@ -199,10 +197,13 @@ const Report = ({ route }) => {
         </View>
       )}
 
+      {/* Botón para navegar al gráfico */}
+      <TouchableOpacity style={styles.graphButton} onPress={handleNavigateToChart}>
+        <Text style={styles.graphButtonText}>{translate('Ver Gráfico', 'View Chart')}</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.exitButton} onPress={handleGoBack}>
-        <Text style={styles.exitButtonText}>
-          {translate('Salir', 'Exit')}
-        </Text>
+        <Text style={styles.exitButtonText}>{translate('Salir', 'Exit')}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
