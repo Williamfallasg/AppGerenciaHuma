@@ -19,6 +19,9 @@ import FamilyScreen from './Navegacion/FamilyScreen';
 import ProgramProjectList from './Navegacion/ProgramProjectList';
 import ResultsForm from './Navegacion/ResultsForm';
 import ChartScreen from './Navegacion/ChartScreen';
+import ProgramChartScreen from './Navegacion/ProgramChartScreen';
+
+
 
 
 const Stack = createStackNavigator();
@@ -99,8 +102,13 @@ const AppStack = () => {
         component={ChartScreen}
         options={{ headerShown: false }}
       />
-
-     
+       
+       <Stack.Screen
+        name="ProgramChartScreen"
+        component={ProgramChartScreen}
+        options={{ headerShown: false }}
+      />
+       
 
     </Stack.Navigator>
   );

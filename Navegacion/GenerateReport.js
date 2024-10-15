@@ -1,5 +1,3 @@
-// Ruta sugerida: components/GenerateReport.js
-
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Image, Alert } from 'react-native';
 import { RadioButton } from 'react-native-paper';
@@ -65,14 +63,24 @@ const GenerateReport = () => {
         {['Programas', 'Proyectos', 'Beneficiarios'].map((option) => (
           <TouchableOpacity
             key={option}
-            style={styles.radioButton}
-            onPress={() => setSelectedOption(option)}
+            style={[
+              styles.radioButton,
+              selectedOption === option ? styles.radioButtonSelected : null,
+            ]}
+            onPress={() => setSelectedOption(option)} // Cambiar la opción cuando se presiona el contenedor completo
           >
             <RadioButton
               value={option}
               status={selectedOption === option ? 'checked' : 'unchecked'}
+              onPress={() => setSelectedOption(option)} // Cambiar la opción cuando se presiona el RadioButton
+              color='#67A6F2' // Color del botón de radio
             />
-            <Text style={styles.radioText}>
+            <Text
+              style={[
+                styles.radioText,
+                selectedOption === option ? styles.radioTextSelected : null,
+              ]}
+            >
               {translate(option, option === 'Programas' ? 'Programs' : option === 'Proyectos' ? 'Projects' : 'Beneficiaries')}
             </Text>
           </TouchableOpacity>

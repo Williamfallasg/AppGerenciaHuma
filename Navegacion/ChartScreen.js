@@ -54,8 +54,8 @@ const ChartScreen = ({ route }) => {
     let pieData = [];
 
     if (selectedVariable === 'age') {
-      const ageDistribution = data.filter(item => item.age).map(item => item.age);
-      labels = ageDistribution.map((age) => `Edad ${age}`);
+      const ageDistribution = data.filter(item => item.age !== undefined).map(item => item.age); // Verificar que age exista
+      labels = ageDistribution.map(age => `Edad ${age}`);
       dataset = ageDistribution;
       pieData = ageDistribution.map((age, index) => ({
         name: `Edad ${age}`,
@@ -65,11 +65,15 @@ const ChartScreen = ({ route }) => {
         legendFontSize: 12
       }));
     } else if (selectedVariable === 'countries') {
-      const countryDistribution = data.filter(item => item.countries).map(item => item.countries.join(', '));
-      labels = countryDistribution.map((country) => `País: ${country}`);
-      dataset = countryDistribution.map(() => 1); // Para mostrar cuántas veces aparece cada país
+      const countryDistribution = data
+        .filter(item => item.countries && item.countries.length > 0) // Verificar que countries existan y no estén vacíos
+        .map(item => item.countries.join(', '));
+      labels = countryDistribution.map(country => `País: ${country}`);
+      dataset = countryDistribution.map(() => 1); // Contar ocurrencias
     } else if (selectedVariable === 'activities') {
-      const activityDistribution = data.filter(item => item.activities).map(item => item.activities.length);
+      const activityDistribution = data
+        .filter(item => item.activities && item.activities.length > 0) // Verificar que activities existan y no estén vacíos
+        .map(item => item.activities.length);
       labels = activityDistribution.map((_, index) => `Beneficiario ${index + 1}`);
       dataset = activityDistribution;
     }
@@ -90,8 +94,8 @@ const ChartScreen = ({ route }) => {
         return (
           <BarChart
             data={{ labels: chartData.labels, datasets: chartData.datasets }}
-            width={screenWidth - 40}
-            height={320}
+            width={screenWidth - 60}  // Reducir el ancho para mejor presentación
+            height={250}  // Reducir la altura del gráfico
             fromZero={true}
             chartConfig={{
               backgroundColor: '#e3f2fd',
@@ -100,11 +104,11 @@ const ChartScreen = ({ route }) => {
               decimalPlaces: 0,
               color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
               labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-              barPercentage: 0.7, // Ajusta el ancho de las barras para mayor separación
+              barPercentage: 0.7, // Ajustar el ancho de las barras para mayor separación
               propsForVerticalLabels: {
-                fontSize: 12, // Reducir el tamaño de las etiquetas para evitar el solapamiento
-                rotation: 45, // Rotar las etiquetas del eje X 45 grados
-                translateY: 10, // Mover ligeramente las etiquetas hacia abajo
+                fontSize: 10,  // Reducir el tamaño de las etiquetas
+                rotation: 45,  // Rotar las etiquetas del eje X 45 grados
+                translateY: 10,  // Mover ligeramente las etiquetas hacia abajo
               },
               style: {
                 borderRadius: 16,
@@ -112,15 +116,15 @@ const ChartScreen = ({ route }) => {
                 elevation: 5,
               },
             }}
-            style={{ marginVertical: 20, borderRadius: 16 }}
+            style={{ marginVertical: 10, borderRadius: 16 }}  // Ajustar los márgenes
           />
         );
       case 'line':
         return (
           <LineChart
             data={{ labels: chartData.labels, datasets: chartData.datasets }}
-            width={screenWidth - 40}
-            height={320}
+            width={screenWidth - 60}  // Ajustar el ancho
+            height={250}  // Reducir altura
             fromZero={true}
             chartConfig={{
               backgroundColor: '#f5f5f5',

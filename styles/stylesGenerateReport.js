@@ -1,4 +1,3 @@
-// styles.js
 import { StyleSheet, Dimensions } from 'react-native';
 
 const styles = StyleSheet.create({
@@ -33,10 +32,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+  },
+  radioButtonSelected: {
+    backgroundColor: '#67A6F2', // El mismo color que el botón Generar Informe
   },
   radioText: {
     fontSize: 18,
     color: '#000',
+  },
+  radioTextSelected: {
+    color: '#FFF', // Cambiar el color del texto al seleccionarlo
   },
   generateButton: {
     backgroundColor: '#67A6F2',
@@ -66,21 +74,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: 'center',
     fontWeight:"bold"
-  },
-  reportContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 20,
-  },
-  reportTitle: {
-    fontSize: 22,
-    marginBottom: 20,
-  },
-  chart: {
-    marginVertical: 10,
-    borderRadius: 16,
   },
 });
 

@@ -38,7 +38,7 @@ const Home = () => {
 
   // Nueva función para navegar a la pantalla de ResultsForm
   const navigateToResultsForm = () => {
-    navigation.navigate('ResultsForm'); // Asegúrate de que 'ResultsForm' esté registrado en tu sistema de navegación
+    navigation.navigate('ResultsForm'); 
   };
 
   return (
@@ -49,27 +49,27 @@ const Home = () => {
       {/* Mostrar botones solo para administradores */}
       {userRole === 'admin' && (
         <>
+          {/* Primero: Registrar programa */}
           <TouchableOpacity style={styles.mainButton} onPress={navigateToProgramForm}>
             <Text style={styles.mainButtonText}>
               {language === 'es' ? 'Registrar programa' : 'Register Program'}
             </Text>
           </TouchableOpacity>
 
+          {/* Segundo: Registrar beneficiário (ahora siempre antes de "Generar informe") */}
+          <TouchableOpacity style={styles.mainButton} onPress={navigateToRegisterUser}>
+            <Text style={styles.mainButtonText}>
+              {language === 'es' ? 'Registrar beneficiário' : 'Register Beneficiary'}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Tercero: Generar informe */}
           <TouchableOpacity style={styles.mainButton} onPress={navigateToGenerateReport}>
             <Text style={styles.mainButtonText}>
               {language === 'es' ? 'Generar informe' : 'Generate Report'}
             </Text>
           </TouchableOpacity>
         </>
-      )}
-
-      {/* Mostrar el botón "Registrar beneficiário" tanto para 'admin' como para 'user' */}
-      {(userRole === 'admin' || userRole === 'user') && (
-        <TouchableOpacity style={styles.mainButton} onPress={navigateToRegisterUser}>
-          <Text style={styles.mainButtonText}>
-            {language === 'es' ? 'Registrar beneficiário' : 'Register Beneficiary'}
-          </Text>
-        </TouchableOpacity>
       )}
 
       {/* Botón para mostrar la lista de programas y proyectos */}

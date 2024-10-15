@@ -6,7 +6,7 @@ import { firestore } from '../firebase/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useUserRole } from '../context/UserRoleContext';
-import { Picker } from '@react-native-picker/picker'; // Import Picker
+import { Picker } from '@react-native-picker/picker'; 
 import styles from '../styles/stylesProgramForm';
 
 const ProgramForm = () => {
@@ -19,10 +19,27 @@ const ProgramForm = () => {
     programName: '',
     programDescription: '',
     programBudget: '',
-    programCurrency: 'USD', // Moneda inicial
+    programCurrency: 'USD', 
     startDate: '',
     endDate: ''
   }]);
+
+  // Lista de monedas obtenida
+  const currencyOptions = [
+    { label: "USD (Dólares)", value: "USD" },
+    { label: "CRC (Colones Costarricenses)", value: "CRC" },
+    { label: "MXN (Pesos Mexicanos)", value: "MXN" },
+    { label: "HNL (Lempiras Hondureñas)", value: "HNL" },
+    { label: "EUR (Euros)", value: "EUR" },
+    { label: "NIO (Córdoba Nicaragüense)", value: "NIO" },
+    { label: "SVC (Colón Salvadoreño)", value: "SVC" },
+    { label: "PAB (Balboa Panameño)", value: "PAB" },
+    { label: "GTQ (Quetzal Guatemalteco)", value: "GTQ" },
+    { label: "CAD (Dólar Canadiense)", value: "CAD" },
+    { label: "AUD (Dólar Australiano)", value: "AUD" },
+    { label: "GBP (Libra Esterlina)", value: "GBP" },
+    { label: "JPY (Yen Japonés)", value: "JPY" }
+  ];
 
   useEffect(() => {
     if (userRole !== 'admin') {
@@ -40,25 +57,24 @@ const ProgramForm = () => {
   }, [userRole]);
 
   const getCurrencySymbol = (currency) => {
-    switch (currency) {
-      case 'CRC': return '₡'; // Colones Costarricenses
-      case 'USD': return '$';  // Dólares Estadounidenses
-      case 'MXN': return '$';  // Pesos Mexicanos
-      case 'HNL': return 'L';  // Lempiras Hondureñas
-      case 'EUR': return '€';  // Euros
-      case 'NIO': return 'C$'; // Córdoba Nicaragüense
-      case 'SVC': return '₡';  // Colón Salvadoreño
-      case 'PAB': return 'B/.'; // Balboa Panameño
-      case 'GTQ': return 'Q';   // Quetzal Guatemalteco
-      case 'CAD': return 'CA$'; // Dólar Canadiense
-      case 'AUD': return 'A$';  // Dólar Australiano
-      case 'GBP': return '£';   // Libra Esterlina
-      case 'JPY': return '¥';   // Yen Japonés
-      default: return '';
-    }
+    const currencyMap = {
+      'CRC': '₡',
+      'USD': '$',
+      'MXN': '$',
+      'HNL': 'L',
+      'EUR': '€',
+      'NIO': 'C$',
+      'SVC': '₡',
+      'PAB': 'B/.',
+      'GTQ': 'Q',
+      'CAD': 'CA$',
+      'AUD': 'A$',
+      'GBP': '£',
+      'JPY': '¥'
+    };
+    return currencyMap[currency] || '';
   };
 
-  // Función para validar que la fecha de fin sea posterior a la fecha de inicio
   const isEndDateValid = (startDate, endDate) => {
     const [startDay, startMonth, startYear] = startDate.split('/').map(Number);
     const [endDay, endMonth, endYear] = endDate.split('/').map(Number);
@@ -66,10 +82,9 @@ const ProgramForm = () => {
     const start = new Date(startYear, startMonth - 1, startDay);
     const end = new Date(endYear, endMonth - 1, endDay);
 
-    return end >= start; // La fecha de fin debe ser igual o posterior a la fecha de inicio
+    return end >= start; 
   };
 
-  // Nueva función para validar los datos de un programa
   const validateProgram = (programa) => {
     if (!programa.programID) {
       Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'El ID del programa es obligatorio' : 'Program ID is required');
@@ -98,29 +113,25 @@ const ProgramForm = () => {
     return true;
   };
 
-  // Maneja el cambio de moneda
   const handleCurrencyChange = (index, value) => {
     const newProgramas = [...programas];
     const symbol = getCurrencySymbol(value);
     
-    const currentBudget = newProgramas[index].programBudget.replace(/[^\d.]/g, ''); // Remover cualquier símbolo actual
+    const currentBudget = newProgramas[index].programBudget.replace(/[^\d.]/g, ''); 
     
     newProgramas[index].programCurrency = value;
-    newProgramas[index].programBudget = `${symbol}${currentBudget}`; // Agregar símbolo al presupuesto
+    newProgramas[index].programBudget = `${symbol}${currentBudget}`; 
 
     setProgramas(newProgramas);
   };
 
-  // Maneja el cambio de cualquier campo del programa
   const handleProgramChange = (index, field, value) => {
     const newProgramas = [...programas];
     newProgramas[index][field] = value;
     setProgramas(newProgramas);
   };
 
-  // Confirmar y guardar el programa en Firestore
   const confirmAndSave = () => {
-    // Crear un resumen de los programas para la confirmación
     let summary = '';
     programas.forEach((programa, index) => {
       summary += `${language === 'es' ? 'Programa' : 'Program'} ${index + 1}:\n`;
@@ -132,7 +143,6 @@ const ProgramForm = () => {
       summary += `${language === 'es' ? 'Fecha de fin' : 'End Date'}: ${programa.endDate}\n\n`;
     });
 
-    // Mostrar alerta de confirmación
     Alert.alert(
       language === 'es' ? 'Confirmar Guardado' : 'Confirm Save',
       `${language === 'es' ? '¿Estás seguro de que deseas guardar los siguientes programas?\n\n' : 'Are you sure you want to save the following programs?\n\n'}${summary}`,
@@ -149,7 +159,6 @@ const ProgramForm = () => {
     );
   };
 
-  // Guardar el programa en Firestore
   const handleSave = async () => {
     for (const programa of programas) {
       if (!validateProgram(programa)) {
@@ -164,7 +173,7 @@ const ProgramForm = () => {
           programName: programa.programName,
           programDescription: programa.programDescription,
           programBudget: programa.programBudget,
-          programCurrency: programa.programCurrency, // Guardar la moneda
+          programCurrency: programa.programCurrency, 
           startDate: programa.startDate,
           endDate: programa.endDate,
         });
@@ -175,7 +184,6 @@ const ProgramForm = () => {
     }
   };
 
-  // Agregar un nuevo programa al estado
   const handleAddProgram = () => {
     setProgramas([
       ...programas,
@@ -191,7 +199,6 @@ const ProgramForm = () => {
     ]);
   };
 
-  // Eliminar un programa del estado
   const handleRemoveProgram = (index) => {
     Alert.alert(
       language === 'es' ? 'Eliminar programa' : 'Remove Program',
@@ -213,7 +220,6 @@ const ProgramForm = () => {
     );
   };
 
-  // Función para manejar el botón "Vincular Proyecto"
   const handleLinkProject = () => {
     Alert.alert(
       language === 'es' ? 'Vincular proyecto' : 'Link Project',
@@ -226,7 +232,7 @@ const ProgramForm = () => {
         {
           text: language === 'es' ? 'Vincular' : 'Link',
           onPress: () => {
-            navigation.navigate('ProjectForm'); // Navega hacia la pantalla del formulario de proyecto
+            navigation.navigate('ProjectForm'); 
           }
         }
       ]
@@ -265,25 +271,15 @@ const ProgramForm = () => {
             placeholderTextColor="#B0B0B0"
           />
 
-          {/* Nuevo picker para seleccionar la moneda */}
+          {/* Selector de moneda */}
           <Picker
             selectedValue={programa.programCurrency}
             style={styles.picker}
             onValueChange={(value) => handleCurrencyChange(index, value)}
           >
-            <Picker.Item label="USD (Dólares)" value="USD" />
-            <Picker.Item label="CRC (Colones Costarricenses)" value="CRC" />
-            <Picker.Item label="MXN (Pesos Mexicanos)" value="MXN" />
-            <Picker.Item label="HNL (Lempiras Hondureñas)" value="HNL" />
-            <Picker.Item label="EUR (Euros)" value="EUR" />
-            <Picker.Item label="NIO (Córdoba Nicaragüense)" value="NIO" />
-            <Picker.Item label="SVC (Colón Salvadoreño)" value="SVC" />
-            <Picker.Item label="PAB (Balboa Panameño)" value="PAB" />
-            <Picker.Item label="GTQ (Quetzal Guatemalteco)" value="GTQ" />
-            <Picker.Item label="CAD (Dólar Canadiense)" value="CAD" />
-            <Picker.Item label="AUD (Dólar Australiano)" value="AUD" />
-            <Picker.Item label="GBP (Libra Esterlina)" value="GBP" />
-            <Picker.Item label="JPY (Yen Japonés)" value="JPY" />
+            {currencyOptions.map(({ label, value }) => (
+              <Picker.Item key={value} label={label} value={value} />
+            ))}
           </Picker>
 
           <TextInput
@@ -292,7 +288,7 @@ const ProgramForm = () => {
             value={programa.programBudget}
             onChangeText={(value) => {
               const symbol = getCurrencySymbol(programa.programCurrency);
-              const numericValue = value.replace(/[^\d.]/g, ''); // Solo permitir números
+              const numericValue = value.replace(/[^\d.]/g, ''); 
               handleProgramChange(index, 'programBudget', `${symbol}${numericValue}`);
             }}
             keyboardType="numeric"

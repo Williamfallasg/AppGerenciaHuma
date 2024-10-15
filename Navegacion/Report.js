@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react'; 
 import { View, Text, Dimensions, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
 import { useUserRole } from '../context/UserRoleContext';
 import { firestore } from '../firebase/firebase';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
 import styles from '../styles/stylesReport';
 
 const Report = ({ route }) => {
@@ -18,15 +18,17 @@ const Report = ({ route }) => {
   const [itemCount, setItemCount] = useState(0);
   const screenWidth = Dimensions.get('window').width;
 
-  // Función de traducción
   const translate = (textEs, textEn) => (language === 'es' ? textEs : textEn);
 
-  // Función para navegar a la pantalla de gráficos
+  // Navegación condicional dependiendo del tipo de reporte seleccionado
   const handleNavigateToChart = () => {
-    navigation.navigate('ChartScreen', { selectedOption });
+    if (selectedOption === 'Programas') {
+      navigation.navigate('ProgramChartScreen', { programData: data });
+    } else if (selectedOption === 'Beneficiarios') {
+      navigation.navigate('ChartScreen', { selectedOption });
+    }
   };
 
-  // Verificar acceso del usuario
   const checkAccessAndRedirect = () => {
     if (userRole !== 'admin') {
       Alert.alert(
@@ -54,7 +56,6 @@ const Report = ({ route }) => {
 
         const programsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Obtener nombres de proyectos vinculados
         const updatedProgramsData = await Promise.all(programsData.map(async (program) => {
           if (program.projects && program.projects.length > 0) {
             const projectNames = await Promise.all(program.projects.map(async (projectId) => {
@@ -66,9 +67,20 @@ const Report = ({ route }) => {
                 return translate('Nombre no disponible', 'Name not available');
               }
             }));
-            return { ...program, projectNames };
+
+            // Consulta para contar los beneficiarios vinculados a los proyectos del programa
+            const usersSnapshot = await getDocs(query(collection(firestore, 'users'), where('projects', 'array-contains-any', program.projects)));
+            const numberOfBeneficiaries = usersSnapshot.size;
+
+            return {
+              ...program,
+              projectNames: projectNames || [], // Asegurando que projectNames siempre sea un arreglo
+              numberOfBeneficiaries, // Aquí se almacena el número de beneficiarios
+              fulfilledIndicators: program.fulfilledIndicators || 0, // Campo de indicadores cumplidos
+              countries: program.countries || [], // Campo de países (asegurar que existe en Firestore)
+            };
           }
-          return { ...program, projectNames: [] };
+          return { ...program, projectNames: [], numberOfBeneficiaries: 0, fulfilledIndicators: 0, countries: [] };
         }));
 
         setData(updatedProgramsData);
@@ -84,7 +96,6 @@ const Report = ({ route }) => {
 
         const usersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Obtener nombres de proyectos asignados a cada usuario
         const updatedUsersData = await Promise.all(usersData.map(async (user) => {
           if (user.projects && user.projects.length > 0) {
             const projectNames = await Promise.all(user.projects.map(async (projectId) => {
@@ -96,7 +107,7 @@ const Report = ({ route }) => {
                 return translate('Nombre no disponible', 'Name not available');
               }
             }));
-            return { ...user, projectNames };
+            return { ...user, projectNames: projectNames || [] }; // Asegurando que projectNames siempre sea un arreglo
           }
           return { ...user, projectNames: [] };
         }));
@@ -123,7 +134,7 @@ const Report = ({ route }) => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>
-        {translate('Informe del Proyecto', 'Project Report')}
+        {translate('Informe del Programa', 'Program Report')}
       </Text>
       <Text style={styles.subtitle}>
         {translate('Tipo de Informe:', 'Report Type:')} {selectedOption}
@@ -150,6 +161,15 @@ const Report = ({ route }) => {
                     <Text style={styles.itemDetail}>
                       {`${translate('Proyectos Vinculados', 'Linked Projects')}: ${item.projectNames && item.projectNames.length > 0 ? item.projectNames.join(', ') : 'N/A'}`}
                     </Text>
+                    <Text style={styles.itemDetail}>
+                      {`${translate('Número de Beneficiarios', 'Number of Beneficiaries')}: ${item.numberOfBeneficiaries}`}
+                    </Text>
+                    <Text style={styles.itemDetail}>
+                      {`${translate('Indicadores Cumplidos', 'Fulfilled Indicators')}: ${item.fulfilledIndicators}`}
+                    </Text>
+                    <Text style={styles.itemDetail}>
+                      {`${translate('Países', 'Countries')}: ${item.countries && item.countries.length > 0 ? item.countries.join(', ') : 'N/A'}`}
+                    </Text>
                   </>
                 )}
 
@@ -170,7 +190,7 @@ const Report = ({ route }) => {
                       {`${translate('Nombre', 'Name')}: ${item.name || 'N/A'}`}
                     </Text>
                     <Text style={styles.itemDetail}>
-                      {`${translate('País', 'Country')}: ${item.countries ? item.countries.join(', ') : 'N/A'}`}
+                      {`${translate('País', 'Country')}: ${item.countries && item.countries.length > 0 ? item.countries.join(', ') : 'N/A'}`}
                     </Text>
                     <Text style={styles.itemDetail}>
                       {`${translate('Edad', 'Age')}: ${item.age || 'N/A'}`}
