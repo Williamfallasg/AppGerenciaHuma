@@ -18,18 +18,16 @@ const ChartScreen = ({ route }) => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
   const [itemCount, setItemCount] = useState(0);
-  const [selectedVariable, setSelectedVariable] = useState('age'); // Variable seleccionada
-  const [selectedChartType, setSelectedChartType] = useState('bar'); // Tipo de gráfico seleccionado
+  const [selectedVariable, setSelectedVariable] = useState('age');
+  const [selectedChartType, setSelectedChartType] = useState('bar');
   const screenWidth = Dimensions.get('window').width;
 
-  // Función de traducción
   const translate = (textEs, textEn) => (language === 'es' ? textEs : textEn);
 
   useEffect(() => {
     fetchData();
   }, [userRole]);
 
-  // Obtener datos de Firestore
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -47,32 +45,31 @@ const ChartScreen = ({ route }) => {
     }
   };
 
-  // Procesar datos según la variable seleccionada
   const processChartData = () => {
     let labels = [];
     let dataset = [];
     let pieData = [];
 
     if (selectedVariable === 'age') {
-      const ageDistribution = data.filter(item => item.age !== undefined).map(item => item.age); // Verificar que age exista
+      const ageDistribution = data.filter(item => item.age !== undefined).map(item => item.age);
       labels = ageDistribution.map(age => `Edad ${age}`);
       dataset = ageDistribution;
       pieData = ageDistribution.map((age, index) => ({
         name: `Edad ${age}`,
         population: age,
-        color: `rgba(33, 150, 243, ${0.8 - index * 0.1})`, // Degradado de colores para pastel
+        color: `rgba(33, 150, 243, ${0.8 - index * 0.1})`,
         legendFontColor: '#7F7F7F',
         legendFontSize: 12
       }));
     } else if (selectedVariable === 'countries') {
       const countryDistribution = data
-        .filter(item => item.countries && item.countries.length > 0) // Verificar que countries existan y no estén vacíos
+        .filter(item => item.countries && item.countries.length > 0)
         .map(item => item.countries.join(', '));
       labels = countryDistribution.map(country => `País: ${country}`);
-      dataset = countryDistribution.map(() => 1); // Contar ocurrencias
+      dataset = countryDistribution.map(() => 1);
     } else if (selectedVariable === 'activities') {
       const activityDistribution = data
-        .filter(item => item.activities && item.activities.length > 0) // Verificar que activities existan y no estén vacíos
+        .filter(item => item.activities && item.activities.length > 0)
         .map(item => item.activities.length);
       labels = activityDistribution.map((_, index) => `Beneficiario ${index + 1}`);
       dataset = activityDistribution;
@@ -85,7 +82,6 @@ const ChartScreen = ({ route }) => {
     };
   };
 
-  // Función para mostrar el gráfico según el tipo seleccionado
   const renderChart = () => {
     const chartData = processChartData();
 
@@ -94,8 +90,8 @@ const ChartScreen = ({ route }) => {
         return (
           <BarChart
             data={{ labels: chartData.labels, datasets: chartData.datasets }}
-            width={screenWidth - 60}  // Reducir el ancho para mejor presentación
-            height={250}  // Reducir la altura del gráfico
+            width={screenWidth - 60}
+            height={270}  // Increased height to accommodate labels
             fromZero={true}
             chartConfig={{
               backgroundColor: '#e3f2fd',
@@ -104,11 +100,14 @@ const ChartScreen = ({ route }) => {
               decimalPlaces: 0,
               color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
               labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-              barPercentage: 0.7, // Ajustar el ancho de las barras para mayor separación
+              barPercentage: 0.7,
               propsForVerticalLabels: {
-                fontSize: 10,  // Reducir el tamaño de las etiquetas
-                rotation: 45,  // Rotar las etiquetas del eje X 45 grados
-                translateY: 10,  // Mover ligeramente las etiquetas hacia abajo
+                fontSize: 10,
+                rotation: 60,  // Rotate labels more to prevent overlap
+                translateY: 15,  // Move labels further down
+              },
+              propsForHorizontalLabels: {
+                fontSize: 12,
               },
               style: {
                 borderRadius: 16,
@@ -116,15 +115,15 @@ const ChartScreen = ({ route }) => {
                 elevation: 5,
               },
             }}
-            style={{ marginVertical: 10, borderRadius: 16 }}  // Ajustar los márgenes
+            style={{ marginVertical: 20, borderRadius: 16 }}
           />
         );
       case 'line':
         return (
           <LineChart
             data={{ labels: chartData.labels, datasets: chartData.datasets }}
-            width={screenWidth - 60}  // Ajustar el ancho
-            height={250}  // Reducir altura
+            width={screenWidth - 60}
+            height={270}  // Increased height to allow more space for labels
             fromZero={true}
             chartConfig={{
               backgroundColor: '#f5f5f5',
@@ -133,6 +132,14 @@ const ChartScreen = ({ route }) => {
               decimalPlaces: 0,
               color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
               labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+              propsForVerticalLabels: {
+                fontSize: 10,
+                rotation: 60,  // Rotate the labels
+                translateY: 15,  // Shift them down
+              },
+              propsForHorizontalLabels: {
+                fontSize: 12,
+              },
               style: {
                 borderRadius: 16,
                 padding: 10,
@@ -140,7 +147,7 @@ const ChartScreen = ({ route }) => {
               },
             }}
             style={{ marginVertical: 20, borderRadius: 16 }}
-            bezier // Añadir curva para un gráfico de tendencia suave
+            bezier
           />
         );
       case 'pie':
@@ -163,7 +170,6 @@ const ChartScreen = ({ route }) => {
     }
   };
 
-  // Botón para salir y regresar a la pantalla de GenerateReport
   const handleGoBack = () => {
     navigation.navigate('GenerateReport');
   };
@@ -174,7 +180,6 @@ const ChartScreen = ({ route }) => {
         {translate('Distribución de Datos', 'Data Distribution')}
       </Text>
 
-      {/* Selector para elegir qué variable graficar */}
       <Picker
         selectedValue={selectedVariable}
         style={{ height: 50, width: screenWidth * 0.8, marginBottom: 20, alignSelf: 'center' }}
@@ -185,7 +190,6 @@ const ChartScreen = ({ route }) => {
         <Picker.Item label={translate('Actividades', 'Activities')} value="activities" />
       </Picker>
 
-      {/* Selector para elegir el tipo de gráfico */}
       <Picker
         selectedValue={selectedChartType}
         style={{ height: 50, width: screenWidth * 0.8, marginBottom: 20, alignSelf: 'center' }}
@@ -193,7 +197,6 @@ const ChartScreen = ({ route }) => {
       >
         <Picker.Item label={translate('Gráfico de Barras', 'Bar Chart')} value="bar" />
         <Picker.Item label={translate('Gráfico de Tendencia', 'Line Chart')} value="line" />
-        <Picker.Item label={translate('Gráfico de Pastel', 'Pie Chart')} value="pie" />
       </Picker>
 
       {loading ? (
@@ -204,7 +207,6 @@ const ChartScreen = ({ route }) => {
         </View>
       )}
 
-      {/* Botón para regresar */}
       <TouchableOpacity style={styles.exitButton} onPress={handleGoBack}>
         <Text style={styles.exitButtonText}>
           {translate('Salir', 'Exit')}
