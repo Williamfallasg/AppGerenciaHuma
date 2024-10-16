@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'; 
+import React, { useEffect, useState } from 'react';
 import { View, Text, Dimensions, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
@@ -20,7 +20,6 @@ const Report = ({ route }) => {
 
   const translate = (textEs, textEn) => (language === 'es' ? textEs : textEn);
 
-  // Navegación condicional dependiendo del tipo de reporte seleccionado
   const handleNavigateToChart = () => {
     if (selectedOption === 'Programas') {
       navigation.navigate('ProgramChartScreen', { programData: data });
@@ -44,7 +43,6 @@ const Report = ({ route }) => {
     fetchData();
   }, [userRole]);
 
-  // Obtener datos de Firestore según la opción seleccionada
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -68,16 +66,15 @@ const Report = ({ route }) => {
               }
             }));
 
-            // Consulta para contar los beneficiarios vinculados a los proyectos del programa
             const usersSnapshot = await getDocs(query(collection(firestore, 'users'), where('projects', 'array-contains-any', program.projects)));
             const numberOfBeneficiaries = usersSnapshot.size;
 
             return {
               ...program,
-              projectNames: projectNames || [], // Asegurando que projectNames siempre sea un arreglo
-              numberOfBeneficiaries, // Aquí se almacena el número de beneficiarios
-              fulfilledIndicators: program.fulfilledIndicators || 0, // Campo de indicadores cumplidos
-              countries: program.countries || [], // Campo de países (asegurar que existe en Firestore)
+              projectNames: projectNames || [],
+              numberOfBeneficiaries,
+              fulfilledIndicators: program.fulfilledIndicators || 0,
+              countries: program.countries || [],
             };
           }
           return { ...program, projectNames: [], numberOfBeneficiaries: 0, fulfilledIndicators: 0, countries: [] };
@@ -107,7 +104,7 @@ const Report = ({ route }) => {
                 return translate('Nombre no disponible', 'Name not available');
               }
             }));
-            return { ...user, projectNames: projectNames || [] }; // Asegurando que projectNames siempre sea un arreglo
+            return { ...user, projectNames: projectNames || [] };
           }
           return { ...user, projectNames: [] };
         }));
@@ -123,6 +120,19 @@ const Report = ({ route }) => {
     }
   };
 
+  // Función para traducir el valor de "gender" a "sexo" en español
+  const getSexInSpanish = (gender) => {
+    if (!gender) return 'N/A';
+    switch (gender.toLowerCase()) {
+      case 'male':
+        return 'Masculino';
+      case 'female':
+        return 'Femenino';
+      default:
+        return 'Otro';
+    }
+  };
+
   if (userRole !== 'admin') {
     return null;
   }
@@ -134,7 +144,7 @@ const Report = ({ route }) => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>
-        {translate('Informe del Programa', 'Program Report')}
+        {translate('Informe ', 'Inform')}
       </Text>
       <Text style={styles.subtitle}>
         {translate('Tipo de Informe:', 'Report Type:')} {selectedOption}
@@ -190,6 +200,9 @@ const Report = ({ route }) => {
                       {`${translate('Nombre', 'Name')}: ${item.name || 'N/A'}`}
                     </Text>
                     <Text style={styles.itemDetail}>
+                      {`${translate('Sexo', 'Sex')}: ${getSexInSpanish(item.gender)}`} {/* Conversión de gender a sexo */}
+                    </Text>
+                    <Text style={styles.itemDetail}>
                       {`${translate('País', 'Country')}: ${item.countries && item.countries.length > 0 ? item.countries.join(', ') : 'N/A'}`}
                     </Text>
                     <Text style={styles.itemDetail}>
@@ -217,7 +230,6 @@ const Report = ({ route }) => {
         </View>
       )}
 
-      {/* Botón para navegar al gráfico */}
       <TouchableOpacity style={styles.graphButton} onPress={handleNavigateToChart}>
         <Text style={styles.graphButtonText}>{translate('Ver Gráfico', 'View Chart')}</Text>
       </TouchableOpacity>
