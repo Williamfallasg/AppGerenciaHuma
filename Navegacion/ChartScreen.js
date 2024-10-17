@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'; 
+import React, { useEffect, useState } from 'react';  
 import { View, Text, Dimensions, ScrollView, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
@@ -50,9 +50,11 @@ const ChartScreen = ({ route }) => {
     let dataset = [];
     let pieData = [];
 
+    // Proceso para la variable "sex"
     if (selectedVariable === 'sex') {
-      const maleCount = data.filter(item => item.sex === 'male').length;
-      const femaleCount = data.filter(item => item.sex === 'female').length;
+      // Normalizamos los valores de gender para hacer comparaciones correctas.
+      const maleCount = data.filter(item => item.gender && item.gender.toLowerCase() === 'male').length;
+      const femaleCount = data.filter(item => item.gender && item.gender.toLowerCase() === 'female').length;
 
       labels = ['Masculino', 'Femenino'];
       dataset = [maleCount, femaleCount];
@@ -63,17 +65,19 @@ const ChartScreen = ({ route }) => {
           population: maleCount,
           color: 'rgba(33, 150, 243, 0.8)',
           legendFontColor: '#7F7F7F',
-          legendFontSize: 12
+          legendFontSize: 14,
         },
         {
           name: 'Femenino',
           population: femaleCount,
           color: 'rgba(244, 67, 54, 0.8)',
           legendFontColor: '#7F7F7F',
-          legendFontSize: 12
+          legendFontSize: 14,
         }
       ];
-    } else if (selectedVariable === 'age') {
+    }
+    // Proceso para la variable "age"
+    else if (selectedVariable === 'age') {
       const ageDistribution = data.filter(item => item.age !== undefined).map(item => item.age);
       labels = ageDistribution.map(age => `Edad ${age}`);
       dataset = ageDistribution;
@@ -82,18 +86,31 @@ const ChartScreen = ({ route }) => {
         population: age,
         color: `rgba(33, 150, 243, ${0.8 - index * 0.1})`,
         legendFontColor: '#7F7F7F',
-        legendFontSize: 12
+        legendFontSize: 14,
       }));
-    } else if (selectedVariable === 'countries') {
+    }
+    // Proceso para la variable "countries"
+    else if (selectedVariable === 'countries') {
       const countryDistribution = data
         .filter(item => item.countries && item.countries.length > 0)
         .map(item => item.countries.join(', '));
       labels = countryDistribution.map(country => `País: ${country}`);
-      dataset = countryDistribution.map(() => 1);
-    } else if (selectedVariable === 'activities') {
+      dataset = countryDistribution.map(() => 1); // Para gráfico de barras, asignamos 1 por país.
+      
+      pieData = countryDistribution.map((country, index) => ({
+        name: `País ${country}`,
+        population: 1,
+        color: `rgba(33, 150, 243, ${0.8 - index * 0.1})`,
+        legendFontColor: '#7F7F7F',
+        legendFontSize: 14,
+      }));
+    }
+    // Proceso para la variable "activities"
+    else if (selectedVariable === 'activities') {
       const activityDistribution = data
         .filter(item => item.activities && item.activities.length > 0)
         .map(item => item.activities.length);
+
       labels = activityDistribution.map((_, index) => `Beneficiario ${index + 1}`);
       dataset = activityDistribution;
     }
@@ -116,8 +133,8 @@ const ChartScreen = ({ route }) => {
               labels: chartData.labels,
               datasets: chartData.datasets,
             }}
-            width={screenWidth - 40} // Ajuste dinámico de ancho
-            height={300}  // Altura aumentada para mejor legibilidad
+            width={screenWidth - 40}  // Ajuste dinámico de ancho
+            height={300}
             fromZero={true}
             chartConfig={{
               backgroundColor: '#f5f5f5',
@@ -126,21 +143,21 @@ const ChartScreen = ({ route }) => {
               decimalPlaces: 0,
               color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
               labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-              propsForVerticalLabels: {
-                fontSize: 12,
-                translateY: 15,
-              },
-              propsForHorizontalLabels: {
-                fontSize: 10, // Reducir tamaño de letra para más espacio
-                rotation: 60,  // Rotación mayor para evitar solapamiento
-                translateX: -20,  // Ajuste para mejor separación de etiquetas
-              },
               style: {
                 borderRadius: 16,
                 padding: 10,
                 elevation: 5,
               },
-              skipXLabels: 2,  // Mostrar solo cada tercera etiqueta
+              propsForVerticalLabels: {
+                fontSize: 12,
+                translateY: 15,
+              },
+              propsForHorizontalLabels: {
+                fontSize: 10,
+                rotation: 90,  // Etiquetas rotadas 90 grados para mostrarlas en vertical
+                translateX: -10,  // Ajuste para mejor separación
+              },
+              skipXLabels: 2, // Mostrar solo cada tercera etiqueta para evitar solapamiento
             }}
             style={{ marginVertical: 20, borderRadius: 16 }}
             bezier
@@ -150,7 +167,7 @@ const ChartScreen = ({ route }) => {
         return (
           <PieChart
             data={chartData.pieData}
-            width={screenWidth - 40} // Ajuste dinámico de ancho
+            width={screenWidth - 40}  // Ajuste dinámico de ancho
             height={260}  // Altura ajustada
             chartConfig={{
               color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
@@ -165,8 +182,8 @@ const ChartScreen = ({ route }) => {
         return (
           <BarChart
             data={{ labels: chartData.labels, datasets: chartData.datasets }}
-            width={screenWidth - 40} // Ajuste dinámico de ancho
-            height={300}  // Altura aumentada
+            width={screenWidth - 40}  // Ajuste dinámico de ancho
+            height={300}
             fromZero={true}
             chartConfig={{
               backgroundColor: '#e3f2fd',
@@ -178,11 +195,13 @@ const ChartScreen = ({ route }) => {
               barPercentage: 0.7,
               propsForVerticalLabels: {
                 fontSize: 12,
-                rotation: 45,  // Rotación para evitar superposición
+                rotation: 45,
                 translateY: 15,
               },
               propsForHorizontalLabels: {
                 fontSize: 12,
+                rotation: 90,  // Etiquetas rotadas para mostrar los países verticalmente
+                translateX: -15,  // Ajuste adicional
               },
               style: {
                 borderRadius: 16,
