@@ -44,6 +44,7 @@ const ProgramChartScreen = ({ route }) => {
             width={screenWidth - 60}
             height={250}
             fromZero={true}
+            yAxisInterval={2}  // Ajustar el intervalo del eje Y
             chartConfig={{
               backgroundColor: '#e3f2fd',
               backgroundGradientFrom: '#e3f2fd',
@@ -57,6 +58,9 @@ const ProgramChartScreen = ({ route }) => {
                 rotation: 45,  // Rotar las etiquetas del eje X para mejor legibilidad
                 translateY: 10,  // Mover ligeramente hacia abajo las etiquetas
               },
+              propsForHorizontalLabels: {
+                fontSize: 12,  // Ajustar el tamaño de las etiquetas del eje Y
+              },
             }}
             style={{ marginVertical: 10, borderRadius: 16 }}
           />
@@ -68,6 +72,7 @@ const ProgramChartScreen = ({ route }) => {
             width={screenWidth - 60}
             height={250}
             fromZero={true}
+            yAxisInterval={2}  // Ajustar el intervalo del eje Y
             chartConfig={{
               backgroundColor: '#f5f5f5',
               backgroundGradientFrom: '#e3f2fd',

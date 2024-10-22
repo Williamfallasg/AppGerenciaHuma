@@ -20,6 +20,8 @@ import ProgramProjectList from './Navegacion/ProgramProjectList';
 import ResultsForm from './Navegacion/ResultsForm';
 import ChartScreen from './Navegacion/ChartScreen';
 import ProgramChartScreen from './Navegacion/ProgramChartScreen';
+import ProjectChartScreen from './Navegacion/ProjectChartScreen';
+
 
 
 
@@ -108,7 +110,12 @@ const AppStack = () => {
         component={ProgramChartScreen}
         options={{ headerShown: false }}
       />
-       
+      <Stack.Screen
+        name="ProjectChartScreen"
+        component={ProjectChartScreen}
+        options={{ headerShown: false }}
+      />
+    
 
     </Stack.Navigator>
   );

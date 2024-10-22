@@ -9,6 +9,66 @@ import { useUserRole } from '../context/UserRoleContext';
 import { Picker } from '@react-native-picker/picker'; 
 import styles from '../styles/stylesProgramForm';
 
+const continents = {
+  America: ['Argentina', 'Brasil', 'Chile', 'México', 'Estados Unidos', 'Canadá', 'Colombia', 'Venezuela', 'Perú', 'Uruguay', 'Paraguay', 'Bolivia', 'Ecuador', 'Costa Rica', 'Panamá', 'Guatemala', 'Honduras', 'El Salvador', 'Nicaragua', 'Cuba', 'Puerto Rico', 'República Dominicana', 'Haití', 'Jamaica'],
+  Europa: ['España', 'Francia', 'Alemania', 'Italia', 'Reino Unido', 'Portugal', 'Suecia', 'Suiza', 'Austria', 'Holanda', 'Bélgica', 'Noruega', 'Dinamarca', 'Finlandia', 'Grecia', 'Irlanda', 'Polonia', 'Hungría', 'República Checa', 'Rusia', 'Ucrania', 'Turquía'],
+  Asia: ['China', 'Japón', 'India', 'Corea del Sur', 'Tailandia', 'Vietnam', 'Malasia', 'Indonesia', 'Singapur', 'Filipinas', 'Taiwán', 'Hong Kong', 'Pakistán', 'Bangladés', 'Sri Lanka', 'Nepal', 'Kazajistán', 'Uzbekistán', 'Irán', 'Iraq'],
+  Africa: ['Sudáfrica', 'Nigeria', 'Kenia', 'Egipto', 'Marruecos', 'Argelia', 'Túnez', 'Angola', 'Etiopía', 'Ghana', 'Senegal', 'Mozambique', 'Zimbabue', 'Namibia', 'Botsuana', 'Camerún', 'Costa de Marfil', 'Sudán', 'Somalia', 'Malawi', 'Zambia', 'República Democrática del Congo'],
+  Oceania: ['Australia', 'Nueva Zelanda', 'Papúa Nueva Guinea', 'Fiyi', 'Samoa', 'Tonga', 'Vanuatu', 'Islas Salomón'],
+};
+
+// Función para obtener el símbolo de la moneda
+const getCurrencySymbol = (currency) => {
+  const currencyMap = {
+    'USD': '$',
+    'CRC': '₡',
+    'MXN': '$',
+    'EUR': '€',
+    'CAD': 'CA$',
+  };
+  return currencyMap[currency] || ''; 
+};
+
+// Función para validar que la fecha de fin sea posterior a la fecha de inicio
+const isEndDateValid = (startDate, endDate) => {
+  const [startDay, startMonth, startYear] = startDate.split('/').map(Number);
+  const [endDay, endMonth, endYear] = endDate.split('/').map(Number);
+
+  const start = new Date(startYear, startMonth - 1, startDay);
+  const end = new Date(endYear, endMonth - 1, endDay);
+
+  return end >= start;
+};
+
+// Función para validar los datos del programa
+const validateProgram = (programa, language) => {
+  if (!programa.programID) {
+    Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'El ID del programa es obligatorio' : 'Program ID is required');
+    return false;
+  }
+  if (!programa.programName) {
+    Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'El nombre del programa es obligatorio' : 'Program name is required');
+    return false;
+  }
+  if (!programa.programBudget || isNaN(parseFloat(programa.programBudget.replace(/[^0-9.]/g, '')))) {
+    Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'El presupuesto del programa es obligatorio y debe ser un número válido' : 'Program budget is required and must be a valid number');
+    return false;
+  }
+  if (!programa.startDate) {
+    Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'La fecha de inicio es obligatoria' : 'Start date is required');
+    return false;
+  }
+  if (!programa.endDate) {
+    Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'La fecha de fin es obligatoria' : 'End date is required');
+    return false;
+  }
+  if (!isEndDateValid(programa.startDate, programa.endDate)) {
+    Alert.alert(language === 'es' ? 'Error de fecha' : 'Date Error', language === 'es' ? 'La fecha de fin debe ser posterior a la fecha de inicio' : 'The end date must be after the start date');
+    return false;
+  }
+  return true;
+};
+
 const ProgramForm = () => {
   const { language } = useLanguage(); 
   const navigation = useNavigation();
@@ -21,24 +81,17 @@ const ProgramForm = () => {
     programBudget: '',
     programCurrency: 'USD', 
     startDate: '',
-    endDate: ''
+    endDate: '',
+    selectedContinent: '', // Continente seleccionado
+    selectedCountries: {}, // Almacenar los países seleccionados por continente
   }]);
 
-  // Lista de monedas obtenida
   const currencyOptions = [
     { label: "USD (Dólares)", value: "USD" },
     { label: "CRC (Colones Costarricenses)", value: "CRC" },
     { label: "MXN (Pesos Mexicanos)", value: "MXN" },
-    { label: "HNL (Lempiras Hondureñas)", value: "HNL" },
     { label: "EUR (Euros)", value: "EUR" },
-    { label: "NIO (Córdoba Nicaragüense)", value: "NIO" },
-    { label: "SVC (Colón Salvadoreño)", value: "SVC" },
-    { label: "PAB (Balboa Panameño)", value: "PAB" },
-    { label: "GTQ (Quetzal Guatemalteco)", value: "GTQ" },
     { label: "CAD (Dólar Canadiense)", value: "CAD" },
-    { label: "AUD (Dólar Australiano)", value: "AUD" },
-    { label: "GBP (Libra Esterlina)", value: "GBP" },
-    { label: "JPY (Yen Japonés)", value: "JPY" }
   ];
 
   useEffect(() => {
@@ -56,78 +109,65 @@ const ProgramForm = () => {
     }
   }, [userRole]);
 
-  const getCurrencySymbol = (currency) => {
-    const currencyMap = {
-      'CRC': '₡',
-      'USD': '$',
-      'MXN': '$',
-      'HNL': 'L',
-      'EUR': '€',
-      'NIO': 'C$',
-      'SVC': '₡',
-      'PAB': 'B/.',
-      'GTQ': 'Q',
-      'CAD': 'CA$',
-      'AUD': 'A$',
-      'GBP': '£',
-      'JPY': '¥'
-    };
-    return currencyMap[currency] || '';
-  };
-
-  const isEndDateValid = (startDate, endDate) => {
-    const [startDay, startMonth, startYear] = startDate.split('/').map(Number);
-    const [endDay, endMonth, endYear] = endDate.split('/').map(Number);
-
-    const start = new Date(startYear, startMonth - 1, startDay);
-    const end = new Date(endYear, endMonth - 1, endDay);
-
-    return end >= start; 
-  };
-
-  const validateProgram = (programa) => {
-    if (!programa.programID) {
-      Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'El ID del programa es obligatorio' : 'Program ID is required');
-      return false;
-    }
-    if (!programa.programName) {
-      Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'El nombre del programa es obligatorio' : 'Program name is required');
-      return false;
-    }
-    if (!programa.programBudget || isNaN(parseFloat(programa.programBudget.replace(/[^0-9.]/g, '')))) {
-      Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'El presupuesto del programa es obligatorio y debe ser un número válido' : 'Program budget is required and must be a valid number');
-      return false;
-    }
-    if (!programa.startDate) {
-      Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'La fecha de inicio es obligatoria' : 'Start date is required');
-      return false;
-    }
-    if (!programa.endDate) {
-      Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'La fecha de fin es obligatoria' : 'End date is required');
-      return false;
-    }
-    if (!isEndDateValid(programa.startDate, programa.endDate)) {
-      Alert.alert(language === 'es' ? 'Error de fecha' : 'Date Error', language === 'es' ? 'La fecha de fin debe ser posterior a la fecha de inicio' : 'The end date must be after the start date');
-      return false;
-    }
-    return true;
-  };
-
   const handleCurrencyChange = (index, value) => {
     const newProgramas = [...programas];
     const symbol = getCurrencySymbol(value);
-    
     const currentBudget = newProgramas[index].programBudget.replace(/[^\d.]/g, ''); 
-    
     newProgramas[index].programCurrency = value;
     newProgramas[index].programBudget = `${symbol}${currentBudget}`; 
-
     setProgramas(newProgramas);
   };
 
   const handleProgramChange = (index, field, value) => {
     const newProgramas = [...programas];
     newProgramas[index][field] = value;
+    setProgramas(newProgramas);
+  };
+
+  const handleContinentChange = (index, continent) => {
+    const newProgramas = [...programas];
+    newProgramas[index].selectedContinent = continent;
+
+    if (!newProgramas[index].selectedCountries[continent]) {
+      newProgramas[index].selectedCountries[continent] = [];
+    }
+
+    setProgramas(newProgramas);
+  };
+
+  const handleCountryChange = (index, country) => {
+    const newProgramas = [...programas];
+    const continent = newProgramas[index].selectedContinent;
+    const selectedCountries = newProgramas[index].selectedCountries[continent];
+
+    if (selectedCountries.includes(country)) {
+      newProgramas[index].selectedCountries[continent] = selectedCountries.filter(c => c !== country); // Eliminar si ya está seleccionado
+    } else {
+      newProgramas[index].selectedCountries[continent] = [...selectedCountries, country]; // Agregar país
+    }
+
+    setProgramas(newProgramas);
+  };
+
+  const handleAddProgram = () => {
+    setProgramas([
+      ...programas,
+      {
+        programID: '',
+        programName: '',
+        programDescription: '',
+        programBudget: '',
+        programCurrency: 'USD',
+        startDate: '',
+        endDate: '',
+        selectedContinent: '',
+        selectedCountries: {},
+      }
+    ]);
+  };
+
+  const handleRemoveProgram = (index) => {
+    const newProgramas = programas.filter((_, i) => i !== index);
     setProgramas(newProgramas);
   };
 
@@ -140,7 +180,14 @@ const ProgramForm = () => {
       summary += `${language === 'es' ? 'Descripción' : 'Description'}: ${programa.programDescription}\n`;
       summary += `${language === 'es' ? 'Presupuesto' : 'Budget'}: ${programa.programBudget}\n`;
       summary += `${language === 'es' ? 'Fecha de inicio' : 'Start Date'}: ${programa.startDate}\n`;
-      summary += `${language === 'es' ? 'Fecha de fin' : 'End Date'}: ${programa.endDate}\n\n`;
+      summary += `${language === 'es' ? 'Fecha de fin' : 'End Date'}: ${programa.endDate}\n`;
+
+      Object.keys(programa.selectedCountries).forEach(continent => {
+        summary += `${language === 'es' ? 'Continente' : 'Continent'}: ${continent}\n`;
+        summary += `${language === 'es' ? 'Países seleccionados' : 'Selected Countries'}: ${programa.selectedCountries[continent].join(', ')}\n`;
+      });
+
+      summary += '\n';
     });
 
     Alert.alert(
@@ -161,8 +208,8 @@ const ProgramForm = () => {
 
   const handleSave = async () => {
     for (const programa of programas) {
-      if (!validateProgram(programa)) {
-        return; 
+      if (!validateProgram(programa, language)) {
+        return;
       }
     }
     
@@ -176,67 +223,13 @@ const ProgramForm = () => {
           programCurrency: programa.programCurrency, 
           startDate: programa.startDate,
           endDate: programa.endDate,
+          selectedCountries: programa.selectedCountries,
         });
       }
       Alert.alert(language === 'es' ? "Guardado exitoso" : "Saved successfully");
     } catch (error) {
       Alert.alert(language === 'es' ? "Error al guardar" : "Save Error", language === 'es' ? "Hubo un error al guardar los datos" : "There was an error saving the data");
     }
-  };
-
-  const handleAddProgram = () => {
-    setProgramas([
-      ...programas,
-      {
-        programID: '',
-        programName: '',
-        programDescription: '',
-        programBudget: '',
-        programCurrency: 'USD',
-        startDate: '',
-        endDate: ''
-      }
-    ]);
-  };
-
-  const handleRemoveProgram = (index) => {
-    Alert.alert(
-      language === 'es' ? 'Eliminar programa' : 'Remove Program',
-      language === 'es' ? '¿Estás seguro de que deseas eliminar este programa?' : 'Are you sure you want to remove this program?',
-      [
-        {
-          text: language === 'es' ? 'Cancelar' : 'Cancel',
-          style: 'cancel'
-        },
-        {
-          text: language === 'es' ? 'Eliminar' : 'Remove',
-          style: 'destructive',
-          onPress: () => {
-            const newProgramas = programas.filter((_, i) => i !== index);
-            setProgramas(newProgramas);
-          }
-        }
-      ]
-    );
-  };
-
-  const handleLinkProject = () => {
-    Alert.alert(
-      language === 'es' ? 'Vincular proyecto' : 'Link Project',
-      language === 'es' ? '¿Estás seguro de que deseas vincular un nuevo proyecto?' : 'Are you sure you want to link a new project?',
-      [
-        {
-          text: language === 'es' ? 'Cancelar' : 'Cancel',
-          style: 'cancel'
-        },
-        {
-          text: language === 'es' ? 'Vincular' : 'Link',
-          onPress: () => {
-            navigation.navigate('ProjectForm'); 
-          }
-        }
-      ]
-    );
   };
 
   return (
@@ -313,31 +306,82 @@ const ProgramForm = () => {
             keyboardType="numeric"
           />
 
-          {index > 0 && (
-            <TouchableOpacity style={styles.deleteButton} onPress={() => handleRemoveProgram(index)}>
-              <Icon name="delete" size={24} color="#F28C32" />
-              <Text style={styles.deleteButtonText}>{language === 'es' ? 'Eliminar programa' : 'Remove Program'}</Text>
-            </TouchableOpacity>
+          {/* Selector de continente */}
+          <Text>{language === 'es' ? "Seleccione el continente donde el programa está disponible:" : "Select the continent where the program is available:"}</Text>
+          <Picker
+            selectedValue={programa.selectedContinent}
+            style={styles.picker}
+            onValueChange={(value) => handleContinentChange(index, value)}
+          >
+            {Object.keys(continents).map(continent => (
+              <Picker.Item key={continent} label={continent} value={continent} />
+            ))}
+          </Picker>
+
+          {/* Selector de país según continente seleccionado */}
+          {programa.selectedContinent && (
+            <>
+              <Text>{language === 'es' ? "Seleccione el país donde el programa está disponible:" : "Select the country where the program is available:"}</Text>
+              <Picker
+                selectedValue="" 
+                style={styles.picker}
+                onValueChange={(value) => handleCountryChange(index, value)}
+              >
+                {continents[programa.selectedContinent].map(country => (
+                  <Picker.Item key={country} label={country} value={country} />
+                ))}
+              </Picker>
+            </>
           )}
+
+          {/* Lista de países seleccionados */}
+          {Object.keys(programa.selectedCountries).length > 0 && (
+            <View style={styles.selectedCountriesContainer}>
+              {Object.keys(programa.selectedCountries).map(continent => (
+                <View key={continent}>
+                  <Text>{`${language === 'es' ? "Continente" : "Continent"}: ${continent}`}</Text>
+                  {programa.selectedCountries[continent].map((country, idx) => (
+                    <View key={idx} style={styles.selectedCountryItem}>
+                      <Text>{country}</Text>
+                      <TouchableOpacity onPress={() => handleCountryChange(index, country)}>
+                        <Icon name="delete" size={20} color="red" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Botón para eliminar programa */}
+          <TouchableOpacity style={styles.deleteButton} onPress={() => handleRemoveProgram(index)}>
+            <Icon name="delete" size={24} color="#F28C32" />
+            <Text style={styles.deleteButtonText}>{language === 'es' ? 'Eliminar programa' : 'Remove Program'}</Text>
+          </TouchableOpacity>
         </View>
       ))}
 
+      {/* Botón para guardar */}
       <TouchableOpacity style={styles.button} onPress={confirmAndSave}>
         <Text style={styles.buttonText}>{language === 'es' ? "Guardar" : "Save"}</Text>
       </TouchableOpacity>
 
+      {/* Botón para agregar programa */}
       <TouchableOpacity style={styles.addButton} onPress={handleAddProgram}>
         <Icon name="add" size={24} color="#FFFFFF" />
         <Text style={styles.addButtonText}>{language === 'es' ? 'Agregar programa' : 'Add Program'}</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={[styles.button, styles.linkProjectButton]} onPress={handleLinkProject}>
+      {/* Botón para vincular proyecto */}
+      <TouchableOpacity style={[styles.button, styles.linkProjectButton]} onPress={() => navigation.navigate('ProjectForm')}>
         <Text style={styles.buttonText}>{language === 'es' ? "Vincular Proyecto" : "Link Project"}</Text>
       </TouchableOpacity>
 
+      {/* Botón para salir */}
       <TouchableOpacity style={[styles.button, styles.exitButton]} onPress={() => navigation.navigate('Home')}>
         <Text style={styles.buttonText}>{language === 'es' ? "Salir" : "Exit"}</Text>
       </TouchableOpacity>
+
     </ScrollView>
   );
 };
