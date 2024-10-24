@@ -1,34 +1,54 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Dimensions, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { BarChart, LineChart, PieChart } from 'react-native-chart-kit';
-import { useNavigation } from '@react-navigation/native';
+import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
 import { Picker } from '@react-native-picker/picker';
-import styles from '../styles/stylesReport'; // Asegúrate de tener tus estilos
+import styles from '../styles/stylesReport';
+import { useNavigation } from '@react-navigation/native';
 
 const ProgramChartScreen = ({ route }) => {
   const navigation = useNavigation();
-  const { programData } = route.params || {}; // Recibimos los datos del programa como parámetro
+  const { programData } = route.params || {}; // Recibimos los datos de programas desde Report
 
-  const [selectedVariable, setSelectedVariable] = useState('numberOfBeneficiaries');
-  const [selectedChartType, setSelectedChartType] = useState('bar');
+  const [selectedVariable, setSelectedVariable] = useState('projectCount'); // Se selecciona por defecto la cantidad de proyectos vinculados
+  const [selectedChartType, setSelectedChartType] = useState('bar'); // Por defecto gráfico de barras
   const screenWidth = Dimensions.get('window').width;
 
   // Procesar los datos según la variable seleccionada
   const processChartData = () => {
     let labels = [];
     let dataset = [];
+    let pieData = [];
 
-    if (selectedVariable === 'numberOfBeneficiaries') {
-      labels = programData.map(item => item.programName || 'Nombre no disponible'); // Usamos el nombre del programa
-      dataset = programData.map(item => item.numberOfBeneficiaries || 0); // Beneficiarios en cada programa
-    } else if (selectedVariable === 'fulfilledIndicators') {
-      labels = programData.map(item => item.programName || 'Nombre no disponible'); // Usamos el nombre del programa
-      dataset = programData.map(item => item.fulfilledIndicators || 0); // Indicadores cumplidos
+    // Proceso para obtener el número de proyectos vinculados por programa
+    if (selectedVariable === 'projectCount') {
+      labels = programData.map(item => item.programName || 'Sin Nombre');
+      dataset = programData.map(item => (item.projects ? item.projects.length : 0)); // Contamos el número de proyectos vinculados
+
+      pieData = programData.map((item, index) => ({
+        name: item.programName || 'Sin Nombre',
+        population: item.projects ? item.projects.length : 0,
+        color: `rgba(33, 150, 243, ${0.8 - index * 0.1})`,
+        legendFontColor: '#7F7F7F',
+        legendFontSize: 14,
+      }));
+    } else if (selectedVariable === 'countryCount') {
+      // Proceso para obtener el número de países en cada programa
+      labels = programData.map(item => item.programName || 'Sin Nombre');
+      dataset = programData.map(item => (item.selectedCountries ? Object.values(item.selectedCountries).flat().length : 0)); // Contamos el número de países
+
+      pieData = programData.map((item, index) => ({
+        name: item.programName || 'Sin Nombre',
+        population: item.selectedCountries ? Object.values(item.selectedCountries).flat().length : 0,
+        color: `rgba(33, 150, 243, ${0.8 - index * 0.1})`,
+        legendFontColor: '#7F7F7F',
+        legendFontSize: 14,
+      }));
     }
 
     return {
       labels,
       datasets: [{ data: dataset }],
+      pieData,
     };
   };
 
@@ -37,42 +57,16 @@ const ProgramChartScreen = ({ route }) => {
     const chartData = processChartData();
 
     switch (selectedChartType) {
-      case 'bar':
-        return (
-          <BarChart
-            data={{ labels: chartData.labels, datasets: chartData.datasets }}
-            width={screenWidth - 60}
-            height={250}
-            fromZero={true}
-            yAxisInterval={2}  // Ajustar el intervalo del eje Y
-            chartConfig={{
-              backgroundColor: '#e3f2fd',
-              backgroundGradientFrom: '#e3f2fd',
-              backgroundGradientTo: '#e1f5fe',
-              decimalPlaces: 0,
-              color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
-              labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-              barPercentage: 0.7,
-              propsForVerticalLabels: {
-                fontSize: 10,  // Ajustar el tamaño de las etiquetas
-                rotation: 45,  // Rotar las etiquetas del eje X para mejor legibilidad
-                translateY: 10,  // Mover ligeramente hacia abajo las etiquetas
-              },
-              propsForHorizontalLabels: {
-                fontSize: 12,  // Ajustar el tamaño de las etiquetas del eje Y
-              },
-            }}
-            style={{ marginVertical: 10, borderRadius: 16 }}
-          />
-        );
       case 'line':
         return (
           <LineChart
-            data={{ labels: chartData.labels, datasets: chartData.datasets }}
-            width={screenWidth - 60}
-            height={250}
+            data={{
+              labels: chartData.labels,
+              datasets: chartData.datasets,
+            }}
+            width={screenWidth - 40}  // Ajuste dinámico de ancho
+            height={300}
             fromZero={true}
-            yAxisInterval={2}  // Ajustar el intervalo del eje Y
             chartConfig={{
               backgroundColor: '#f5f5f5',
               backgroundGradientFrom: '#e3f2fd',
@@ -80,11 +74,21 @@ const ProgramChartScreen = ({ route }) => {
               decimalPlaces: 0,
               color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
               labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-              propsForVerticalLabels: {
-                fontSize: 10,  // Ajustar el tamaño de las etiquetas
-                rotation: 45,  // Rotar las etiquetas del eje X para mejor legibilidad
-                translateY: 10,  // Mover ligeramente hacia abajo las etiquetas
+              style: {
+                borderRadius: 16,
+                padding: 10,
+                elevation: 5,
               },
+              propsForVerticalLabels: {
+                fontSize: 12,
+                translateY: 15,
+              },
+              propsForHorizontalLabels: {
+                fontSize: 10,
+                rotation: 90,  // Etiquetas rotadas 90 grados para mostrarlas en vertical
+                translateX: -10,  // Ajuste para mejor separación
+              },
+              skipXLabels: 2, // Mostrar solo cada tercera etiqueta para evitar solapamiento
             }}
             style={{ marginVertical: 20, borderRadius: 16 }}
             bezier
@@ -93,15 +97,9 @@ const ProgramChartScreen = ({ route }) => {
       case 'pie':
         return (
           <PieChart
-            data={chartData.datasets[0].data.map((value, index) => ({
-              name: chartData.labels[index], // Usamos el nombre del programa en lugar de Programa 1, Programa 2...
-              population: value,
-              color: `rgba(33, 150, 243, ${0.8 - index * 0.1})`,
-              legendFontColor: '#7F7F7F',
-              legendFontSize: 10, // Reducimos el tamaño de la leyenda para mejor legibilidad
-            }))}
-            width={screenWidth - 40}
-            height={220}
+            data={chartData.pieData}
+            width={screenWidth - 40}  // Ajuste dinámico de ancho
+            height={260}  // Altura ajustada
             chartConfig={{
               color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
             }}
@@ -111,33 +109,65 @@ const ProgramChartScreen = ({ route }) => {
             absolute
           />
         );
+      case 'bar':
+        return (
+          <BarChart
+            data={{ labels: chartData.labels, datasets: chartData.datasets }}
+            width={screenWidth - 40}  // Ajuste dinámico de ancho
+            height={300}
+            fromZero={true}
+            chartConfig={{
+              backgroundColor: '#e3f2fd',
+              backgroundGradientFrom: '#e3f2fd',
+              backgroundGradientTo: '#e1f5fe',
+              decimalPlaces: 0,
+              color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
+              labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+              barPercentage: 0.7,
+              propsForVerticalLabels: {
+                fontSize: 12,
+                rotation: 45,
+                translateY: 15,
+              },
+              propsForHorizontalLabels: {
+                fontSize: 12,
+                rotation: 90,  // Etiquetas rotadas para mostrar los países verticalmente
+                translateX: -15,  // Ajuste adicional
+              },
+              style: {
+                borderRadius: 16,
+                padding: 10,
+                elevation: 5,
+              },
+            }}
+            style={{ marginVertical: 20, borderRadius: 16 }}
+          />
+        );
       default:
         return null;
     }
   };
 
-  const handleGoBack = () => {
-    navigation.goBack(); // Regresa a la pantalla anterior
-  };
-
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Gráfico de Programas</Text>
+      <Text style={[styles.title, { fontSize: 24, marginVertical: 15 }]}>
+        Distribución de Proyectos Vinculados por Programa
+      </Text>
 
       {/* Selector para elegir qué variable graficar */}
       <Picker
         selectedValue={selectedVariable}
-        style={{ height: 50, width: Dimensions.get('window').width * 0.8, marginBottom: 20, alignSelf: 'center' }}
+        style={{ height: 50, width: screenWidth * 0.8, marginBottom: 20, alignSelf: 'center' }}
         onValueChange={(itemValue) => setSelectedVariable(itemValue)}
       >
-        <Picker.Item label="Número de Beneficiarios" value="numberOfBeneficiaries" />
-        <Picker.Item label="Indicadores Cumplidos" value="fulfilledIndicators" />
+        <Picker.Item label="Cantidad de Proyectos Vinculados" value="projectCount" />
+        <Picker.Item label="Cantidad de Países" value="countryCount" />
       </Picker>
 
       {/* Selector para elegir el tipo de gráfico */}
       <Picker
         selectedValue={selectedChartType}
-        style={{ height: 50, width: Dimensions.get('window').width * 0.8, marginBottom: 20, alignSelf: 'center' }}
+        style={{ height: 50, width: screenWidth * 0.8, marginBottom: 20, alignSelf: 'center' }}
         onValueChange={(itemValue) => setSelectedChartType(itemValue)}
       >
         <Picker.Item label="Gráfico de Barras" value="bar" />
@@ -148,11 +178,15 @@ const ProgramChartScreen = ({ route }) => {
       {programData.length === 0 ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
-        <View style={styles.dataContainer}>{renderChart()}</View>
+        <View style={styles.dataContainer}>
+          {renderChart()}
+        </View>
       )}
 
-      <TouchableOpacity style={styles.exitButton} onPress={handleGoBack}>
-        <Text style={styles.exitButtonText}>Salir</Text>
+      <TouchableOpacity style={[styles.exitButton, { backgroundColor: '#FF8C00', borderRadius: 20, paddingVertical: 15, marginTop: 20 }]} onPress={() => navigation.goBack()}>
+        <Text style={[styles.exitButtonText, { fontSize: 16, color: '#fff', fontWeight: 'bold' }]}>
+          Salir
+        </Text>
       </TouchableOpacity>
     </ScrollView>
   );

@@ -58,11 +58,10 @@ const Report = ({ route }) => {
           querySnapshot.docs.map(async (docSnapshot) => {
             const program = { id: docSnapshot.id, ...docSnapshot.data() };
 
-            // Verificación de la existencia de proyectos vinculados
             if (program.projects && program.projects.length > 0) {
               const projectNames = await Promise.all(
                 program.projects.map(async (projectId) => {
-                  if (projectId) { // Verificamos si projectId es válido
+                  if (projectId) {
                     const projectDocRef = doc(firestore, 'projects', projectId);
                     const projectDocSnapshot = await getDoc(projectDocRef);
                     return projectDocSnapshot.exists() ? projectDocSnapshot.data().projectName : translate('N/A', 'N/A');
@@ -88,16 +87,34 @@ const Report = ({ route }) => {
         const projectsData = querySnapshot.docs.map((docSnapshot) => ({ id: docSnapshot.id, ...docSnapshot.data() }));
 
         const updatedProjectsData = projectsData.map((project) => {
-          const { activities = [] } = project;
+          const { activities = [], indicators = [], beneficiaries = [] } = project; // Ensure beneficiaries is an array
           const formattedActivities = activities.map((activity) => ({
             id: activity.id,
             activityName: activity.activity,
             startDate: activity.startDate,
             endDate: activity.endDate,
             beneficiaries: activity.beneficiaries,
-            indicators: activity.indicators || [],
           }));
-          return { ...project, activities: formattedActivities, numberOfBeneficiaries: project.beneficiaries || 'N/A' };
+
+          const activityCount = activities.length;
+
+          const formattedIndicators = indicators.length > 0 
+            ? indicators.map(indicator => typeof indicator === 'object' ? indicator.description || indicator.name || 'N/A' : indicator).join(', ')
+            : 'N/A';
+
+          // Ensure beneficiaries is an array and process it
+          const formattedBeneficiaries = Array.isArray(beneficiaries)
+            ? beneficiaries.map((b) => `${b.name || 'N/A'} (${translate('Edad', 'Age')}: ${b.age || 'N/A'}, ${translate('Sexo', 'Sex')}: ${getSexInSpanish(b.gender)})`).join(', ')
+            : 'N/A';
+
+          return { 
+            ...project, 
+            activities: formattedActivities, 
+            numberOfBeneficiaries: project.beneficiaries || 'N/A',
+            indicators: formattedIndicators,
+            activityCount,
+            formattedBeneficiaries, // Add formatted beneficiaries
+          };
         });
 
         setData(updatedProjectsData);
@@ -163,6 +180,9 @@ const Report = ({ route }) => {
                       {`${translate('Nombre del Programa', 'Program Name')}: ${item.programName || 'N/A'}`}
                     </Text>
                     <Text style={styles.itemDetail}>
+                      {`${translate('Número de Beneficiarios', 'Number of Beneficiaries')}: ${item.numberOfBeneficiaries || 'N/A'}`}
+                    </Text>
+                    <Text style={styles.itemDetail}>
                       {`${translate('Proyectos Vinculados', 'Linked Projects')}: ${
                         Array.isArray(item.projectNames) && item.projectNames.length > 0
                           ? item.projectNames.join(', ')
@@ -170,10 +190,7 @@ const Report = ({ route }) => {
                       }`}
                     </Text>
                     <Text style={styles.itemDetail}>
-                      {`${translate('Número de Beneficiarios', 'Number of Beneficiaries')}: ${item.numberOfBeneficiaries}`}
-                    </Text>
-                    <Text style={styles.itemDetail}>
-                      {`${translate('Indicadores Cumplidos', 'Fulfilled Indicators')}: ${item.fulfilledIndicators}`}
+                      {`${translate('Indicadores Cumplidos', 'Fulfilled Indicators')}: ${item.fulfilledIndicators || 'N/A'}`}
                     </Text>
                     <Text style={styles.itemDetail}>
                       {`${translate('Países donde está disponible:', 'Countries Available In:')} ${
@@ -191,6 +208,19 @@ const Report = ({ route }) => {
                       {`${translate('Nombre del Proyecto', 'Project Name')}: ${item.projectName || 'N/A'}`}
                     </Text>
                     <Text style={styles.itemDetail}>
+                      {`${translate('Número de Beneficiarios', 'Number of Beneficiaries')}: ${item.numberOfBeneficiaries}`}
+                    </Text>
+                    <Text style={styles.itemDetail}>
+                      {`${translate('Beneficiarios', 'Beneficiaries')}: ${item.formattedBeneficiaries}`}
+                    </Text>
+                    <Text style={styles.itemDetail}>
+                      {`${translate('Indicadores del Proyecto', 'Project Indicators')}: ${
+                        item.indicators && item.indicators.length > 0
+                          ? item.indicators
+                          : 'N/A'
+                      }`}
+                    </Text>
+                    <Text style={styles.itemDetail}>
                       {`${translate('Actividades Vinculadas', 'Linked Activities')}: ${
                         item.activities && item.activities.length > 0
                           ? item.activities.map((a) => a.activityName).join(', ')
@@ -198,7 +228,7 @@ const Report = ({ route }) => {
                       }`}
                     </Text>
                     <Text style={styles.itemDetail}>
-                      {`${translate('Número de Beneficiarios', 'Number of Beneficiaries')}: ${item.numberOfBeneficiaries}`}
+                      {`${translate('Cantidad de Actividades', 'Number of Activities')}: ${item.activityCount}`}
                     </Text>
                   </>
                 )}
