@@ -19,7 +19,7 @@ const RegisterUser = () => {
     gender: '',
     birthDate: '',
     age: '',
-    countries: [],  // Cambiado a una lista para soportar múltiples países
+    countries: [],
     province: '',
     canton: '',
     district: '',
@@ -31,127 +31,98 @@ const RegisterUser = () => {
 
   const [qrValue, setQrValue] = useState('');
   const [isUserValid, setIsUserValid] = useState(false);
-  const [formSubmitted, setFormSubmitted] = useState(false);
   const [projects, setProjects] = useState([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [filteredActivities, setFilteredActivities] = useState([]);
-  const [showSummary, setShowSummary] = useState(false);
   const navigation = useNavigation();
   const { width } = useWindowDimensions();
   const { familyMembers, setFamilyMembers } = useFamily();
 
-  // Lista de países
-  const countriesSpanish = [
-    'Afganistán', 'Albania', 'Alemania', 'Andorra', 'Angola', 'Antigua y Barbuda', 'Arabia Saudita',
-    'Argelia', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaiyán', 'Bahamas', 'Bangladés',
-    'Barbados', 'Baréin', 'Bélgica', 'Belice', 'Benín', 'Bielorrusia', 'Birmania', 'Bolivia', 'Bosnia y Herzegovina',
-    'Botsuana', 'Brasil', 'Brunéi', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Bután', 'Cabo Verde', 'Camboya',
-    'Camerún', 'Canadá', 'Catar', 'Chad', 'Chile', 'China', 'Chipre', 'Ciudad del Vaticano', 'Colombia', 
-    'Comoras', 'Corea del Norte', 'Corea del Sur', 'Costa de Marfil', 'Costa Rica', 'Croacia', 'Cuba', 
-    'Dinamarca', 'Dominica', 'Ecuador', 'Egipto', 'El Salvador', 'Emiratos Árabes Unidos', 'Eritrea', 'Eslovaquia',
-    'Eslovenia', 'España', 'Estados Unidos', 'Estonia', 'Esuatini', 'Etiopía', 'Filipinas', 'Finlandia', 'Fiyi',
-    'Francia', 'Gabón', 'Gambia', 'Georgia', 'Ghana', 'Granada', 'Grecia', 'Guatemala', 'Guinea', 'Guinea-Bisáu',
-    'Guinea Ecuatorial', 'Guyana', 'Haití', 'Honduras', 'Hungría', 'India', 'Indonesia', 'Irak', 'Irán', 'Irlanda',
-    'Islandia', 'Islas Marshall', 'Islas Salomón', 'Israel', 'Italia', 'Jamaica', 'Japón', 'Jordania', 'Kazajistán',
-    'Kenia', 'Kirguistán', 'Kiribati', 'Kosovo', 'Kuwait', 'Laos', 'Lesoto', 'Letonia', 'Líbano', 'Liberia', 'Libia',
-    'Liechtenstein', 'Lituania', 'Luxemburgo', 'Madagascar', 'Malasia', 'Malaui', 'Maldivas', 'Malí', 'Malta',
-    'Marruecos', 'Mauricio', 'Mauritania', 'México', 'Micronesia', 'Moldavia', 'Mónaco', 'Mongolia', 'Montenegro',
-    'Mozambique', 'Namibia', 'Nauru', 'Nepal', 'Nicaragua', 'Níger', 'Nigeria', 'Noruega', 'Nueva Zelanda',
-    'Omán', 'Países Bajos', 'Pakistán', 'Palaos', 'Panamá', 'Papúa Nueva Guinea', 'Paraguay', 'Perú', 'Polonia',
-    'Portugal', 'Reino Unido', 'República Centroafricana', 'República Checa', 'República del Congo', 'República Democrática del Congo',
-    'República Dominicana', 'Ruanda', 'Rumanía', 'Rusia', 'Samoa', 'San Cristóbal y Nieves', 'San Marino', 'San Vicente y las Granadinas',
-    'Santa Lucía', 'Santo Tomé y Príncipe', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leona', 'Singapur', 'Siria', 'Somalia', 'Sri Lanka',
-    'Sudáfrica', 'Sudán', 'Sudán del Sur', 'Suecia', 'Suiza', 'Surinam', 'Tailandia', 'Tanzania', 'Tayikistán', 'Timor Oriental', 
-    'Togo', 'Tonga', 'Trinidad y Tobago', 'Túnez', 'Turkmenistán', 'Turquía', 'Tuvalu', 'Ucrania', 'Uganda', 'Uruguay', 'Uzbekistán',
-    'Vanuatu', 'Venezuela', 'Vietnam', 'Yemen', 'Yibuti', 'Zambia', 'Zimbabue'
-];
-
-const countriesEnglish = [
-    'Afghanistan', 'Albania', 'Germany', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Saudi Arabia',
-    'Algeria', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan', 'Bahamas', 'Bangladesh',
-    'Barbados', 'Bahrain', 'Belgium', 'Belize', 'Benin', 'Belarus', 'Myanmar', 'Bolivia', 'Bosnia and Herzegovina',
-    'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Bhutan', 'Cape Verde', 'Cambodia',
-    'Cameroon', 'Canada', 'Qatar', 'Chad', 'Chile', 'China', 'Cyprus', 'Vatican City', 'Colombia', 
-    'Comoros', 'North Korea', 'South Korea', 'Ivory Coast', 'Costa Rica', 'Croatia', 'Cuba', 
-    'Denmark', 'Dominica', 'Ecuador', 'Egypt', 'El Salvador', 'United Arab Emirates', 'Eritrea', 'Slovakia',
-    'Slovenia', 'Spain', 'United States', 'Estonia', 'Eswatini', 'Ethiopia', 'Philippines', 'Finland', 'Fiji',
-    'France', 'Gabon', 'Gambia', 'Georgia', 'Ghana', 'Grenada', 'Greece', 'Guatemala', 'Guinea', 'Guinea-Bissau',
-    'Equatorial Guinea', 'Guyana', 'Haiti', 'Honduras', 'Hungary', 'India', 'Indonesia', 'Iraq', 'Iran', 'Ireland',
-    'Iceland', 'Marshall Islands', 'Solomon Islands', 'Israel', 'Italy', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan',
-    'Kenya', 'Kyrgyzstan', 'Kiribati', 'Kosovo', 'Kuwait', 'Laos', 'Lesotho', 'Latvia', 'Lebanon', 'Liberia', 'Libya',
-    'Liechtenstein', 'Lithuania', 'Luxembourg', 'Madagascar', 'Malaysia', 'Malawi', 'Maldives', 'Mali', 'Malta',
-    'Morocco', 'Mauritius', 'Mauritania', 'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro',
-    'Mozambique', 'Namibia', 'Nauru', 'Nepal', 'Nicaragua', 'Niger', 'Nigeria', 'Norway', 'New Zealand',
-    'Oman', 'Netherlands', 'Pakistan', 'Palau', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Poland',
-    'Portugal', 'United Kingdom', 'Central African Republic', 'Czech Republic', 'Congo', 'Democratic Republic of the Congo',
-    'Dominican Republic', 'Rwanda', 'Romania', 'Russia', 'Samoa', 'Saint Kitts and Nevis', 'San Marino', 'Saint Vincent and the Grenadines',
-    'Saint Lucia', 'Sao Tome and Principe', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Syria', 'Somalia', 'Sri Lanka',
-    'South Africa', 'Sudan', 'South Sudan', 'Sweden', 'Switzerland', 'Suriname', 'Thailand', 'Tanzania', 'Tajikistan', 'East Timor',
-    'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkmenistan', 'Turkey', 'Tuvalu', 'Ukraine', 'Uganda', 'Uruguay', 'Uzbekistan',
-    'Vanuatu', 'Venezuela', 'Vietnam', 'Yemen', 'Djibouti', 'Zambia', 'Zimbabwe'
-];
-
+  
+     // Lista de países
+     const countriesSpanish = [
+      'Afganistán', 'Albania', 'Alemania', 'Andorra', 'Angola', 'Antigua y Barbuda', 'Arabia Saudita',
+      'Argelia', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaiyán', 'Bahamas', 'Bangladés',
+      'Barbados', 'Baréin', 'Bélgica', 'Belice', 'Benín', 'Bielorrusia', 'Birmania', 'Bolivia', 'Bosnia y Herzegovina',
+      'Botsuana', 'Brasil', 'Brunéi', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Bután', 'Cabo Verde', 'Camboya',
+      'Camerún', 'Canadá', 'Catar', 'Chad', 'Chile', 'China', 'Chipre', 'Ciudad del Vaticano', 'Colombia', 
+      'Comoras', 'Corea del Norte', 'Corea del Sur', 'Costa de Marfil', 'Costa Rica', 'Croacia', 'Cuba', 
+      'Dinamarca', 'Dominica', 'Ecuador', 'Egipto', 'El Salvador', 'Emiratos Árabes Unidos', 'Eritrea', 'Eslovaquia',
+      'Eslovenia', 'España', 'Estados Unidos', 'Estonia', 'Esuatini', 'Etiopía', 'Filipinas', 'Finlandia', 'Fiyi',
+      'Francia', 'Gabón', 'Gambia', 'Georgia', 'Ghana', 'Granada', 'Grecia', 'Guatemala', 'Guinea', 'Guinea-Bisáu',
+      'Guinea Ecuatorial', 'Guyana', 'Haití', 'Honduras', 'Hungría', 'India', 'Indonesia', 'Irak', 'Irán', 'Irlanda',
+      'Islandia', 'Islas Marshall', 'Islas Salomón', 'Israel', 'Italia', 'Jamaica', 'Japón', 'Jordania', 'Kazajistán',
+      'Kenia', 'Kirguistán', 'Kiribati', 'Kosovo', 'Kuwait', 'Laos', 'Lesoto', 'Letonia', 'Líbano', 'Liberia', 'Libia',
+      'Liechtenstein', 'Lituania', 'Luxemburgo', 'Madagascar', 'Malasia', 'Malaui', 'Maldivas', 'Malí', 'Malta',
+      'Marruecos', 'Mauricio', 'Mauritania', 'México', 'Micronesia', 'Moldavia', 'Mónaco', 'Mongolia', 'Montenegro',
+      'Mozambique', 'Namibia', 'Nauru', 'Nepal', 'Nicaragua', 'Níger', 'Nigeria', 'Noruega', 'Nueva Zelanda',
+      'Omán', 'Países Bajos', 'Pakistán', 'Palaos', 'Panamá', 'Papúa Nueva Guinea', 'Paraguay', 'Perú', 'Polonia',
+      'Portugal', 'Reino Unido', 'República Centroafricana', 'República Checa', 'República del Congo', 'República Democrática del Congo',
+      'República Dominicana', 'Ruanda', 'Rumanía', 'Rusia', 'Samoa', 'San Cristóbal y Nieves', 'San Marino', 'San Vicente y las Granadinas',
+      'Santa Lucía', 'Santo Tomé y Príncipe', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leona', 'Singapur', 'Siria', 'Somalia', 'Sri Lanka',
+      'Sudáfrica', 'Sudán', 'Sudán del Sur', 'Suecia', 'Suiza', 'Surinam', 'Tailandia', 'Tanzania', 'Tayikistán', 'Timor Oriental', 
+      'Togo', 'Tonga', 'Trinidad y Tobago', 'Túnez', 'Turkmenistán', 'Turquía', 'Tuvalu', 'Ucrania', 'Uganda', 'Uruguay', 'Uzbekistán',
+      'Vanuatu', 'Venezuela', 'Vietnam', 'Yemen', 'Yibuti', 'Zambia', 'Zimbabue'
+  ];
+  
+  const countriesEnglish = [
+      'Afghanistan', 'Albania', 'Germany', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Saudi Arabia',
+      'Algeria', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan', 'Bahamas', 'Bangladesh',
+      'Barbados', 'Bahrain', 'Belgium', 'Belize', 'Benin', 'Belarus', 'Myanmar', 'Bolivia', 'Bosnia and Herzegovina',
+      'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Bhutan', 'Cape Verde', 'Cambodia',
+      'Cameroon', 'Canada', 'Qatar', 'Chad', 'Chile', 'China', 'Cyprus', 'Vatican City', 'Colombia', 
+      'Comoros', 'North Korea', 'South Korea', 'Ivory Coast', 'Costa Rica', 'Croatia', 'Cuba', 
+      'Denmark', 'Dominica', 'Ecuador', 'Egypt', 'El Salvador', 'United Arab Emirates', 'Eritrea', 'Slovakia',
+      'Slovenia', 'Spain', 'United States', 'Estonia', 'Eswatini', 'Ethiopia', 'Philippines', 'Finland', 'Fiji',
+      'France', 'Gabon', 'Gambia', 'Georgia', 'Ghana', 'Grenada', 'Greece', 'Guatemala', 'Guinea', 'Guinea-Bissau',
+      'Equatorial Guinea', 'Guyana', 'Haiti', 'Honduras', 'Hungary', 'India', 'Indonesia', 'Iraq', 'Iran', 'Ireland',
+      'Iceland', 'Marshall Islands', 'Solomon Islands', 'Israel', 'Italy', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan',
+      'Kenya', 'Kyrgyzstan', 'Kiribati', 'Kosovo', 'Kuwait', 'Laos', 'Lesotho', 'Latvia', 'Lebanon', 'Liberia', 'Libya',
+      'Liechtenstein', 'Lithuania', 'Luxembourg', 'Madagascar', 'Malaysia', 'Malawi', 'Maldives', 'Mali', 'Malta',
+      'Morocco', 'Mauritius', 'Mauritania', 'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro',
+      'Mozambique', 'Namibia', 'Nauru', 'Nepal', 'Nicaragua', 'Niger', 'Nigeria', 'Norway', 'New Zealand',
+      'Oman', 'Netherlands', 'Pakistan', 'Palau', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Poland',
+      'Portugal', 'United Kingdom', 'Central African Republic', 'Czech Republic', 'Congo', 'Democratic Republic of the Congo',
+      'Dominican Republic', 'Rwanda', 'Romania', 'Russia', 'Samoa', 'Saint Kitts and Nevis', 'San Marino', 'Saint Vincent and the Grenadines',
+      'Saint Lucia', 'Sao Tome and Principe', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Syria', 'Somalia', 'Sri Lanka',
+      'South Africa', 'Sudan', 'South Sudan', 'Sweden', 'Switzerland', 'Suriname', 'Thailand', 'Tanzania', 'Tajikistan', 'East Timor',
+      'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkmenistan', 'Turkey', 'Tuvalu', 'Ukraine', 'Uganda', 'Uruguay', 'Uzbekistan',
+      'Vanuatu', 'Venezuela', 'Vietnam', 'Yemen', 'Djibouti', 'Zambia', 'Zimbabwe'
+  ];
   const selectedCountries = language === 'es' ? countriesSpanish : countriesEnglish;
 
   useEffect(() => {
-    // Obtener proyectos desde Firestore
     const unsubscribeProjects = onSnapshot(collection(firestore, "projects"), (snapshot) => {
-      try {
-        setLoadingProjects(true);
-        const projectsList = snapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            label: data?.projectName || 'Nombre no disponible',
-            value: doc.id,
-            activities: data?.activities || [],
-          };
-        });
-        setProjects(projectsList);
-      } catch (error) {
-        console.error("Error fetching projects: ", error);
-        Alert.alert(language === 'es' ? 'Error al obtener proyectos' : 'Error fetching projects');
-      } finally {
-        setLoadingProjects(false);
-      }
+      setLoadingProjects(true);
+      const projectsList = snapshot.docs.map(doc => ({
+        label: doc.data()?.projectName || 'Nombre no disponible',
+        value: doc.id,
+        activities: doc.data()?.activities || [],
+      }));
+      setProjects(projectsList);
+      setLoadingProjects(false);
     });
-
-    return () => {
-      unsubscribeProjects();
-    };
+    return () => unsubscribeProjects();
   }, []);
 
   const handleInputChange = async (field, value) => {
     const updatedUserData = { ...userData, [field]: value };
     setUserData(updatedUserData);
 
-    // Si el campo cambiado es el userID, intentamos obtener los datos del usuario registrado
     if (field === 'userID' && value) {
       try {
         const userQuery = query(collection(firestore, "users"), where("userID", "==", value));
         const querySnapshot = await getDocs(userQuery);
-
-        if (!querySnapshot.empty && querySnapshot.docs.length > 0) {
-          const userDoc = querySnapshot.docs[0];
-          const userDataFromFirestore = userDoc.exists() ? userDoc.data() : null;
-
-          if (userDataFromFirestore) {
-            setUserData(prevData => ({
-              ...prevData,
-              ...userDataFromFirestore,
-            }));
-            setIsUserValid(true);
-
-            // Limpiar los campos de ubicación y detalles del proyecto
-            clearLocationAndProjectFields();
-          } else {
-            setIsUserValid(false);
-          }
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0].data();
+          setUserData(prevData => ({ ...prevData, ...userDoc }));
+          setIsUserValid(true);
+          clearLocationAndProjectFields();
         } else {
           setUserData({ ...userData, userID: value });
           setIsUserValid(false);
         }
       } catch (error) {
-        console.error("Error fetching user data: ", error);
         Alert.alert(language === 'es' ? 'Error al obtener datos del usuario' : 'Error fetching user data');
       }
     }
@@ -172,312 +143,164 @@ const countriesEnglish = [
   const handleCountrySelection = (value) => {
     setUserData(prevData => ({
       ...prevData,
-      countries: Array.from(new Set([...prevData.countries, value])),  // Agregar país sin duplicados
+      countries: Array.from(new Set([...prevData.countries, value])),
     }));
   };
 
   const handleProjectSelection = (value) => {
     setUserData(prevData => ({
       ...prevData,
-      projects: Array.from(new Set([...prevData.projects, value])),  // Agregar proyecto sin duplicados
+      projects: Array.from(new Set([...prevData.projects, value])),
     }));
-
-    // Filtrar actividades del proyecto seleccionado
-    const selectedProject = projects.find((project) => project.value === value);
-    if (selectedProject) {
-      setFilteredActivities(selectedProject.activities.map(activity => activity.activity || 'Actividad no disponible'));
-    } else {
-      setFilteredActivities([]);
-    }
+    const selectedProject = projects.find(project => project.value === value);
+    setFilteredActivities(selectedProject ? selectedProject.activities.map(activity => activity.activity || 'Actividad no disponible') : []);
   };
 
   const handleActivitySelection = (value) => {
     setUserData(prevData => ({
       ...prevData,
-      activities: Array.from(new Set([...prevData.activities, value])),  // Agregar actividad sin duplicados
+      activities: Array.from(new Set([...prevData.activities, value])),
     }));
   };
 
   const validateFields = () => {
-    let isValid = true;
-    let missingFields = [];
+    const fieldNames = {
+      userID: language === 'es' ? 'ID de usuario' : 'User ID',
+      idType: language === 'es' ? 'Tipo de identificación' : 'ID Type',
+      name: language === 'es' ? 'Nombre' : 'Name',
+      gender: language === 'es' ? 'Sexo' : 'Sex',
+      birthDate: language === 'es' ? 'Fecha de nacimiento' : 'Birth Date',
+      age: language === 'es' ? 'Edad' : 'Age',
+      countries: language === 'es' ? 'País' : 'Country',
+      province: language === 'es' ? 'Provincia' : 'Province',
+      canton: language === 'es' ? 'Cantón' : 'Canton',
+      district: language === 'es' ? 'Distrito' : 'District',
+      phone: language === 'es' ? 'Teléfono' : 'Phone',
+      projects: language === 'es' ? 'Proyectos' : 'Projects',
+      medicalCondition: language === 'es' ? 'Condición Médica' : 'Medical Condition',
+      activities: language === 'es' ? 'Actividades' : 'Activities'
+    };
 
-    // Validar campos obligatorios
-    for (const field in userData) {
-      if (userData.hasOwnProperty(field)) {
-        if (Array.isArray(userData[field]) && userData[field].length === 0) {
-          missingFields.push(field);
-          isValid = false;
-        } else if (typeof userData[field] === 'string' && userData[field] === '') {
-          missingFields.push(field);
-          isValid = false;
-        }
-      }
-    }
+    const missingFields = Object.keys(userData).filter(key => {
+      if (Array.isArray(userData[key])) return userData[key].length === 0;
+      return !userData[key];
+    }).map(key => fieldNames[key]);
 
-    if (!isValid) {
+    if (missingFields.length) {
       Alert.alert(
         language === 'es' ? 'Campos obligatorios' : 'Missing Fields',
-        language === 'es' ? `Por favor, complete todos los campos: ${missingFields.join(', ')}` : `Please fill in all fields: ${missingFields.join(', ')}`
+        language === 'es'
+          ? `Por favor, complete todos los campos: ${missingFields.join(', ')}`
+          : `Please fill in all fields: ${missingFields.join(', ')}`
       );
+      return false;
     }
-
-    return isValid;
+    return true;
   };
 
   const handleSave = async () => {
-    setFormSubmitted(true);
-
-    if (!validateFields()) {
-      return;
-    }
+    if (!validateFields()) return;
 
     try {
       const userQuery = query(collection(firestore, "users"), where("userID", "==", userData.userID));
       const querySnapshot = await getDocs(userQuery);
-
+      const dataToSave = {
+        ...userData,
+        countries: Array.from(new Set(userData.countries)),
+        projects: Array.from(new Set(userData.projects)),
+        activities: Array.from(new Set(userData.activities)),
+      };
       if (!querySnapshot.empty) {
-        // Usuario encontrado, actualizar su información agregando nueva información de ubicación y proyecto
-        const userDocRef = querySnapshot.docs[0].ref;
-        const existingData = querySnapshot.docs[0].data();
-
-        // Fusionar datos existentes con la nueva información (sin duplicar entradas)
-        const updatedData = {
-          ...existingData,
-          countries: Array.from(new Set([...(existingData.countries || []), ...(userData.countries || [])])),
-          province: userData.province || existingData.province,
-          canton: userData.canton || existingData.canton,
-          district: userData.district || existingData.district,
-          projects: Array.from(new Set([...(existingData.projects || []), ...(userData.projects || [])])),
-          activities: Array.from(new Set([...(existingData.activities || []), ...(userData.activities || [])])),
-        };
-
-        await setDoc(userDocRef, updatedData, { merge: true });
-        Alert.alert(language === 'es' ? 'Datos actualizados' : 'Data updated', language === 'es' ? 'Datos actualizados exitosamente.' : 'Data updated successfully.');
+        await setDoc(querySnapshot.docs[0].ref, dataToSave, { merge: true });
+        Alert.alert(language === 'es' ? 'Datos actualizados' : 'Data updated');
       } else {
-        // Añadir un nuevo documento si el usuario no está registrado
-        await addDoc(collection(firestore, "users"), userData);
-        Alert.alert(language === 'es' ? 'Datos guardados' : 'Data saved', language === 'es' ? 'Datos guardados exitosamente.' : 'Data saved successfully.');
+        await addDoc(collection(firestore, "users"), dataToSave);
+        Alert.alert(language === 'es' ? 'Datos guardados' : 'Data saved');
       }
-
       setQrValue(userData.userID);
-      setShowSummary(true); // Mostrar el resumen de los datos después de guardar
     } catch (error) {
-      console.error("Error saving user data: ", error);
       Alert.alert(language === 'es' ? 'Error al guardar datos' : 'Error saving data');
     }
-  };
-
-  const handleFamilyNavigation = () => {
-    if (!isUserValid) {
-      Alert.alert(
-        language === 'es' ? 'Error' : 'Error',
-        language === 'es' ? 'Complete todos los datos del usuario antes de añadir un familiar' : 'Complete all user data before adding a family member'
-      );
-      return;
-    }
-
-    // Navegar a la pantalla de añadir familiar
-    navigation.navigate('FamilyScreen');
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container(width)}>
       <Image source={require('../assets/image.png')} style={styles.logo(width)} />
-
-      {/* Sección: Datos del Usuario */}
       <Text style={styles.sectionTitle}>{language === 'es' ? 'Datos del Usuario' : 'User Information'}</Text>
+      
       <View style={styles.sectionContainer}>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={userData.idType}
-            style={styles.picker}
-            onValueChange={(value) => handleInputChange('idType', value)}
-            itemStyle={styles.pickerItem}
-          >
-            <Picker.Item label={language === 'es' ? "Seleccione tipo de identificación" : "Select ID Type"} value="" />
-            <Picker.Item label={language === 'es' ? "Cédula" : "ID Card"} value="ID Card" />
-            <Picker.Item label={language === 'es' ? "Pasaporte" : "Passport"} value="Passport" />
-          </Picker>
-        </View>
+        <Picker selectedValue={userData.idType} style={styles.pickerContainer} onValueChange={(value) => handleInputChange('idType', value)}>
+          <Picker.Item label={language === 'es' ? "Seleccione tipo de identificación" : "Select ID Type"} value="" />
+          <Picker.Item label={language === 'es' ? "Cédula" : "ID Card"} value="ID Card" />
+          <Picker.Item label={language === 'es' ? "Pasaporte" : "Passport"} value="Passport" />
+        </Picker>
 
-        <TextInput
-          style={styles.input(width)}
-          placeholder={language === 'es' ? "ID de usuario" : "User ID"}
-          value={userData.userID}
-          onChangeText={(value) => handleInputChange('userID', value)}
-          placeholderTextColor="#B0B0B0"
-        />
+        <TextInput style={styles.input(width)} placeholder={language === 'es' ? "ID de usuario" : "User ID"} value={userData.userID} onChangeText={(value) => handleInputChange('userID', value)} />
+        <TextInput style={styles.input(width)} placeholder={language === 'es' ? "Nombre completo" : "Full name"} value={userData.name} onChangeText={(value) => handleInputChange('name', value)} />
+        
+        <Picker selectedValue={userData.gender} style={styles.pickerContainer} onValueChange={(value) => handleInputChange('gender', value)}>
+          <Picker.Item label={language === 'es' ? "Seleccione un sexo" : "Select a sex"} value="" />
+          <Picker.Item label={language === 'es' ? "Masculino" : "Male"} value="Male" />
+          <Picker.Item label={language === 'es' ? "Femenino" : "Female"} value="Female" />
+        </Picker>
 
-        <TextInput
-          style={styles.input(width)}
-          placeholder={language === 'es' ? "Nombre completo" : "Full name"}
-          value={userData.name}
-          onChangeText={(value) => handleInputChange('name', value)}
-          placeholderTextColor="#B0B0B0"
-        />
-
-        {/* Picker para género */}
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={userData.gender}
-            style={styles.picker}
-            onValueChange={(value) => handleInputChange('gender', value)}
-            itemStyle={styles.pickerItem}
-          >
-            <Picker.Item label={language === 'es' ? "Seleccione un sexo" : "Select a sex"} value="" />
-            <Picker.Item label={language === 'es' ? "Masculino" : "Male"} value="Male" />
-            <Picker.Item label={language === 'es' ? "Femenino" : "Female"} value="Female" />
-          </Picker>
-        </View>
-
-        <TextInput
-          style={styles.input(width)}
-          placeholder={language === 'es' ? "Fecha de nacimiento (dd/mm/yyyy)" : "Birth Date (dd/mm/yyyy)"}
-          value={userData.birthDate}
-          onChangeText={(value) => handleInputChange('birthDate', value)}
-          keyboardType="numeric"
-          placeholderTextColor="#B0B0B0"
-          maxLength={10}
-        />
-
-        <TextInput
-          style={styles.input(width)}
-          placeholder={language === 'es' ? "Edad" : "Age"}
-          value={userData.age}
-          onChangeText={(value) => handleInputChange('age', value)}
-          keyboardType="numeric"
-          placeholderTextColor="#B0B0B0"
-        />
-
-        <TextInput
-          style={styles.input(width)}
-          placeholder={language === 'es' ? "Celular" : "Phone"}
-          value={userData.phone}
-          onChangeText={(value) => handleInputChange('phone', value)}
-          keyboardType="phone-pad"
-          placeholderTextColor="#B0B0B0"
-        />
-
-        <TextInput
-          style={styles.input(width)}
-          placeholder={language === 'es' ? "Condición Médica" : "Medical Condition"}
-          value={userData.medicalCondition}
-          onChangeText={(value) => handleInputChange('medicalCondition', value)}
-          placeholderTextColor="#B0B0B0"
-        />
+        <TextInput style={styles.input(width)} placeholder={language === 'es' ? "Fecha de nacimiento (dd/mm/yyyy)" : "Birth Date (dd/mm/yyyy)"} value={userData.birthDate} onChangeText={(value) => handleInputChange('birthDate', value)} />
+        <TextInput style={styles.input(width)} placeholder={language === 'es' ? "Edad" : "Age"} value={userData.age} onChangeText={(value) => handleInputChange('age', value)} />
+        <TextInput style={styles.input(width)} placeholder={language === 'es' ? "Celular" : "Phone"} value={userData.phone} onChangeText={(value) => handleInputChange('phone', value)} />
+        <TextInput style={styles.input(width)} placeholder={language === 'es' ? "Condición Médica" : "Medical Condition"} value={userData.medicalCondition} onChangeText={(value) => handleInputChange('medicalCondition', value)} />
       </View>
 
-      {/* Sección: Ubicación del Usuario */}
       <Text style={styles.sectionTitle}>{language === 'es' ? 'Ubicación del Usuario' : 'User Location'}</Text>
       <View style={styles.sectionContainer}>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={userData.countries[userData.countries.length - 1] || ''}
-            style={styles.picker}
-            onValueChange={(value) => handleCountrySelection(value)}
-            itemStyle={styles.pickerItem}
-          >
-            <Picker.Item label={language === 'es' ? "Seleccione un país" : "Select a country"} value="" />
-            {selectedCountries.map((country, index) => (
-              <Picker.Item key={index} label={country} value={country} />
-            ))}
-          </Picker>
-        </View>
-
-        <TextInput
-          style={styles.input(width)}
-          placeholder={language === 'es' ? "Provincia" : "Province"}
-          value={userData.province}
-          onChangeText={(value) => handleInputChange('province', value)}
-          placeholderTextColor="#B0B0B0"
-        />
-
-        <TextInput
-          style={styles.input(width)}
-          placeholder={language === 'es' ? "Cantón" : "Canton"}
-          value={userData.canton}
-          onChangeText={(value) => handleInputChange('canton', value)}
-          placeholderTextColor="#B0B0B0"
-        />
-
-        <TextInput
-          style={styles.input(width)}
-          placeholder={language === 'es' ? "Distrito" : "District"}
-          value={userData.district}
-          onChangeText={(value) => handleInputChange('district', value)}
-          placeholderTextColor="#B0B0B0"
-        />
+        <Picker selectedValue={userData.countries[userData.countries.length - 1] || ''} style={styles.pickerContainer} onValueChange={(value) => handleCountrySelection(value)}>
+          <Picker.Item label={language === 'es' ? "Seleccione un país" : "Select a country"} value="" />
+          {selectedCountries.map((country, index) => (
+            <Picker.Item key={index} label={country} value={country} />
+          ))}
+        </Picker>
+        <TextInput style={styles.input(width)} placeholder={language === 'es' ? "Provincia" : "Province"} value={userData.province} onChangeText={(value) => handleInputChange('province', value)} />
+        <TextInput style={styles.input(width)} placeholder={language === 'es' ? "Cantón" : "Canton"} value={userData.canton} onChangeText={(value) => handleInputChange('canton', value)} />
+        <TextInput style={styles.input(width)} placeholder={language === 'es' ? "Distrito" : "District"} value={userData.district} onChangeText={(value) => handleInputChange('district', value)} />
       </View>
 
-      {/* Sección: Detalles del Proyecto */}
       <Text style={styles.sectionTitle}>{language === 'es' ? 'Detalles del Proyecto' : 'Project Details'}</Text>
       <View style={styles.sectionContainer}>
-        <View style={styles.pickerContainer}>
-          {loadingProjects ? (
-            <ActivityIndicator size="large" color="#0000ff" />
-          ) : (
-            <Picker
-              selectedValue={userData.projects[0] || ''}
-              style={styles.picker}
-              onValueChange={(value) => handleProjectSelection(value)}
-              itemStyle={styles.pickerItem}
-            >
-              <Picker.Item label={language === 'es' ? "Seleccione un proyecto" : "Select a project"} value="" />
-              {projects.map((project, index) => (
-                <Picker.Item key={index} label={project.label} value={project.value} />
-              ))}
-            </Picker>
-          )}
-        </View>
-
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={userData.activities[0] || ''}
-            style={styles.picker}
-            onValueChange={(value) => handleActivitySelection(value)}
-            itemStyle={styles.pickerItem}
-          >
-            <Picker.Item label={language === 'es' ? "Seleccione una actividad" : "Select an activity"} value="" />
-            {filteredActivities.length > 0 ? (
-              filteredActivities.map((activity, index) => (
-                <Picker.Item key={index} label={activity} value={activity} />
-              ))
-            ) : (
-              <Picker.Item label={language === 'es' ? "No hay actividades disponibles" : "No activities available"} value="" />
-            )}
+        {loadingProjects ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : (
+          <Picker selectedValue={userData.projects[0] || ''} style={styles.pickerContainer} onValueChange={(value) => handleProjectSelection(value)}>
+            <Picker.Item label={language === 'es' ? "Seleccione un proyecto" : "Select a project"} value="" />
+            {projects.map((project, index) => (
+              <Picker.Item key={index} label={project.label} value={project.value} />
+            ))}
           </Picker>
-        </View>
+        )}
+        <Picker selectedValue={userData.activities[0] || ''} style={styles.pickerContainer} onValueChange={(value) => handleActivitySelection(value)}>
+          <Picker.Item label={language === 'es' ? "Seleccione una actividad" : "Select an activity"} value="" />
+          {filteredActivities.length > 0 ? (
+            filteredActivities.map((activity, index) => <Picker.Item key={index} label={activity} value={activity} />)
+          ) : (
+            <Picker.Item label={language === 'es' ? "No hay actividades disponibles" : "No activities available"} value="" />
+          )}
+        </Picker>
       </View>
 
-      {/* Botones para acciones */}
       <TouchableOpacity style={styles.button(width)} onPress={handleSave}>
-        <Text style={styles.buttonText}>
-          {language === 'es' ? "Guardar" : "Save"}
-        </Text>
+        <Text style={styles.buttonText}>{language === 'es' ? "Guardar" : "Save"}</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.addButton(width), !isUserValid && { backgroundColor: '#ccc' }]}
-        onPress={handleFamilyNavigation}
-        disabled={!isUserValid}
-      >
-        <Text style={styles.buttonText}>
-          {language === 'es' ? "Añadir Familiar" : "Add Family Member"}
-        </Text>
+      <TouchableOpacity style={[styles.addButton(width), !isUserValid && { backgroundColor: '#ccc' }]} onPress={() => navigation.navigate('FamilyScreen')} disabled={!isUserValid}>
+        <Text style={styles.buttonText}>{language === 'es' ? "Añadir Familiar" : "Add Family Member"}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.exitButton(width)} onPress={() => navigation.navigate('Home')}>
-        <Text style={styles.buttonText}>
-          {language === 'es' ? "Salir" : "Exit"}
-        </Text>
+        <Text style={styles.buttonText}>{language === 'es' ? "Salir" : "Exit"}</Text>
       </TouchableOpacity>
 
-      {/* Mostrar el QR si existe */}
       {qrValue && (
-        <View style={styles.qrContainer(width)}>
+        <TouchableOpacity onPress={() => navigation.navigate('UserDetailsScreen', { userData })} style={styles.qrContainer(width)}>
           <QRCode value={qrValue} size={width * 0.5} />
-        </View>
+        </TouchableOpacity>
       )}
     </ScrollView>
   );

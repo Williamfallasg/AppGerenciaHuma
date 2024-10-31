@@ -36,11 +36,6 @@ const Home = () => {
     navigation.navigate('ProgramProjectList');
   };
 
-  // Nueva función para navegar a la pantalla de ResultsForm
-  const navigateToResultsForm = () => {
-    navigation.navigate('ResultsForm'); 
-  };
-
   return (
     <View style={styles.container}>
       {/* El logotipo se muestra para ambos roles */}
@@ -56,10 +51,10 @@ const Home = () => {
             </Text>
           </TouchableOpacity>
 
-          {/* Segundo: Registrar beneficiário (ahora siempre antes de "Generar informe") */}
+          {/* Segundo: Registrar beneficiário */}
           <TouchableOpacity style={styles.mainButton} onPress={navigateToRegisterUser}>
             <Text style={styles.mainButtonText}>
-              {language === 'es' ? 'Registrar beneficiário' : 'Register Beneficiary'}
+              {language === 'es' ? 'Registrar beneficiario' : 'Register Beneficiary'}
             </Text>
           </TouchableOpacity>
 
@@ -76,13 +71,6 @@ const Home = () => {
       <TouchableOpacity style={styles.mainButton} onPress={navigateToProgramProjectList}>
         <Text style={styles.mainButtonText}>
           {language === 'es' ? 'Mostrar Programas y Proyectos' : 'Show Programs and Projects'}
-        </Text>
-      </TouchableOpacity>
-
-      {/* Botón para ir a ResultsForm */}
-      <TouchableOpacity style={styles.mainButton} onPress={navigateToResultsForm}>
-        <Text style={styles.mainButtonText}>
-          {language === 'es' ? 'Actividades del proyecto' : 'Project activities'}
         </Text>
       </TouchableOpacity>
 

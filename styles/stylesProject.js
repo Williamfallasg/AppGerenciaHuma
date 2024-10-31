@@ -10,7 +10,7 @@ const styles = {
     fontWeight: 'bold',
     color: '#333',
     textAlign: 'center',
-    marginTop: 50,
+    marginTop: 20,
     marginBottom: 20,
   },
   picker: {
@@ -38,6 +38,7 @@ const styles = {
     shadowOffset: { width: 0, height: 3 },
     elevation: 3,
     width: '100%',
+    alignItems: 'center',
   },
   chartStyle: {
     marginVertical: 10,
@@ -61,13 +62,13 @@ const styles = {
       borderRadius: 16,
     },
     propsForVerticalLabels: {
-      fontSize: 12,
+      fontSize: 10,
       translateY: 10,
     },
     propsForHorizontalLabels: {
-      fontSize: 12,
-      rotation: 45, // Para hacer que las etiquetas estén en diagonal
-      translateX: -5,
+      fontSize: 10,
+      rotation: 90, // Incrementar la rotación a 90 grados para una legibilidad máxima
+      translateX: -10, // Ajustar la posición de las etiquetas para evitar que se corten
     },
     propsForDots: {
       r: '4',
@@ -88,9 +89,12 @@ const styles = {
     labelColor: (opacity = 1) => `rgba(52, 73, 94, ${opacity})`,
     barPercentage: 0.7,
     propsForHorizontalLabels: {
-      fontSize: 12,
-      rotation: 45, // Rotar etiquetas en diagonal
-      translateX: -5,
+      fontSize: 10,
+      rotation: 90, // Rotar etiquetas a 90 grados para evitar solapamientos
+      translateX: -10, // Ajustar la posición de las etiquetas para mejor presentación
+    },
+    propsForVerticalLabels: {
+      fontSize: 10,
     },
   },
   exitButton: {

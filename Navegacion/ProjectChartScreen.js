@@ -1,27 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Dimensions, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, Dimensions, ScrollView, ActivityIndicator, TouchableOpacity, StyleSheet } from 'react-native';
 import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
-import styles from '../styles/styles';  // Importar los estilos
 
 const ProjectChartScreen = ({ route }) => {
   const navigation = useNavigation();
   const { projectData } = route.params || {};
   const [selectedVariable, setSelectedVariable] = useState('numberOfBeneficiaries');
   const [selectedChartType, setSelectedChartType] = useState('bar');
-  const screenWidth = Dimensions.get('window').width;
+  const screenWidth = Dimensions.get('window').width - 40;
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setTimeout(() => setLoading(false), 1000);
   }, []);
 
+  const truncateProjectName = (name) => {
+    return name.length > 10 ? name.substring(0, 10) + '...' : name;
+  };
+
   const sanitizeData = (data) => {
     return data.map(item => ({
-      projectName: item.projectName || 'No Name',
-      numberOfBeneficiaries: Math.max(0, typeof item.numberOfBeneficiaries === 'number' && !isNaN(item.numberOfBeneficiaries) ? item.numberOfBeneficiaries : 0),
-      linkedActivitiesCount: item.activities ? item.activities.length : 0, 
+      projectName: item.projectName ? truncateProjectName(item.projectName) : 'No Name',
+      numberOfBeneficiaries: Math.max(0, typeof item.beneficiaryCount === 'number' && !isNaN(item.beneficiaryCount) ? item.beneficiaryCount : 0),
+      linkedActivitiesCount: item.activities ? item.activities.split(', ').length : 0, 
+      indicatorCount: item.indicators ? item.indicators.split(', ').length : 0,
     }));
   };
 
@@ -54,6 +58,17 @@ const ProjectChartScreen = ({ route }) => {
         legendFontColor: '#34495e',
         legendFontSize: 14,
       }));
+    } else if (selectedVariable === 'indicatorCount') {
+      labels = sanitizedData.map(item => item.projectName || 'No Name');
+      dataset = sanitizedData.map(item => item.indicatorCount || 0);
+
+      pieData = sanitizedData.map((item, index) => ({
+        name: item.projectName || 'No Name',
+        population: item.indicatorCount || 0,
+        color: `rgba(52, 152, 219, ${0.9 - index * 0.1})`,
+        legendFontColor: '#34495e',
+        legendFontSize: 14,
+      }));
     }
 
     return {
@@ -74,7 +89,7 @@ const ProjectChartScreen = ({ route }) => {
               labels: chartData.labels,
               datasets: chartData.datasets,
             }}
-            width={screenWidth - 40}
+            width={screenWidth}
             height={300}
             fromZero={true}
             chartConfig={styles.chartConfig}
@@ -86,12 +101,12 @@ const ProjectChartScreen = ({ route }) => {
         return (
           <PieChart
             data={chartData.pieData}
-            width={screenWidth - 40}
-            height={300}
+            width={screenWidth}
+            height={250}
             chartConfig={styles.pieChartConfig}
             accessor="population"
             backgroundColor="transparent"
-            paddingLeft={screenWidth > 400 ? '20' : '15'}
+            paddingLeft={screenWidth > 400 ? '10' : '5'}
             absolute
           />
         );
@@ -99,7 +114,7 @@ const ProjectChartScreen = ({ route }) => {
         return (
           <BarChart
             data={{ labels: chartData.labels, datasets: chartData.datasets }}
-            width={screenWidth - 40}
+            width={screenWidth}
             height={300}
             fromZero={true}
             chartConfig={styles.barChartConfig}
@@ -118,7 +133,11 @@ const ProjectChartScreen = ({ route }) => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>
-        Distribución de Datos
+        {selectedVariable === 'numberOfBeneficiaries'
+          ? 'Número de Beneficiarios'
+          : selectedVariable === 'linkedActivitiesCount'
+          ? 'Cantidad de Actividades Vinculadas'
+          : 'Cantidad de Indicadores'}
       </Text>
 
       <Picker
@@ -128,6 +147,7 @@ const ProjectChartScreen = ({ route }) => {
       >
         <Picker.Item label="Número de Beneficiarios" value="numberOfBeneficiaries" />
         <Picker.Item label="Cantidad de Actividades Vinculadas" value="linkedActivitiesCount" />
+        <Picker.Item label="Cantidad de Indicadores" value="indicatorCount" />
       </Picker>
 
       <Picker
@@ -156,5 +176,87 @@ const ProjectChartScreen = ({ route }) => {
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flexGrow: 1,
+    padding: 10,
+    backgroundColor: '#f5f5f5',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginTop: 50,
+    marginBottom: 20,
+  },
+  picker: {
+    height: 40,
+    width: '100%',
+    marginBottom: 15,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    elevation: 2,
+  },
+  dataContainer: {
+    marginTop: 10,
+    padding: 8,
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    width: '100%',
+  },
+  chartStyle: {
+    marginVertical: 10,
+    borderRadius: 16,
+    padding: 15,
+    backgroundColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+  },
+  chartConfig: {
+    backgroundColor: '#ffffff',
+    backgroundGradientFrom: '#ecf0f1',
+    backgroundGradientTo: '#ffffff',
+    decimalPlaces: 0,
+    color: (opacity = 1) => `rgba(52, 152, 219, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(52, 73, 94, ${opacity})`,
+  },
+  barChartConfig: {
+    backgroundColor: '#ffffff',
+    backgroundGradientFrom: '#ecf0f1',
+    backgroundGradientTo: '#ffffff',
+    decimalPlaces: 0,
+    color: (opacity = 1) => `rgba(52, 152, 219, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(52, 73, 94, ${opacity})`,
+    barPercentage: 0.7,
+    propsForHorizontalLabels: {
+      fontSize: 10,
+      rotation: 30, // Rotate labels slightly for readability
+      translateX: -10,
+    },
+  },
+  pieChartConfig: {
+    color: (opacity = 1) => `rgba(52, 152, 219, ${opacity})`,
+    legendFontColor: '#34495e',
+    legendFontSize: 12,
+  },
+  exitButton: {
+    backgroundColor: '#F28C32',
+    borderRadius: 10,
+    paddingVertical: 15,
+    width: '95%',
+    alignItems: 'center',
+  },
+  exitButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+});
 
 export default ProjectChartScreen;

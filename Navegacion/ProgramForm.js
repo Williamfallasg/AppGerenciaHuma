@@ -344,7 +344,7 @@ const ProgramForm = () => {
                     <View key={idx} style={styles.selectedCountryItem}>
                       <Text>{country}</Text>
                       <TouchableOpacity onPress={() => handleCountryChange(index, country)}>
-                        <Icon name="delete" size={20} color="red" />
+                        <Icon name="delete" size={20} color="#F28C32" />
                       </TouchableOpacity>
                     </View>
                   ))}

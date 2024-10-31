@@ -17,11 +17,11 @@ import GenerateReport from './Navegacion/GenerateReport';
 import Report from './Navegacion/Report';
 import FamilyScreen from './Navegacion/FamilyScreen';
 import ProgramProjectList from './Navegacion/ProgramProjectList';
-import ResultsForm from './Navegacion/ResultsForm';
 import ChartScreen from './Navegacion/ChartScreen';
 import ProgramChartScreen from './Navegacion/ProgramChartScreen';
 import ProjectChartScreen from './Navegacion/ProjectChartScreen';
-
+import UserDetailsScreen from './Navegacion/UserDetailsScreen';
+import QRCodeScannerScreen from './Navegacion/QRCodeScannerScreen';
 
 
 
@@ -93,12 +93,6 @@ const AppStack = () => {
         options={{ headerShown: false }}
       />
 
-     <Stack.Screen
-        name="ResultsForm"
-        component={ResultsForm}
-        options={{ headerShown: false }}
-      />
-
       <Stack.Screen
         name="ChartScreen"
         component={ChartScreen}
@@ -115,7 +109,17 @@ const AppStack = () => {
         component={ProjectChartScreen}
         options={{ headerShown: false }}
       />
-    
+
+      <Stack.Screen
+        name="UserDetailsScreen"
+        component={UserDetailsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="QRCodeScannerScreen"
+        component={QRCodeScannerScreen}
+        options={{ headerShown: false }}
+      />
 
     </Stack.Navigator>
   );

@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
 import { useUserRole } from '../context/UserRoleContext';
 import { firestore } from '../firebase/firebase';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
 import styles from '../styles/stylesReport';
 
 const Report = ({ route }) => {
@@ -48,87 +48,107 @@ const Report = ({ route }) => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      let querySnapshot;
+      if (selectedOption === 'Proyectos') {
+        const projectsSnapshot = await getDocs(collection(firestore, 'projects'));
+        setItemCount(projectsSnapshot.size);
 
-      if (selectedOption === 'Programas') {
-        querySnapshot = await getDocs(collection(firestore, 'programs'));
-        setItemCount(querySnapshot.size);
+        const projectsData = await Promise.all(
+          projectsSnapshot.docs.map(async (docSnapshot) => {
+            const project = docSnapshot.data();
+            const beneficiariesQuery = query(
+              collection(firestore, 'users'),
+              where('projects', 'array-contains', docSnapshot.id)
+            );
+            const beneficiariesSnapshot = await getDocs(beneficiariesQuery);
+
+            const ages = [];
+            const genders = [];
+            beneficiariesSnapshot.forEach((beneficiaryDoc) => {
+              const userData = beneficiaryDoc.data();
+              if (userData.age) ages.push(userData.age);
+              if (userData.gender) genders.push(getSexInSpanish(userData.gender));
+            });
+
+            const activities = project.activities 
+              ? project.activities.map((a) => a.activityName || a.activity).join(', ')
+              : 'N/A';
+            const indicators = project.indicators && project.indicators.length > 0
+              ? project.indicators.map((i) => i.description || 'N/A').join(', ')
+              : 'N/A';
+
+            return {
+              id: docSnapshot.id,
+              projectName: project.projectName || 'N/A',
+              beneficiaryCount: ages.length,
+              ages: ages.join(', '),
+              genders: genders.join(', '),
+              activities,
+              indicators,
+            };
+          })
+        );
+
+        setData(projectsData);
+      } else if (selectedOption === 'Programas') {
+        const programsSnapshot = await getDocs(collection(firestore, 'programs'));
+        setItemCount(programsSnapshot.size);
 
         const programsData = await Promise.all(
-          querySnapshot.docs.map(async (docSnapshot) => {
-            const program = { id: docSnapshot.id, ...docSnapshot.data() };
+          programsSnapshot.docs.map(async (docSnapshot) => {
+            const program = docSnapshot.data();
+            const linkedProjects = program.projects || [];
+            const projectNames = [];
+            const allIndicators = [];
 
-            if (program.projects && program.projects.length > 0) {
-              const projectNames = await Promise.all(
-                program.projects.map(async (projectId) => {
-                  if (projectId) {
-                    const projectDocRef = doc(firestore, 'projects', projectId);
-                    const projectDocSnapshot = await getDoc(projectDocRef);
-                    return projectDocSnapshot.exists() ? projectDocSnapshot.data().projectName : translate('N/A', 'N/A');
-                  } else {
-                    return translate('N/A', 'N/A');
-                  }
-                })
-              );
-              program.projectNames = projectNames;
-            } else {
-              program.projectNames = [];
-            }
+            // Obtener nombres de los proyectos y sus indicadores vinculados
+            await Promise.all(
+              linkedProjects.map(async (projectId) => {
+                const projectDoc = await getDoc(doc(firestore, 'projects', projectId));
+                if (projectDoc.exists()) {
+                  const projectData = projectDoc.data();
+                  projectNames.push(projectData.projectName || 'N/A');
 
-            return program;
+                  // Obtener indicadores del proyecto
+                  const indicators = projectData.indicators && projectData.indicators.length > 0
+                    ? projectData.indicators.map((i) => i.description || 'N/A').join(', ')
+                    : 'N/A';
+                  allIndicators.push(indicators);
+                }
+              })
+            );
+
+            const countriesAvailable = program.selectedCountries
+              ? Object.values(program.selectedCountries).flat().join(', ')
+              : 'N/A';
+
+            return {
+              programName: program.programName || 'N/A',
+              numberOfBeneficiaries: program.numberOfBeneficiaries || 'N/A',
+              linkedProjects: projectNames.join(', '),
+              indicators: allIndicators.join(', '), // Concatenar todos los indicadores de los proyectos vinculados
+              countriesAvailable,
+            };
           })
         );
 
         setData(programsData);
-      } else if (selectedOption === 'Proyectos') {
-        querySnapshot = await getDocs(collection(firestore, 'projects'));
-        setItemCount(querySnapshot.size);
-
-        const projectsData = querySnapshot.docs.map((docSnapshot) => ({ id: docSnapshot.id, ...docSnapshot.data() }));
-
-        const updatedProjectsData = projectsData.map((project) => {
-          const { activities = [], indicators = [], beneficiaries = [] } = project; // Ensure beneficiaries is an array
-          const formattedActivities = activities.map((activity) => ({
-            id: activity.id,
-            activityName: activity.activity,
-            startDate: activity.startDate,
-            endDate: activity.endDate,
-            beneficiaries: activity.beneficiaries,
-          }));
-
-          const activityCount = activities.length;
-
-          const formattedIndicators = indicators.length > 0 
-            ? indicators.map(indicator => typeof indicator === 'object' ? indicator.description || indicator.name || 'N/A' : indicator).join(', ')
-            : 'N/A';
-
-          // Ensure beneficiaries is an array and process it
-          const formattedBeneficiaries = Array.isArray(beneficiaries)
-            ? beneficiaries.map((b) => `${b.name || 'N/A'} (${translate('Edad', 'Age')}: ${b.age || 'N/A'}, ${translate('Sexo', 'Sex')}: ${getSexInSpanish(b.gender)})`).join(', ')
-            : 'N/A';
-
-          return { 
-            ...project, 
-            activities: formattedActivities, 
-            numberOfBeneficiaries: project.beneficiaries || 'N/A',
-            indicators: formattedIndicators,
-            activityCount,
-            formattedBeneficiaries, // Add formatted beneficiaries
-          };
-        });
-
-        setData(updatedProjectsData);
       } else if (selectedOption === 'Beneficiarios') {
-        querySnapshot = await getDocs(collection(firestore, 'users'));
-        setItemCount(querySnapshot.size);
+        const usersSnapshot = await getDocs(collection(firestore, 'users'));
+        setItemCount(usersSnapshot.size);
 
-        const usersData = querySnapshot.docs.map((docSnapshot) => ({ id: docSnapshot.id, ...docSnapshot.data() }));
+        const usersData = usersSnapshot.docs.map((docSnapshot) => ({
+          id: docSnapshot.id,
+          ...docSnapshot.data(),
+        }));
         setData(usersData);
       } else {
         throw new Error(translate('Opción desconocida seleccionada', 'Unknown option selected'));
       }
     } catch (error) {
-      Alert.alert('Error', `${translate('No se pudo obtener la información.', 'Could not fetch information.')}\n${translate('Detalles del error:', 'Error details:')} ${error.message}`);
+      Alert.alert(
+        'Error',
+        `${translate('No se pudo obtener la información.', 'Could not fetch information.')}\n${translate('Detalles del error:', 'Error details:')} ${error.message}`
+      );
     } finally {
       setLoading(false);
     }
@@ -156,7 +176,7 @@ const Report = ({ route }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>{translate('Informe ', 'Inform')}</Text>
+      <Text style={styles.title}>{translate('Informe', 'Report')}</Text>
       <Text style={styles.subtitle}>
         {translate('Tipo de Informe:', 'Report Type:')} {selectedOption}
       </Text>
@@ -183,21 +203,13 @@ const Report = ({ route }) => {
                       {`${translate('Número de Beneficiarios', 'Number of Beneficiaries')}: ${item.numberOfBeneficiaries || 'N/A'}`}
                     </Text>
                     <Text style={styles.itemDetail}>
-                      {`${translate('Proyectos Vinculados', 'Linked Projects')}: ${
-                        Array.isArray(item.projectNames) && item.projectNames.length > 0
-                          ? item.projectNames.join(', ')
-                          : translate('N/A', 'N/A')
-                      }`}
+                      {`${translate('Proyectos Vinculados', 'Linked Projects')}: ${item.linkedProjects || 'N/A'}`}
                     </Text>
                     <Text style={styles.itemDetail}>
-                      {`${translate('Indicadores Cumplidos', 'Fulfilled Indicators')}: ${item.fulfilledIndicators || 'N/A'}`}
+                      {`${translate('Indicadores', 'Indicators')}: ${item.indicators || 'N/A'}`}
                     </Text>
                     <Text style={styles.itemDetail}>
-                      {`${translate('Países donde está disponible:', 'Countries Available In:')} ${
-                        item.selectedCountries && Object.values(item.selectedCountries).flat().length > 0
-                          ? Object.values(item.selectedCountries).flat().join(', ')
-                          : 'N/A'
-                      }`}
+                      {`${translate('Países donde está disponible:', 'Countries Available In')}: ${item.countriesAvailable || 'N/A'}`}
                     </Text>
                   </>
                 )}
@@ -208,27 +220,19 @@ const Report = ({ route }) => {
                       {`${translate('Nombre del Proyecto', 'Project Name')}: ${item.projectName || 'N/A'}`}
                     </Text>
                     <Text style={styles.itemDetail}>
-                      {`${translate('Número de Beneficiarios', 'Number of Beneficiaries')}: ${item.numberOfBeneficiaries}`}
+                      {`${translate('Cantidad de Beneficiarios', 'Number of Beneficiaries')}: ${item.beneficiaryCount || 'N/A'}`}
                     </Text>
                     <Text style={styles.itemDetail}>
-                      {`${translate('Beneficiarios', 'Beneficiaries')}: ${item.formattedBeneficiaries}`}
+                      {`${translate('Edades', 'Ages')}: ${item.ages || 'N/A'}`}
                     </Text>
                     <Text style={styles.itemDetail}>
-                      {`${translate('Indicadores del Proyecto', 'Project Indicators')}: ${
-                        item.indicators && item.indicators.length > 0
-                          ? item.indicators
-                          : 'N/A'
-                      }`}
+                      {`${translate('Sexo', 'Gender')}: ${item.genders || 'N/A'}`}
                     </Text>
                     <Text style={styles.itemDetail}>
-                      {`${translate('Actividades Vinculadas', 'Linked Activities')}: ${
-                        item.activities && item.activities.length > 0
-                          ? item.activities.map((a) => a.activityName).join(', ')
-                          : 'N/A'
-                      }`}
+                      {`${translate('Actividades', 'Activities')}: ${item.activities || 'N/A'}`}
                     </Text>
                     <Text style={styles.itemDetail}>
-                      {`${translate('Cantidad de Actividades', 'Number of Activities')}: ${item.activityCount}`}
+                      {`${translate('Indicadores', 'Indicators')}: ${item.indicators || 'N/A'}`}
                     </Text>
                   </>
                 )}
