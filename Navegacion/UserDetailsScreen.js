@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react'; 
 import { View, Text, Button, ScrollView, Alert, StyleSheet } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
@@ -66,7 +66,8 @@ const UserDetailsScreen = () => {
     district: language === 'es' ? 'Distrito' : 'District',
     phone: language === 'es' ? 'Teléfono' : 'Phone',
     projects: language === 'es' ? 'Proyectos' : 'Projects',
-    medicalCondition: language === 'es' ? 'Condición Médica' : 'Medical Condition',
+    medicalCondition: language === 'es' ? 'Condiciones Médicas' : 'Medical Conditions',
+    originCountry: language === 'es' ? 'País de origen' : 'Country of Origin',
     activities: language === 'es' ? 'Actividades' : 'Activities',
   };
 
@@ -76,6 +77,20 @@ const UserDetailsScreen = () => {
     return gender;
   };
 
+  // Función para traducir el tipo de identificación
+  const getTranslatedIDType = (idType) => {
+    if (idType === 'ID Card') return language === 'es' ? 'Cédula' : 'ID Card';
+    if (idType === 'Passport') return language === 'es' ? 'Pasaporte' : 'Passport';
+    return idType;
+  };
+
+  // Orden de campos basado en el formulario de RegisterUser
+  const orderedFields = [
+    'userID', 'idType', 'name', 'gender', 'birthDate', 'age', 
+    'originCountry', 'countries', 'province', 'canton', 'district', 
+    'phone', 'projects', 'medicalCondition', 'activities'
+  ];
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>
@@ -83,17 +98,23 @@ const UserDetailsScreen = () => {
       </Text>
       
       <View style={styles.card}>
-        {Object.entries(userData).map(([key, value]) => (
-          <View key={key} style={styles.itemContainer}>
-            <Text style={styles.label}>{translations[key] || formatLabel(key)}</Text>
-            <Text style={styles.value}>
-              {key === 'gender'
-                ? getTranslatedGender(value)
-                : key === 'projects'
-                ? projectNames.join(', ') // Mostrar nombres de proyectos
-                : Array.isArray(value) ? value.join(', ') : value} 
-            </Text>
-          </View>
+        {orderedFields.map((key) => (
+          userData[key] !== undefined && (
+            <View key={key} style={styles.itemContainer}>
+              <Text style={styles.label}>{translations[key] || formatLabel(key)}</Text>
+              <Text style={styles.value}>
+                {key === 'gender'
+                  ? getTranslatedGender(userData[key])
+                  : key === 'idType'
+                  ? getTranslatedIDType(userData[key]) // Traducir tipo de identificación
+                  : key === 'projects'
+                  ? projectNames.join(', ') // Mostrar nombres de proyectos separados por comas
+                  : key === 'activities'
+                  ? userData[key].join(', ') // Mostrar actividades separadas por comas
+                  : Array.isArray(userData[key]) ? userData[key].join(', ') : userData[key]} 
+              </Text>
+            </View>
+          )
         ))}
       </View>
 

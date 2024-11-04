@@ -19,6 +19,7 @@ const RegisterUser = () => {
     gender: '',
     birthDate: '',
     age: '',
+    countryOfOrigin: '',  // Campo nuevo: país de origen
     countries: [],
     province: '',
     canton: '',
@@ -38,57 +39,59 @@ const RegisterUser = () => {
   const { width } = useWindowDimensions();
   const { familyMembers, setFamilyMembers } = useFamily();
 
-  
-     // Lista de países
-     const countriesSpanish = [
-      'Afganistán', 'Albania', 'Alemania', 'Andorra', 'Angola', 'Antigua y Barbuda', 'Arabia Saudita',
-      'Argelia', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaiyán', 'Bahamas', 'Bangladés',
-      'Barbados', 'Baréin', 'Bélgica', 'Belice', 'Benín', 'Bielorrusia', 'Birmania', 'Bolivia', 'Bosnia y Herzegovina',
-      'Botsuana', 'Brasil', 'Brunéi', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Bután', 'Cabo Verde', 'Camboya',
-      'Camerún', 'Canadá', 'Catar', 'Chad', 'Chile', 'China', 'Chipre', 'Ciudad del Vaticano', 'Colombia', 
-      'Comoras', 'Corea del Norte', 'Corea del Sur', 'Costa de Marfil', 'Costa Rica', 'Croacia', 'Cuba', 
-      'Dinamarca', 'Dominica', 'Ecuador', 'Egipto', 'El Salvador', 'Emiratos Árabes Unidos', 'Eritrea', 'Eslovaquia',
-      'Eslovenia', 'España', 'Estados Unidos', 'Estonia', 'Esuatini', 'Etiopía', 'Filipinas', 'Finlandia', 'Fiyi',
-      'Francia', 'Gabón', 'Gambia', 'Georgia', 'Ghana', 'Granada', 'Grecia', 'Guatemala', 'Guinea', 'Guinea-Bisáu',
-      'Guinea Ecuatorial', 'Guyana', 'Haití', 'Honduras', 'Hungría', 'India', 'Indonesia', 'Irak', 'Irán', 'Irlanda',
-      'Islandia', 'Islas Marshall', 'Islas Salomón', 'Israel', 'Italia', 'Jamaica', 'Japón', 'Jordania', 'Kazajistán',
-      'Kenia', 'Kirguistán', 'Kiribati', 'Kosovo', 'Kuwait', 'Laos', 'Lesoto', 'Letonia', 'Líbano', 'Liberia', 'Libia',
-      'Liechtenstein', 'Lituania', 'Luxemburgo', 'Madagascar', 'Malasia', 'Malaui', 'Maldivas', 'Malí', 'Malta',
-      'Marruecos', 'Mauricio', 'Mauritania', 'México', 'Micronesia', 'Moldavia', 'Mónaco', 'Mongolia', 'Montenegro',
-      'Mozambique', 'Namibia', 'Nauru', 'Nepal', 'Nicaragua', 'Níger', 'Nigeria', 'Noruega', 'Nueva Zelanda',
-      'Omán', 'Países Bajos', 'Pakistán', 'Palaos', 'Panamá', 'Papúa Nueva Guinea', 'Paraguay', 'Perú', 'Polonia',
-      'Portugal', 'Reino Unido', 'República Centroafricana', 'República Checa', 'República del Congo', 'República Democrática del Congo',
-      'República Dominicana', 'Ruanda', 'Rumanía', 'Rusia', 'Samoa', 'San Cristóbal y Nieves', 'San Marino', 'San Vicente y las Granadinas',
-      'Santa Lucía', 'Santo Tomé y Príncipe', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leona', 'Singapur', 'Siria', 'Somalia', 'Sri Lanka',
-      'Sudáfrica', 'Sudán', 'Sudán del Sur', 'Suecia', 'Suiza', 'Surinam', 'Tailandia', 'Tanzania', 'Tayikistán', 'Timor Oriental', 
-      'Togo', 'Tonga', 'Trinidad y Tobago', 'Túnez', 'Turkmenistán', 'Turquía', 'Tuvalu', 'Ucrania', 'Uganda', 'Uruguay', 'Uzbekistán',
-      'Vanuatu', 'Venezuela', 'Vietnam', 'Yemen', 'Yibuti', 'Zambia', 'Zimbabue'
-  ];
-  
-  const countriesEnglish = [
-      'Afghanistan', 'Albania', 'Germany', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Saudi Arabia',
-      'Algeria', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan', 'Bahamas', 'Bangladesh',
-      'Barbados', 'Bahrain', 'Belgium', 'Belize', 'Benin', 'Belarus', 'Myanmar', 'Bolivia', 'Bosnia and Herzegovina',
-      'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Bhutan', 'Cape Verde', 'Cambodia',
-      'Cameroon', 'Canada', 'Qatar', 'Chad', 'Chile', 'China', 'Cyprus', 'Vatican City', 'Colombia', 
-      'Comoros', 'North Korea', 'South Korea', 'Ivory Coast', 'Costa Rica', 'Croatia', 'Cuba', 
-      'Denmark', 'Dominica', 'Ecuador', 'Egypt', 'El Salvador', 'United Arab Emirates', 'Eritrea', 'Slovakia',
-      'Slovenia', 'Spain', 'United States', 'Estonia', 'Eswatini', 'Ethiopia', 'Philippines', 'Finland', 'Fiji',
-      'France', 'Gabon', 'Gambia', 'Georgia', 'Ghana', 'Grenada', 'Greece', 'Guatemala', 'Guinea', 'Guinea-Bissau',
-      'Equatorial Guinea', 'Guyana', 'Haiti', 'Honduras', 'Hungary', 'India', 'Indonesia', 'Iraq', 'Iran', 'Ireland',
-      'Iceland', 'Marshall Islands', 'Solomon Islands', 'Israel', 'Italy', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan',
-      'Kenya', 'Kyrgyzstan', 'Kiribati', 'Kosovo', 'Kuwait', 'Laos', 'Lesotho', 'Latvia', 'Lebanon', 'Liberia', 'Libya',
-      'Liechtenstein', 'Lithuania', 'Luxembourg', 'Madagascar', 'Malaysia', 'Malawi', 'Maldives', 'Mali', 'Malta',
-      'Morocco', 'Mauritius', 'Mauritania', 'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro',
-      'Mozambique', 'Namibia', 'Nauru', 'Nepal', 'Nicaragua', 'Niger', 'Nigeria', 'Norway', 'New Zealand',
-      'Oman', 'Netherlands', 'Pakistan', 'Palau', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Poland',
-      'Portugal', 'United Kingdom', 'Central African Republic', 'Czech Republic', 'Congo', 'Democratic Republic of the Congo',
-      'Dominican Republic', 'Rwanda', 'Romania', 'Russia', 'Samoa', 'Saint Kitts and Nevis', 'San Marino', 'Saint Vincent and the Grenadines',
-      'Saint Lucia', 'Sao Tome and Principe', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Syria', 'Somalia', 'Sri Lanka',
-      'South Africa', 'Sudan', 'South Sudan', 'Sweden', 'Switzerland', 'Suriname', 'Thailand', 'Tanzania', 'Tajikistan', 'East Timor',
-      'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkmenistan', 'Turkey', 'Tuvalu', 'Ukraine', 'Uganda', 'Uruguay', 'Uzbekistan',
-      'Vanuatu', 'Venezuela', 'Vietnam', 'Yemen', 'Djibouti', 'Zambia', 'Zimbabwe'
-  ];
+  // Lista de países en español
+const countriesSpanish = [
+  'Afganistán', 'Albania', 'Alemania', 'Andorra', 'Angola', 'Antigua y Barbuda', 'Arabia Saudita',
+  'Argelia', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaiyán', 'Bahamas', 'Bangladés',
+  'Barbados', 'Baréin', 'Bélgica', 'Belice', 'Benín', 'Bielorrusia', 'Birmania', 'Bolivia', 'Bosnia y Herzegovina',
+  'Botsuana', 'Brasil', 'Brunéi', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Bután', 'Cabo Verde', 'Camboya',
+  'Camerún', 'Canadá', 'Catar', 'Chad', 'Chile', 'China', 'Chipre', 'Ciudad del Vaticano', 'Colombia', 
+  'Comoras', 'Corea del Norte', 'Corea del Sur', 'Costa de Marfil', 'Costa Rica', 'Croacia', 'Cuba', 
+  'Dinamarca', 'Dominica', 'Ecuador', 'Egipto', 'El Salvador', 'Emiratos Árabes Unidos', 'Eritrea', 'Eslovaquia',
+  'Eslovenia', 'España', 'Estados Unidos', 'Estonia', 'Esuatini', 'Etiopía', 'Filipinas', 'Finlandia', 'Fiyi',
+  'Francia', 'Gabón', 'Gambia', 'Georgia', 'Ghana', 'Granada', 'Grecia', 'Guatemala', 'Guinea', 'Guinea-Bisáu',
+  'Guinea Ecuatorial', 'Guyana', 'Haití', 'Honduras', 'Hungría', 'India', 'Indonesia', 'Irak', 'Irán', 'Irlanda',
+  'Islandia', 'Islas Marshall', 'Islas Salomón', 'Israel', 'Italia', 'Jamaica', 'Japón', 'Jordania', 'Kazajistán',
+  'Kenia', 'Kirguistán', 'Kiribati', 'Kosovo', 'Kuwait', 'Laos', 'Lesoto', 'Letonia', 'Líbano', 'Liberia', 'Libia',
+  'Liechtenstein', 'Lituania', 'Luxemburgo', 'Madagascar', 'Malasia', 'Malaui', 'Maldivas', 'Malí', 'Malta',
+  'Marruecos', 'Mauricio', 'Mauritania', 'México', 'Micronesia', 'Moldavia', 'Mónaco', 'Mongolia', 'Montenegro',
+  'Mozambique', 'Namibia', 'Nauru', 'Nepal', 'Nicaragua', 'Níger', 'Nigeria', 'Noruega', 'Nueva Zelanda',
+  'Omán', 'Países Bajos', 'Pakistán', 'Palaos', 'Panamá', 'Papúa Nueva Guinea', 'Paraguay', 'Perú', 'Polonia',
+  'Portugal', 'Reino Unido', 'República Centroafricana', 'República Checa', 'República del Congo', 'República Democrática del Congo',
+  'República Dominicana', 'Ruanda', 'Rumanía', 'Rusia', 'Samoa', 'San Cristóbal y Nieves', 'San Marino', 'San Vicente y las Granadinas',
+  'Santa Lucía', 'Santo Tomé y Príncipe', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leona', 'Singapur', 'Siria', 'Somalia', 'Sri Lanka',
+  'Sudáfrica', 'Sudán', 'Sudán del Sur', 'Suecia', 'Suiza', 'Surinam', 'Tailandia', 'Tanzania', 'Tayikistán', 'Timor Oriental', 
+  'Togo', 'Tonga', 'Trinidad y Tobago', 'Túnez', 'Turkmenistán', 'Turquía', 'Tuvalu', 'Ucrania', 'Uganda', 'Uruguay', 'Uzbekistán',
+  'Vanuatu', 'Venezuela', 'Vietnam', 'Yemen', 'Yibuti', 'Zambia', 'Zimbabue'
+];
+
+// Lista de países en inglés
+const countriesEnglish = [
+  'Afghanistan', 'Albania', 'Germany', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Saudi Arabia',
+  'Algeria', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan', 'Bahamas', 'Bangladesh',
+  'Barbados', 'Bahrain', 'Belgium', 'Belize', 'Benin', 'Belarus', 'Myanmar', 'Bolivia', 'Bosnia and Herzegovina',
+  'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Bhutan', 'Cape Verde', 'Cambodia',
+  'Cameroon', 'Canada', 'Qatar', 'Chad', 'Chile', 'China', 'Cyprus', 'Vatican City', 'Colombia', 
+  'Comoros', 'North Korea', 'South Korea', 'Ivory Coast', 'Costa Rica', 'Croatia', 'Cuba', 
+  'Denmark', 'Dominica', 'Ecuador', 'Egypt', 'El Salvador', 'United Arab Emirates', 'Eritrea', 'Slovakia',
+  'Slovenia', 'Spain', 'United States', 'Estonia', 'Eswatini', 'Ethiopia', 'Philippines', 'Finland', 'Fiji',
+  'France', 'Gabon', 'Gambia', 'Georgia', 'Ghana', 'Grenada', 'Greece', 'Guatemala', 'Guinea', 'Guinea-Bissau',
+  'Equatorial Guinea', 'Guyana', 'Haiti', 'Honduras', 'Hungary', 'India', 'Indonesia', 'Iraq', 'Iran', 'Ireland',
+  'Iceland', 'Marshall Islands', 'Solomon Islands', 'Israel', 'Italy', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan',
+  'Kenya', 'Kyrgyzstan', 'Kiribati', 'Kosovo', 'Kuwait', 'Laos', 'Lesotho', 'Latvia', 'Lebanon', 'Liberia', 'Libya',
+  'Liechtenstein', 'Lithuania', 'Luxembourg', 'Madagascar', 'Malaysia', 'Malawi', 'Maldives', 'Mali', 'Malta',
+  'Morocco', 'Mauritius', 'Mauritania', 'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro',
+  'Mozambique', 'Namibia', 'Nauru', 'Nepal', 'Nicaragua', 'Niger', 'Nigeria', 'Norway', 'New Zealand',
+  'Oman', 'Netherlands', 'Pakistan', 'Palau', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Poland',
+  'Portugal', 'United Kingdom', 'Central African Republic', 'Czech Republic', 'Congo', 'Democratic Republic of the Congo',
+  'Dominican Republic', 'Rwanda', 'Romania', 'Russia', 'Samoa', 'Saint Kitts and Nevis', 'San Marino', 'Saint Vincent and the Grenadines',
+  'Saint Lucia', 'Sao Tome and Principe', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Syria', 'Somalia', 'Sri Lanka',
+  'South Africa', 'Sudan', 'South Sudan', 'Sweden', 'Switzerland', 'Suriname', 'Thailand', 'Tanzania', 'Tajikistan', 'East Timor',
+  'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkmenistan', 'Turkey', 'Tuvalu', 'Ukraine', 'Uganda', 'Uruguay', 'Uzbekistan',
+  'Vanuatu', 'Venezuela', 'Vietnam', 'Yemen', 'Djibouti', 'Zambia', 'Zimbabwe'
+];
+
+
   const selectedCountries = language === 'es' ? countriesSpanish : countriesEnglish;
 
   useEffect(() => {
@@ -147,13 +150,28 @@ const RegisterUser = () => {
     }));
   };
 
-  const handleProjectSelection = (value) => {
+  const handleProjectSelection = async (value) => {
     setUserData(prevData => ({
       ...prevData,
       projects: Array.from(new Set([...prevData.projects, value])),
     }));
-    const selectedProject = projects.find(project => project.value === value);
-    setFilteredActivities(selectedProject ? selectedProject.activities.map(activity => activity.activity || 'Actividad no disponible') : []);
+
+    try {
+      const selectedProject = projects.find(project => project.value === value);
+      if (selectedProject) {
+        setFilteredActivities(selectedProject.activities.map(activity => activity.activity || 'Actividad no disponible'));
+        
+        // Guardar el proyecto seleccionado en la base de datos
+        await addDoc(collection(firestore, 'userProjects'), {
+          userID: userData.userID,
+          projectID: value,
+          projectName: selectedProject.label,
+          activities: selectedProject.activities,
+        });
+      }
+    } catch (error) {
+      Alert.alert(language === 'es' ? 'Error al guardar proyecto' : 'Error saving project');
+    }
   };
 
   const handleActivitySelection = (value) => {
@@ -171,6 +189,7 @@ const RegisterUser = () => {
       gender: language === 'es' ? 'Sexo' : 'Sex',
       birthDate: language === 'es' ? 'Fecha de nacimiento' : 'Birth Date',
       age: language === 'es' ? 'Edad' : 'Age',
+      countryOfOrigin: language === 'es' ? 'País de origen' : 'Country of Origin',
       countries: language === 'es' ? 'País' : 'Country',
       province: language === 'es' ? 'Provincia' : 'Province',
       canton: language === 'es' ? 'Cantón' : 'Canton',
@@ -248,6 +267,7 @@ const RegisterUser = () => {
         <TextInput style={styles.input(width)} placeholder={language === 'es' ? "Edad" : "Age"} value={userData.age} onChangeText={(value) => handleInputChange('age', value)} />
         <TextInput style={styles.input(width)} placeholder={language === 'es' ? "Celular" : "Phone"} value={userData.phone} onChangeText={(value) => handleInputChange('phone', value)} />
         <TextInput style={styles.input(width)} placeholder={language === 'es' ? "Condición Médica" : "Medical Condition"} value={userData.medicalCondition} onChangeText={(value) => handleInputChange('medicalCondition', value)} />
+        <TextInput style={styles.input(width)} placeholder={language === 'es' ? "País de Origen" : "Country of Origin"} value={userData.countryOfOrigin} onChangeText={(value) => handleInputChange('countryOfOrigin', value)} />
       </View>
 
       <Text style={styles.sectionTitle}>{language === 'es' ? 'Ubicación del Usuario' : 'User Location'}</Text>

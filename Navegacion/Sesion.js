@@ -16,7 +16,6 @@ const Sesion = () => {
   const [loading, setLoading] = useState(false);
   const { language, setLanguage } = useLanguage();
 
-  // Valida que los campos de correo y contraseña no estén vacíos
   const isValidForm = () => correo.trim() !== '' && contrasena.trim() !== '';
 
   const handleSubmit = async () => {
@@ -34,7 +33,6 @@ const Sesion = () => {
       const user = userCredential.user;
       const uid = user.uid;
 
-      // Obtener el documento del usuario desde Firestore usando el UID
       const docRef = doc(firestore, 'usuarios', uid);
       const docSnap = await getDoc(docRef);
 
@@ -50,10 +48,10 @@ const Sesion = () => {
 
         if (userRole === 'admin') {
           Alert.alert(language === 'es' ? 'Bienvenido al sistema de Humanitarian Consultants' : 'Welcome to the Humanitarian Consultants system');
-          navigation.navigate('Home');
+          navigation.navigate('Home'); // Navegación para administradores
         } else if (userRole === 'user') {
           Alert.alert(language === 'es' ? 'Bienvenido' : 'Welcome');
-          navigation.navigate('Home');
+          navigation.navigate('RegisterUser'); // Navegación para usuarios comunes
         } else {
           Alert.alert(language === 'es' ? 'Rol no autorizado' : 'Unauthorized role');
         }
@@ -63,7 +61,7 @@ const Sesion = () => {
     } catch (error) {
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
         Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Correo o contraseña incorrectos' : 'Incorrect email or password');
-        setCorreo(''); // Limpiar solo si el error es de credenciales
+        setCorreo('');
         setContrasena('');
       } else {
         Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'No se pudo iniciar sesión. Intente de nuevo.' : 'Could not log in. Please try again.');
@@ -121,6 +119,7 @@ const Sesion = () => {
           </TouchableOpacity>
         )}
 
+        {/* Botones adicionales para recuperación de contraseña y registro de usuario */}
         <TouchableOpacity onPress={() => navigation.navigate('Registrarse')}>
           <Text style={styles.linkText}>{language === 'es' ? 'Registrar usuario' : 'Register User'}</Text>
         </TouchableOpacity>
