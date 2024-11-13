@@ -18,20 +18,14 @@ const firebaseConfig = {
 // Inicializar Firebase App
 const app = initializeApp(firebaseConfig);
 
-// Verificar si Auth ya está inicializado para evitar múltiples inicializaciones
+// Inicializar Firebase Auth con persistencia en AsyncStorage
 let auth;
 try {
-    // Intentar obtener una instancia de Auth ya inicializada
-    auth = getAuth(app);
-} catch (error) {
-    // Si no está inicializado, inicializar Auth con persistencia en AsyncStorage
-    if (error.code === 'auth/not-initialized') {
-        auth = initializeAuth(app, {
-            persistence: getReactNativePersistence(ReactNativeAsyncStorage),
-        });
-    } else {
-        throw error;  // Lanzar otros errores si no están relacionados con la inicialización
-    }
+    auth = getAuth(app); // Intentar obtener una instancia de Auth existente
+} catch {
+    auth = initializeAuth(app, {
+        persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+    });
 }
 
 // Inicializar Firestore

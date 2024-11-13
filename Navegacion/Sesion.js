@@ -51,7 +51,7 @@ const Sesion = () => {
           navigation.navigate('Home'); // Navegación para administradores
         } else if (userRole === 'user') {
           Alert.alert(language === 'es' ? 'Bienvenido' : 'Welcome');
-          navigation.navigate('RegisterUser'); // Navegación para usuarios comunes
+          navigation.navigate('Home'); // Navegación para usuarios comunes
         } else {
           Alert.alert(language === 'es' ? 'Rol no autorizado' : 'Unauthorized role');
         }
@@ -60,11 +60,12 @@ const Sesion = () => {
       }
     } catch (error) {
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'Correo o contraseña incorrectos' : 'Incorrect email or password');
+        Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'El correo o la contraseña es incorrecta' : 'The email or password is incorrect');
         setCorreo('');
         setContrasena('');
       } else {
-        Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'No se pudo iniciar sesión. Intente de nuevo.' : 'Could not log in. Please try again.');
+        Alert.alert(language === 'es' ? 'Error' : 'Error', language === 'es' ? 'No se pudo iniciar sesión. Intente de nuevo, El correo o la contraseña es incorrecta.' : 
+          'Could not log in. Please try again, The email or password is incorrect');
       }
     } finally {
       setLoading(false);

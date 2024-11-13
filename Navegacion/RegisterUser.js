@@ -19,7 +19,7 @@ const RegisterUser = () => {
     gender: '',
     birthDate: '',
     age: '',
-    countryOfOrigin: '',  // Campo nuevo: país de origen
+    countryOfOrigin: '',
     countries: [],
     province: '',
     canton: '',
@@ -91,7 +91,6 @@ const countriesEnglish = [
   'Vanuatu', 'Venezuela', 'Vietnam', 'Yemen', 'Djibouti', 'Zambia', 'Zimbabwe'
 ];
 
-
   const selectedCountries = language === 'es' ? countriesSpanish : countriesEnglish;
 
   useEffect(() => {
@@ -143,11 +142,20 @@ const countriesEnglish = [
     setFilteredActivities([]);
   };
 
-  const handleCountrySelection = (value) => {
+  const handleCountrySelection = async (value) => {
     setUserData(prevData => ({
       ...prevData,
       countries: Array.from(new Set([...prevData.countries, value])),
     }));
+
+    try {
+      await addDoc(collection(firestore, 'userCountries'), {
+        userID: userData.userID,
+        country: value,
+      });
+    } catch (error) {
+      Alert.alert(language === 'es' ? 'Error al guardar país' : 'Error saving country');
+    }
   };
 
   const handleProjectSelection = async (value) => {
@@ -160,12 +168,12 @@ const countriesEnglish = [
       const selectedProject = projects.find(project => project.value === value);
       if (selectedProject) {
         setFilteredActivities(selectedProject.activities.map(activity => activity.activity || 'Actividad no disponible'));
-        
-        // Guardar el proyecto seleccionado en la base de datos
+
         await addDoc(collection(firestore, 'userProjects'), {
           userID: userData.userID,
           projectID: value,
           projectName: selectedProject.label,
+          country: userData.countries[userData.countries.length - 1] || null,
           activities: selectedProject.activities,
         });
       }
@@ -174,37 +182,42 @@ const countriesEnglish = [
     }
   };
 
-  const handleActivitySelection = (value) => {
+  const handleActivitySelection = async (value) => {
     setUserData(prevData => ({
       ...prevData,
       activities: Array.from(new Set([...prevData.activities, value])),
     }));
+
+    try {
+      const selectedProjectID = userData.projects[userData.projects.length - 1] || null;
+      const selectedCountry = userData.countries[userData.countries.length - 1] || null;
+
+      const userProjectsQuery = query(
+        collection(firestore, 'userProjects'),
+        where('userID', '==', userData.userID),
+        where('projectID', '==', selectedProjectID),
+        where('country', '==', selectedCountry)
+      );
+
+      const querySnapshot = await getDocs(userProjectsQuery);
+      
+      if (!querySnapshot.empty) {
+        const projectDocRef = querySnapshot.docs[0].ref;
+        await setDoc(projectDocRef, {
+          activities: Array.from(new Set([...querySnapshot.docs[0].data().activities || [], value]))
+        }, { merge: true });
+      }
+    } catch (error) {
+      Alert.alert(language === 'es' ? 'Error al guardar actividad' : 'Error saving activity');
+    }
   };
 
   const validateFields = () => {
-    const fieldNames = {
-      userID: language === 'es' ? 'ID de usuario' : 'User ID',
-      idType: language === 'es' ? 'Tipo de identificación' : 'ID Type',
-      name: language === 'es' ? 'Nombre' : 'Name',
-      gender: language === 'es' ? 'Sexo' : 'Sex',
-      birthDate: language === 'es' ? 'Fecha de nacimiento' : 'Birth Date',
-      age: language === 'es' ? 'Edad' : 'Age',
-      countryOfOrigin: language === 'es' ? 'País de origen' : 'Country of Origin',
-      countries: language === 'es' ? 'País' : 'Country',
-      province: language === 'es' ? 'Provincia' : 'Province',
-      canton: language === 'es' ? 'Cantón' : 'Canton',
-      district: language === 'es' ? 'Distrito' : 'District',
-      phone: language === 'es' ? 'Teléfono' : 'Phone',
-      projects: language === 'es' ? 'Proyectos' : 'Projects',
-      medicalCondition: language === 'es' ? 'Condición Médica' : 'Medical Condition',
-      activities: language === 'es' ? 'Actividades' : 'Activities'
-    };
-
     const missingFields = Object.keys(userData).filter(key => {
       if (Array.isArray(userData[key])) return userData[key].length === 0;
       return !userData[key];
-    }).map(key => fieldNames[key]);
-
+    });
+    
     if (missingFields.length) {
       Alert.alert(
         language === 'es' ? 'Campos obligatorios' : 'Missing Fields',
@@ -260,7 +273,7 @@ const countriesEnglish = [
         <Picker selectedValue={userData.gender} style={styles.pickerContainer} onValueChange={(value) => handleInputChange('gender', value)}>
           <Picker.Item label={language === 'es' ? "Seleccione un sexo" : "Select a sex"} value="" />
           <Picker.Item label={language === 'es' ? "Masculino" : "Male"} value="Male" />
-          <Picker.Item label={language === 'es' ? "Femenino" : "Female"} value="Female" />
+          <Picker.Item label={language === 'es' ? "Femenina" : "Female"} value="Female" />
         </Picker>
 
         <TextInput style={styles.input(width)} placeholder={language === 'es' ? "Fecha de nacimiento (dd/mm/yyyy)" : "Birth Date (dd/mm/yyyy)"} value={userData.birthDate} onChangeText={(value) => handleInputChange('birthDate', value)} />

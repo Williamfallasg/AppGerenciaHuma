@@ -1,50 +1,75 @@
-import React, { useEffect, useState } from 'react'; 
+import React, { useEffect, useState } from 'react';
 import { View, Text, Button, ScrollView, Alert, StyleSheet } from 'react-native';
-import * as FileSystem from 'expo-file-system';
+import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
 import { firestore } from '../firebase/firebase';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 
 const UserDetailsScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { userData } = route.params;
   const { language } = useLanguage();
-  const [projectNames, setProjectNames] = useState([]);
+  const [countryProjectDetails, setCountryProjectDetails] = useState([]);
 
   useEffect(() => {
-    const fetchProjectNames = async () => {
-      try {
-        if (userData.projects && userData.projects.length > 0) {
-          const projectsRef = collection(firestore, "projects");
-          const projectsQuery = query(projectsRef, where("__name__", "in", userData.projects));
-          const querySnapshot = await getDocs(projectsQuery);
-          const names = querySnapshot.docs.map(doc => doc.data().projectName || 'Nombre no disponible');
-          setProjectNames(names);
-        }
-      } catch (error) {
-        console.error("Error fetching project names: ", error);
-        Alert.alert("Error", language === 'es' ? "No se pudieron cargar los nombres de los proyectos" : "Could not load project names");
-      }
+    // Configuración del listener para obtener actualizaciones en tiempo real
+    const fetchCountryProjectDetails = () => {
+      const userProjectsRef = collection(firestore, 'userProjects');
+      const q = query(userProjectsRef, where('userID', '==', userData.userID));
+
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const details = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            country: data.country || 'País no especificado',
+            projectName: data.projectName || 'Proyecto no especificado',
+            activity: data.activities && data.activities.length > 0
+              ? data.activities[0].activity || 'Actividad no especificada'
+              : 'Actividad no especificada',
+          };
+        });
+        setCountryProjectDetails(details);
+      });
+
+      return unsubscribe;
     };
-    fetchProjectNames();
-  }, [userData.projects]);
+
+    const unsubscribe = fetchCountryProjectDetails();
+    return () => unsubscribe();
+  }, [userData.userID]);
 
   const handleDownload = async () => {
     try {
-      const jsonContent = JSON.stringify(userData, null, 2);
-      const fileUri = `${FileSystem.documentDirectory}user_data.json`;
-      await FileSystem.writeAsStringAsync(fileUri, jsonContent);
+      const htmlContent = `
+        <html>
+          <body>
+            <h1>${language === 'es' ? 'Detalles del Usuario' : 'User Details'}</h1>
+            <div>
+              ${orderedFields.map(key => `
+                <p><strong>${translations[key] || formatLabel(key)}:</strong> ${Array.isArray(userData[key]) ? userData[key].join(', ') : userData[key] || 'N/A'}</p>
+              `).join('')}
+              ${countryProjectDetails.map(detail => `
+                <p><strong>${language === 'es' ? 'País' : 'Country'}:</strong> ${detail.country}</p>
+                <p><strong>${language === 'es' ? 'Proyecto' : 'Project'}:</strong> ${detail.projectName}</p>
+                <p><strong>${language === 'es' ? 'Actividad Seleccionada' : 'Selected Activity'}:</strong> ${detail.activity}</p>
+                <hr/>
+              `).join('')}
+            </div>
+          </body>
+        </html>
+      `;
 
-      await Sharing.shareAsync(fileUri, {
-        mimeType: 'application/json',
+      const { uri } = await Print.printToFileAsync({ html: htmlContent });
+      await Sharing.shareAsync(uri, {
+        mimeType: 'application/pdf',
         dialogTitle: language === 'es' ? 'Descargar datos del usuario' : 'Download User Data',
-        UTI: 'public.json',
+        UTI: 'com.adobe.pdf',
       });
     } catch (error) {
-      console.error("Error downloading file: ", error);
+      console.error("Error downloading PDF: ", error);
       Alert.alert("Error", language === 'es' ? "No se pudo descargar el archivo" : "Could not download the file");
     }
   };
@@ -71,23 +96,9 @@ const UserDetailsScreen = () => {
     activities: language === 'es' ? 'Actividades' : 'Activities',
   };
 
-  const getTranslatedGender = (gender) => {
-    if (gender.toLowerCase() === 'female') return language === 'es' ? 'Femenino' : 'Female';
-    if (gender.toLowerCase() === 'male') return language === 'es' ? 'Masculino' : 'Male';
-    return gender;
-  };
-
-  // Función para traducir el tipo de identificación
-  const getTranslatedIDType = (idType) => {
-    if (idType === 'ID Card') return language === 'es' ? 'Cédula' : 'ID Card';
-    if (idType === 'Passport') return language === 'es' ? 'Pasaporte' : 'Passport';
-    return idType;
-  };
-
-  // Orden de campos basado en el formulario de RegisterUser
   const orderedFields = [
     'userID', 'idType', 'name', 'gender', 'birthDate', 'age', 
-    'originCountry', 'countries', 'province', 'canton', 'district', 
+    'countryOfOrigin', 'countries', 'province', 'canton', 'district', 
     'phone', 'projects', 'medicalCondition', 'activities'
   ];
 
@@ -103,23 +114,26 @@ const UserDetailsScreen = () => {
             <View key={key} style={styles.itemContainer}>
               <Text style={styles.label}>{translations[key] || formatLabel(key)}</Text>
               <Text style={styles.value}>
-                {key === 'gender'
-                  ? getTranslatedGender(userData[key])
-                  : key === 'idType'
-                  ? getTranslatedIDType(userData[key]) // Traducir tipo de identificación
-                  : key === 'projects'
-                  ? projectNames.join(', ') // Mostrar nombres de proyectos separados por comas
-                  : key === 'activities'
-                  ? userData[key].join(', ') // Mostrar actividades separadas por comas
-                  : Array.isArray(userData[key]) ? userData[key].join(', ') : userData[key]} 
+                {Array.isArray(userData[key]) ? userData[key].join(', ') : userData[key]} 
               </Text>
             </View>
           )
         ))}
+
+        {countryProjectDetails.map((detail, index) => (
+          <View key={index} style={styles.projectContainer}>
+            <Text style={styles.label}>País:</Text>
+            <Text style={styles.value}>{detail.country}</Text>
+            <Text style={styles.label}>Proyecto:</Text>
+            <Text style={styles.value}>{detail.projectName}</Text>
+            <Text style={styles.label}>Actividad Seleccionada:</Text>
+            <Text style={styles.value}>{detail.activity || 'No hay actividad seleccionada'}</Text>
+          </View>
+        ))}
       </View>
 
       <View style={styles.buttonContainer}>
-        <Button title={language === 'es' ? 'Descargar datos' : 'Download Data'} onPress={handleDownload} color="#007BFF" />
+        <Button title={language === 'es' ? 'Descargar datos en PDF' : 'Download Data in PDF'} onPress={handleDownload} color="#007BFF" />
       </View>
       <View style={[styles.buttonContainer, { marginTop: 10 }]}>
         <Button title={language === 'es' ? 'Salir' : 'Exit'} onPress={handleExit} color="#F28C32" />
@@ -163,6 +177,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: '#EAEAEA',
     paddingBottom: 8,
+  },
+  projectContainer: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    padding: 15,
+    marginVertical: 10,
   },
   label: {
     fontSize: 16,
